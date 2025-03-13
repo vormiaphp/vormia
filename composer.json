@@ -3,6 +3,15 @@
     "description": "Vormia CMS Starter Kit for Laravel 12",
     "type": "library",
     "license": "MIT",
+    "homepage": "https://github.com/vormia-cms/starterkit",
+    "authors": [
+        {
+            "name": "Josh Minga",
+            "email": "joshlminga@gmail.com",
+            "homepage": "https://vormia.com",
+            "role": "Developer"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "VormiaCms\\StarterKit\\": "src/"
