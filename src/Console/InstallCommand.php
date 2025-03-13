@@ -3,6 +3,7 @@
 namespace VormiaCms\StarterKit\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Process;
 use VormiaCms\StarterKit\VormiaStarterKit;
 
 class InstallCommand extends Command
@@ -52,6 +53,47 @@ class InstallCommand extends Command
 
         $this->info('Vormia Starter Kit has been completely installed!');
         $this->info('Remember to run "php artisan serve" to start your application.');
+    }
+
+    /**
+     * Check and install required dependencies.
+     */
+    protected function checkAndInstallDependencies()
+    {
+        $dependencies = [
+            'intervention/image' => \Intervention\Image\ImageManager::class,
+            'laravel/sanctum' => \Laravel\Sanctum\HasApiTokens::class,
+            'livewire/livewire' => \Livewire\Livewire::class,
+        ];
+
+        $missingDependencies = [];
+
+        foreach ($dependencies as $package => $class) {
+            if (!class_exists($class)) {
+                $missingDependencies[] = $package;
+            }
+        }
+
+        if (empty($missingDependencies)) {
+            $this->info('All required dependencies are already installed.');
+            return;
+        }
+
+        $this->info('Installing required dependencies...');
+
+        foreach ($missingDependencies as $package) {
+            $this->info("Installing {$package}...");
+
+            $result = Process::run('composer require ' . $package);
+
+            if ($result->successful()) {
+                $this->info("{$package} installed successfully.");
+            } else {
+                $this->error("Failed to install {$package}.");
+                $this->error($result->errorOutput());
+                $this->warn("Please run 'composer require {$package}' manually.");
+            }
+        }
     }
 
     /**
