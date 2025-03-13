@@ -1,0 +1,201 @@
+// Import Colors
+@import "incl/colors";
+@import "incl/func";
+
+/**
+* Style
+**/
+@include font_color_box;
+@include select2;
+
+.body {
+  font-family: "Roboto", sans-serif;
+}
+
+/* Error */
+span.error,
+p.error,
+span.error > p {
+  font-size: 13px;
+  font-weight: 400;
+  color: getColor(red);
+  font-style: italic;
+}
+
+/* Error */
+.required {
+  & {
+    .bi-asterisk,
+    .fa-asterisk {
+      color: getColor(red);
+      font-size: 10px;
+    }
+  }
+}
+
+label.required:after {
+  content: "*";
+  margin-left: 0.2rem;
+  color: getColor(red);
+}
+
+/** LIVE WIRE DEMO HOME **/
+.setting-main {
+  h1,
+  h2,
+  h3,
+  h4,
+  a,
+  span,
+  p,
+  div,
+  code {
+    font-family: "Baloo Chettan 2", serif;
+  }
+
+  position: relative; // Ensure the ::before is relative to .setting-main
+  background-image: url(../img/login-cover-1.jpg) !important;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  z-index: 1; // Ensure the container is above the ::before
+
+  margin: 0;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); // Adjusted opacity to 40%
+    z-index: 0; // Keep the overlay beneath the content
+  }
+
+  // Layout
+  .login-card {
+    background: linear-gradient(200deg, #87cefa 3%, #ffffff 50%);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    padding: 40px 30px;
+    width: 100%;
+  }
+
+  // write a loop for max-width with class name eg. bw-400 to 800, in steps of 100
+  @for $i from 400 through 800 {
+    @if $i % 100 == 0 {
+      .bw-#{$i} {
+        max-width: #{$i}px;
+      }
+    }
+  }
+
+  .login-card h3 {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .form-control {
+    border-radius: 12px;
+  }
+
+  .btn-primary {
+    background-color: #000;
+    border: none;
+    border-radius: 12px;
+  }
+
+  .btn-primary:hover {
+    background-color: #333;
+  }
+
+  .social-icons img {
+    width: 36px;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .social-icons img:hover {
+    transform: scale(1.1);
+  }
+
+  section {
+    position: relative; // Ensures the section content stays above the overlay
+    background-color: transparent !important; // #ffffff00 is transparent, but this is clearer
+    z-index: 2; // Keep content above the overlay
+  }
+
+  input {
+    -webkit-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    -moz-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    box-shadow: 0 0 5px 2px rgb(182 188 200 / 74%);
+  }
+
+  // icons
+  .link-icon-go-home {
+    i {
+      font-size: 1.2em;
+      color: color(dark_blue);
+    }
+    color: color(dark_blue);
+    &:hover {
+      i {
+        color: #12689f;
+      }
+    }
+  }
+
+  .process-box {
+    border-radius: 5px;
+    @include shadow3;
+    margin: 5% 0px;
+    padding: 2% 1%;
+
+    ul,
+    ol {
+      list-style: auto;
+    }
+  }
+
+  // Results
+  .result-box {
+    position: absolute;
+    background-color: #fff;
+    width: 88%;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+
+    top: 90%;
+
+    h4 {
+      font-size: 18px;
+      text-align: center;
+    }
+    .result-box-body {
+      // border-radius: 5px;
+      @include shadow3;
+      padding: 2% 2%;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+
+      .result-box-body-item {
+        border-bottom: 1px solid #e9e9e9 !important;
+        margin-bottom: 2%;
+
+        button {
+          text-decoration: none !important;
+        }
+      }
+    }
+  }
+}
+/** END LIVE WIRE DEMO HOME **/

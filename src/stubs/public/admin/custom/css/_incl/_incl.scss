@@ -1,0 +1,279 @@
+/* Box Shadow */
+@mixin shadow1 {
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+}
+@mixin shadow2 {
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+}
+@mixin shadow3 {
+    -webkit-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    -moz-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+}
+
+@mixin shadow-focus {
+    -webkit-box-shadow: 0 0 5px 2px rgba(255, 0, 0, 0.73);
+    -moz-box-shadow: 0 0 5px 2px rgba(255, 0, 0, 0.73);
+    box-shadow: 0 0 5px 2px rgba(255, 0, 0, 0.73);
+    border: 1px solid #ff0000d4;
+    // shadow color change
+    // box-shadow: 0 0 0 0.2rem rgba(255, 65, 54, 0.25);
+}
+
+@mixin shadow-hover {
+    -webkit-box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+    -moz-box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+    box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+}
+
+/** DatePicker
+** https://mymth.github.io/vanillajs-datepicker/
+**/
+@mixin date-picker {
+    div.datepicker {
+        div.datepicker-picker {
+            div.datepicker-header {
+                div.datepicker-controls {
+                    button.prev-btn,
+                    button.next-btn {
+                        color: color(dark-blue);
+                    }
+                    button.view-switch {
+                        color: color(blue);
+                    }
+                }
+            }
+            div.datepicker-main {
+                div.datepicker-view {
+                    div.days {
+                        div.days-of-week {
+                            span {
+                                color: color(dark-blue);
+                            }
+                        }
+                        div.datepicker-grid {
+                            span.datepicker-cell {
+                                color: color(black);
+                                &.prev {
+                                    color: color(dark-gray-5);
+                                }
+
+                                &.focused {
+                                    background-color: color(light-blue);
+                                    color: color(white);
+                                }
+
+                                &:hover {
+                                    background-color: color(gray);
+                                    color: color(white);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div.datepicker-footer {
+                div.datepicker-controls {
+                    button.clear-btn {
+                        background-color: color(red);
+                        color: color(white);
+                        border: none;
+                        border-radius: 2px;
+                        padding: 0.5rem 1rem;
+                        margin-right: 1rem;
+                        cursor: pointer;
+                        &:hover {
+                            background-color: color(red-dark);
+                        }
+                        // Font
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+** FOR Select2
+*
+*/
+@mixin select2 {
+    span.select2 {
+        border-radius: 5px;
+        border: 1px solid #e2e2e2;
+        width: 100% !important;
+    }
+
+    .select2-container {
+        max-width: 100% !important;
+    }
+
+    // padding: 0.375rem 0.75rem;
+    // height: 45px;
+
+    span.selection {
+        span.select2-selection--single {
+            // height: 30px !important;
+            // padding: 2px 10px !important;
+            height: 45px !important;
+            padding: 0px 0.75rem 0.375rem 0.75rem !important;
+            border-radius: 6px !important;
+            border-bottom: 2px solid color(dark-red-2) !important;
+
+            //border-radius: 20px;
+            span.select2-selection__arrow {
+                padding-right: 10%;
+                top: 8px !important;
+            }
+
+            &.is-invalid,
+            &.was-validated {
+                border-color: #dc3545 !important;
+            }
+
+            &.is-valid,
+            &.was-validated {
+                border-color: #198754 !important;
+            }
+        }
+
+        span.select2-selection__rendered {
+            font-size: 15px !important;
+        }
+    }
+
+    span.select2-dropdown {
+        span.select2-search {
+            input.select2-search__field,
+            input.select2-search__field:focus,
+            input.select2-search__field:active {
+                border-radius: 10px !important;
+            }
+        }
+
+        span.select2-results {
+            ul {
+                li {
+                }
+                li:hover {
+                    background-color: color(red);
+                    color: color(white);
+                }
+                li:active {
+                    color: color(blue2);
+                }
+            }
+        }
+    }
+}
+
+@mixin boostrap-select {
+    //select
+    word-wrap: normal;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+
+    //.form-select
+    display: block;
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    -moz-padding-start: calc(0.75rem - 3px);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    &:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+}
+
+/** DatePicker
+** https://mymth.github.io/vanillajs-datepicker/
+**/
+@mixin date-picker {
+    div.datepicker {
+        div.datepicker-picker {
+            div.datepicker-header {
+                div.datepicker-controls {
+                    button.prev-btn,
+                    button.next-btn {
+                        color: color(dark-blue);
+                    }
+                    button.view-switch {
+                        color: color(blue);
+                    }
+                }
+            }
+            div.datepicker-main {
+                div.datepicker-view {
+                    div.days {
+                        div.days-of-week {
+                            span {
+                                color: color(dark-blue);
+                            }
+                        }
+                        div.datepicker-grid {
+                            span.datepicker-cell {
+                                color: color(black);
+                                &.prev {
+                                    color: color(dark-gray-5);
+                                }
+
+                                &.focused {
+                                    background-color: color(light-blue);
+                                    color: color(white);
+                                }
+
+                                &:hover {
+                                    background-color: color(gray);
+                                    color: color(white);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div.datepicker-footer {
+                div.datepicker-controls {
+                    button.clear-btn {
+                        background-color: color(red);
+                        color: color(white);
+                        border: none;
+                        border-radius: 2px;
+                        padding: 0.5rem 1rem;
+                        margin-right: 1rem;
+                        cursor: pointer;
+                        &:hover {
+                            background-color: color(red-dark);
+                        }
+                        // Font
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+    }
+}

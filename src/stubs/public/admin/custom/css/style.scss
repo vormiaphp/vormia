@@ -1,0 +1,279 @@
+// Include Color
+@import "_incl/colors";
+// Include
+@import "_incl/incl";
+// Pre Functions
+@import "_incl/func";
+
+/**
+** Todo:
+** 1: Vormia Includes
+*/
+@include colorsCode();
+@include marginSet();
+@include paddingSet();
+@include required();
+
+@include bagdesName();
+@include date-picker();
+@include select2();
+// @include boostrap-select();
+
+/***
+** Todo: Login Banner
+*/
+body.login-pg {
+    background-image: url("../img/login/kilimanjaro.jpeg") !important;
+
+    .bg-login {
+        background-image: none !important;
+    }
+
+    .login-card {
+        @include shadow3();
+
+        margin-top: 15%;
+
+        @media screen and (max-width: 768px) {
+            margin-top: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            color: color(black);
+        }
+
+        .logo-comp {
+            width: 90%;
+        }
+
+        input {
+            @include shadow3();
+
+            &:focus {
+                -webkit-box-shadow: 0 0 5px 2px rgba(0, 81, 255, 0.73);
+                -moz-box-shadow: 0 0 5px 2px rgba(0, 26, 255, 0.73);
+                box-shadow: 0 0 5px 2px rgba(0, 55, 255, 0.73);
+                border: 1px solid #002fffd4;
+                // shadow color change
+                // box-shadow: 0 0 0 0.2rem rgba(255, 65, 54, 0.25);
+            }
+        }
+
+        button {
+            font-weight: bold;
+            background-color: color(acentria-red) !important;
+            border-color: color(acentria-red) !important;
+            &:hover {
+                -webkit-box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+                -moz-box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+                box-shadow: 0 0 5px 1px rgba(235, 1, 1, 0.688);
+            }
+        }
+
+        a {
+            color: color(gray);
+            &:hover {
+                color: color(acentria-red);
+                text-decoration: none;
+            }
+        }
+        p {
+            color: color(gray);
+            margin-bottom: 0px;
+        }
+    }
+
+    .comp-log-logo {
+        img {
+            width: 55% !important;
+        }
+    }
+}
+
+body[data-layout="detached"] #page-topbar {
+    background-color: color(white) !important;
+    color: color(dark-gray) !important;
+    border-bottom: 1px solid color(light-gray);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+body[data-layout="detached"] #layout-wrapper::before {
+    // background: linear-gradient(to right, #ed1c25, #ed1c25) !important;
+}
+
+body[data-topbar="colored"] .header-item,
+body[data-topbar="dark"] .header-item {
+    color: color(black) !important;
+    font-weight: 500;
+}
+
+body[data-topbar="colored"] .header-profile-user,
+body[data-topbar="dark"] .header-profile-user {
+    // background-color: rgba(255, 0, 0, 0.81);
+}
+
+@media (min-width: 992px) {
+    body[data-layout="detached"] .vertical-menu .user-img img {
+        // border: 2px dashed #ed1c25 !important;
+    }
+}
+
+.mm-active .active {
+    color: color(acentria-red) !important;
+    & i {
+        color: color(acentria-red) !important;
+    }
+}
+
+#sidebar-menu ul li a:hover {
+    color: color(acentria-red) !important;
+    & i {
+        color: color(acentria-red) !important;
+    }
+}
+
+.bg-login-overlay {
+    position: absolute;
+    background: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        from(#273c9c),
+        to(#30aeef)
+    );
+    background: linear-gradient(to right, #30aeef, #1c2654);
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0 0 50% 50%;
+    opacity: 0.8;
+}
+
+// Error
+span.error,
+p.error,
+span.error > p {
+    font-size: 12px;
+    font-weight: 400;
+    color: color(red);
+    font-style: italic;
+}
+
+.alert-danger {
+    color: color(white) !important;
+    background-color: color(red) !important;
+    border-color: color(red) !important;
+
+    button.close {
+        span {
+            color: color(white) !important;
+        }
+    }
+}
+
+/** BOOTSTRAP 4 */
+.btn-danger {
+    background-color: color(red) !important;
+    border-color: color(red) !important;
+
+    &:hover {
+        background-color: #bb0c02 !important;
+        border-color: #bb0c02 !important;
+    }
+}
+
+.btn-warning {
+    background-color: color(orange) !important;
+    border-color: color(orange) !important;
+
+    &:hover {
+        background-color: #eeb902 !important;
+        border-color: #eeb902 !important;
+    }
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: #dadada !important;
+    opacity: 0.5;
+}
+
+.form-important,
+.form-important:focus {
+    border: 1px solid color(red) !important;
+    box-shadow: 0 0 5px 1px rgba(255, 0, 0, 0.73);
+}
+
+/**
+** Todo: Shadow
+*/
+
+.shaow-style-1 {
+    @include shadow1();
+}
+
+.shaow-style-2 {
+    @include shadow2();
+}
+
+.shaow-style-3 {
+    @include shadow3();
+}
+
+.qn_an_box_more {
+    border-bottom: 0.3px solid color(light-gray);
+    margin-bottom: 2px;
+}
+
+// ? PORTAL
+body[data-layout="horizontal"][data-topbar="dark"] #page-topbar {
+    background-color: color(white) !important;
+    // color: color(dark-gray) !important;
+    border-bottom: 1px solid color(light-gray);
+    // padding: 0.5rem 1rem;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+body[data-layout="horizontal"][data-topbar="colored"] .header-item,
+body[data-layout="horizontal"][data-topbar="dark"] .header-item {
+    color: color(dark-gray) !important;
+}
+.portal-customer {
+    // ?Navbar
+    .navbar-header {
+        z-index: 9999;
+
+        .navbar-brand {
+            img {
+                width: 100px;
+            }
+        }
+
+        .navbar-nav {
+            .nav-item {
+                .nav-link {
+                    color: color(dark-gray) !important;
+                    font-size: 14px;
+                    font-weight: 500;
+                    padding: 0.5rem 1rem;
+
+                    &:hover {
+                        color: color(dark-gray);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ? after .page-content the first div.card
+.page-content .card {
+    @include shadow3();
+}
+
+.vertical-menu {
+    @include shadow-hover();
+}

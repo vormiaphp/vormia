@@ -1,0 +1,147 @@
+// Method colorsCode
+@mixin colorsCode($map: $colors) {
+    @each $name, $colorcode in $map {
+        .sks-color-#{$name} {
+            color: $colorcode !important;
+        }
+    }
+
+    // Background Color
+    @each $name, $colorcode in $map {
+        .sks-bg-color-#{$name} {
+            background-color: $colorcode !important;
+        }
+    }
+}
+
+// margin
+@mixin marginSet() {
+    $list: (
+        t: top,
+        r: right,
+        b: bottom,
+        l: left,
+    );
+
+    @each $n, $v in $list {
+        @for $i from 1 through 10 {
+            $size: $i;
+            .sks-rem-m#{$n}-#{$size} {
+                margin-#{$v}: #{$size}+ "rem";
+            }
+        }
+
+        @for $i from 1 through 50 {
+            $size: $i;
+            .sks-m#{$n}-#{$size} {
+                margin-#{$v}: #{$size}+ "%";
+            }
+        }
+    }
+}
+
+// padding
+@mixin paddingSet() {
+    $list: (
+        t: top,
+        r: right,
+        b: bottom,
+        l: left,
+    );
+
+    @each $n, $v in $list {
+        @for $i from 1 through 10 {
+            $size: $i;
+            .sks-rem-p#{$n}-#{$size} {
+                padding-#{$v}: #{$size}+ "rem";
+            }
+        }
+
+        @for $i from 1 through 50 {
+            $size: $i;
+            .sks-p#{$n}-#{$size} {
+                padding-#{$v}: #{$size}+ "px";
+            }
+        }
+    }
+}
+
+// Width Size
+@mixin widthSize() {
+    // loop from 10 to 100 in 10
+    @for $i from 1 through 20 {
+        $size: $i * 5;
+        .sks-width-#{$size} {
+            width: #{$size}+ "%";
+        }
+    }
+}
+
+// Font Size
+@mixin fontSize() {
+    @for $i from 10 through 20 {
+        $size: $i;
+        .sks-font-#{$size} {
+            font-size: #{$size}+ "px";
+        }
+    }
+}
+
+// Required & Error
+@mixin required() {
+    .sks-required {
+        & {
+            .bi-asterisk,
+            .fa-asterisk {
+                color: color(red);
+                font-size: 10px;
+            }
+        }
+    }
+
+    label.sks-required:after {
+        content: "*";
+        margin-left: 0.2rem;
+        color: color(red);
+    }
+
+    // Error
+    span.sks-error,
+    p.sks-error,
+    span.sks-error > p {
+        font-size: 12px;
+        font-weight: 400;
+        color: color(red);
+        font-style: italic;
+    }
+}
+
+// ? BADGE
+@mixin bagdesName {
+    .badge {
+        font-size: 10px;
+        font-weight: 400;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+
+    .badge-success {
+        background-color: color(main-tuffany) !important;
+        color: color(white) !important;
+    }
+
+    .badge-danger {
+        background-color: color(main-red) !important;
+        color: color(white) !important;
+    }
+
+    .badge-warning {
+        background-color: color(main-orange) !important;
+        color: color(white) !important;
+    }
+
+    .badge-primary {
+        background-color: color(main-blue) !important;
+        color: color(white) !important;
+    }
+}

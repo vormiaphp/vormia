@@ -1,0 +1,24 @@
+{
+    "name": "vormia-cms/starterkit",
+    "description": "Vormia CMS Starter Kit for Laravel 12",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "VormiaCms\\StarterKit\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "VormiaCms\\StarterKit\\StarterServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^12.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

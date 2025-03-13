@@ -1,0 +1,946 @@
+// Functions
+@function getColor($color_name, $map: $colors) {
+    @return map-get($map, $color_name);
+}
+
+@function color($color_name, $map: $colors) {
+    @return map-get($map, $color_name);
+}
+
+@mixin explain-box {
+    a {
+        text-decoration: none;
+    }
+
+    background-color: getColor(dark_blue);
+    margin-bottom: 2%;
+    border-radius: 5px;
+    padding: 2%;
+    div.img-box {
+        a {
+            img {
+                width: 100%;
+                border-radius: 5px;
+            }
+        }
+    }
+
+    div.info-box {
+        a {
+            h4,
+            h5 {
+                margin-bottom: 1em;
+                color: getColor(white);
+            }
+            div.edition {
+                span {
+                    display: block;
+                    color: getColor(white);
+                }
+            }
+
+            h6 {
+                margin-top: 15px;
+                font-size: 13px;
+                color: getColor(white);
+            }
+        }
+    }
+}
+
+@mixin blurry-text {
+    .blurry-text {
+        color: transparent;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/**
+* Colors
+* .red-color
+*/
+@mixin font_color_box {
+    .red-color {
+        color: getColor(red);
+    }
+
+    .green-color {
+        color: getColor(green);
+    }
+}
+
+/* Box Shadow */
+@mixin shadow1 {
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+}
+@mixin shadow2 {
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+}
+@mixin shadow3 {
+    -webkit-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    -moz-box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+    box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.27);
+}
+
+// Custom Essay
+@mixin formEssay {
+    .custom-essay {
+        div.header-section {
+            border-bottom: 3px solid #12689f;
+        }
+
+        div {
+            label {
+                font-weight: bold;
+                color: #072358;
+            }
+        }
+
+        div.line-btm {
+            border-bottom: 2px solid #970404;
+            margin-bottom: 10px;
+        }
+
+        span.selection {
+            span.select2-selection {
+                height: 5% !important;
+
+                .select2-selection__rendered {
+                    padding: 2% !important;
+                }
+            }
+        }
+
+        div.order-place {
+            border: 0.9px solid #0daaf740;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            border-bottom-left-radius: 1px;
+            border-bottom-right-radius: 1px;
+
+            padding: 4% 3%;
+
+            @include shadow3;
+        }
+    }
+}
+
+// Essay Pricing Show
+@mixin pricingShow {
+    div.essay-pricing-show {
+        padding: 5% 10% 0 0;
+        margin-top: 20%;
+        div.card {
+            @include shadow1;
+        }
+    }
+}
+
+// Search Page
+@mixin printResults {
+    div.searched-results {
+        #searchresultsarea {
+            margin-left: 14%;
+            font-family: "Arial";
+        }
+
+        #searchresultsnumber {
+            font-size: 0.8rem;
+            color: gray;
+        }
+
+        .searchresult {
+            margin-left: 8px;
+        }
+
+        .searchresult h2 {
+            font-size: 22px;
+            line-height: 18px;
+            font-weight: normal;
+            color: rgb(29, 1, 189);
+            margin-bottom: 0px;
+            margin-top: 25px;
+        }
+
+        .searchresult a {
+            font-size: 16px;
+            line-height: 14px;
+            color: green;
+            margin-bottom: 0px;
+        }
+
+        .searchresult button {
+            font-size: 10px;
+            line-height: 14px;
+            color: green;
+            margin-bottom: 0px;
+            padding: 0px;
+            border-width: 0px;
+            background-color: white;
+        }
+
+        #bellicon {
+            width: 20px;
+            height: 20px;
+            background-color: rgb(105, 105, 105);
+            // background-image: url("images/bell.png");
+            background-size: 12px;
+            background-position: 50% 50%;
+            background-repeat: no-repeat;
+            border-radius: 30px;
+            position: absolute;
+            right: 90px;
+            bottom: 18px;
+        }
+
+        #profileimage {
+            border-radius: 50px;
+            width: 32px;
+            height: 32px;
+            position: absolute;
+            right: 40px;
+            bottom: 12px;
+        }
+
+        #optionsbar {
+            width: 100%;
+            height: 50px;
+            border-width: 0px;
+            border-bottom: 1px;
+            border-color: lightgray;
+            border-style: solid;
+            display: flex;
+            align-items: flex-end;
+            font-family: "Arial";
+            font-size: 13px;
+            color: rgb(112, 112, 112);
+            padding-top: 64px;
+        }
+
+        #optionsmenu1 {
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            padding: 0px;
+            margin: 0px;
+            margin-left: 150px;
+        }
+
+        #optionsmenu1 li {
+            padding: 0px 10px 15px 20px;
+        }
+
+        #optionsmenuactive {
+            color: #4285f4;
+            font-weight: bold;
+            position: relative;
+            z-index: -1;
+        }
+
+        .searchresult p {
+            width: 625px;
+            font-size: 13px;
+            margin-top: 0px;
+            color: rgb(82, 82, 82);
+        }
+
+        .relatedsearches h3 {
+            font-weight: normal;
+            font-size: 19px;
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        .relatedlists ul {
+            list-style: none;
+            color: rgb(29, 1, 189);
+            padding-left: 0px;
+            font-size: 14px;
+            margin-bottom: 50px;
+        }
+
+        .relatedlists {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 300px;
+        }
+
+        .relatedlists ul li {
+            margin-bottom: 8px;
+        }
+
+        .pagelist {
+            list-style: none;
+            color: rgb(29, 135, 255);
+            display: flex;
+            flex-direction: row;
+            font-size: 12px;
+            margin-bottom: 30px;
+            margin-left: 100px;
+        }
+
+        .pagelistprevious::before {
+            content: "<";
+            display: block;
+            position: absolute;
+            right: 12px;
+            top: -35px;
+            color: rgb(29, 135, 255);
+            font-size: 20px;
+            transform: scale(0.7, 1.2);
+        }
+
+        .pagelistprevious::after {
+            content: "";
+            display: block;
+            position: absolute;
+            right: -40px;
+            top: -35px;
+            width: 40px;
+            height: 40px;
+            // background-image: url("images/g.png");
+            background-repeat: no-repeat;
+            background-size: 28px;
+        }
+
+        .pagelistfirst {
+            margin-left: 20px;
+            font-size: 13px;
+        }
+
+        .pagelistnumber::before,
+        .pagelistfirst::before {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -2px;
+            top: -21px;
+            border-radius: 50px;
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            z-index: 3;
+        }
+
+        .pagelistnumber::after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -6px;
+            top: -25px;
+            border-radius: 50px;
+            width: 18px;
+            height: 18px;
+            background-color: rgb(255, 196, 0);
+            z-index: 2;
+        }
+
+        .pagelistfirst::after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -6px;
+            top: -25px;
+            border-radius: 50px;
+            width: 18px;
+            height: 18px;
+            background-color: red;
+            z-index: 2;
+        }
+
+        .pagelist li {
+            margin-right: 15px;
+            position: relative;
+        }
+
+        .pagelistnext {
+            margin-left: 40px;
+            font-size: 13px;
+        }
+
+        .pagelistnext::before {
+            content: ">";
+            display: block;
+            position: absolute;
+            left: 5px;
+            top: -35px;
+            color: rgb(29, 135, 255);
+            font-size: 20px;
+            transform: scale(0.7, 1.2);
+        }
+
+        .pagelistnext::after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -55px;
+            top: -37px;
+            width: 50px;
+            height: 50px;
+            background-image: url("images/gle.png");
+            background-repeat: no-repeat;
+            background-size: 48px;
+        }
+
+        #footer {
+            background-color: rgb(238, 238, 238);
+            position: relative;
+            left: 0px;
+            bottom: 0px;
+            width: 100%;
+            font-size: 13px;
+            font-family: "arial";
+            color: rgb(85, 85, 85);
+        }
+
+        #footermenu {
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            margin-top: 0px;
+            margin-left: 135px;
+            margin-bottom: 0px;
+            padding-bottom: 10px;
+        }
+
+        #footermenu li {
+            padding-right: 30px;
+        }
+
+        #footerlocation {
+            display: flex;
+            direction: row;
+            margin-left: 175px;
+            position: relative;
+            top: -5px;
+        }
+
+        #footerlocation p:nth-of-type(1) {
+            font-weight: bold;
+        }
+    }
+}
+
+/** DatePicker
+** https://mymth.github.io/vanillajs-datepicker/
+**/
+@mixin date-picker {
+    div.datepicker {
+        div.datepicker-picker {
+            div.datepicker-header {
+                div.datepicker-controls {
+                    button.prev-btn,
+                    button.next-btn {
+                        color: color(dark-blue);
+                    }
+                    button.view-switch {
+                        color: color(blue);
+                    }
+                }
+            }
+            div.datepicker-main {
+                div.datepicker-view {
+                    div.days {
+                        div.days-of-week {
+                            span {
+                                color: color(dark-blue);
+                            }
+                        }
+                        div.datepicker-grid {
+                            span.datepicker-cell {
+                                color: color(black);
+                                &.prev {
+                                    color: color(dark-gray-5);
+                                }
+
+                                &.focused {
+                                    background-color: color(light-blue);
+                                    color: color(white);
+                                }
+
+                                &:hover {
+                                    background-color: color(gray);
+                                    color: color(white);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div.datepicker-footer {
+                div.datepicker-controls {
+                    button.clear-btn {
+                        background-color: color(red);
+                        color: color(white);
+                        border: none;
+                        border-radius: 2px;
+                        padding: 0.5rem 1rem;
+                        margin-right: 1rem;
+                        cursor: pointer;
+                        &:hover {
+                            background-color: color(red-dark);
+                        }
+                        // Font
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+    }
+
+    .datepicker-cell.focused:not(.selected) {
+        background-color: #002bff !important;
+    }
+
+    .datepicker-cell:not(.disabled):hover {
+        background-color: #ff005b;
+        cursor: pointer;
+    }
+}
+
+/**
+** FOR Select2
+*
+*/
+@mixin select2 {
+    span.select2 {
+        border-radius: 5px;
+        border: 1px solid #e2e2e2;
+        width: 100% !important;
+    }
+
+    .select2-container {
+        max-width: 100% !important;
+    }
+
+    // padding: 0.375rem 0.75rem;
+    // height: 45px;
+
+    span.selection {
+        span.select2-selection--single {
+            // height: 30px !important;
+            // padding: 2px 10px !important;
+            height: 45px !important;
+            padding: 0px 0.75rem 0.375rem 0.75rem !important;
+            border-radius: 6px !important;
+            border-bottom: 2px solid color(dark-red-2) !important;
+
+            //border-radius: 20px;
+            span.select2-selection__arrow {
+                padding-right: 10%;
+                top: 8px !important;
+            }
+
+            &.is-invalid,
+            &.was-validated {
+                border-color: #dc3545 !important;
+            }
+
+            &.is-valid,
+            &.was-validated {
+                border-color: #198754 !important;
+            }
+        }
+
+        span.select2-selection__rendered {
+            font-size: 15px !important;
+        }
+    }
+
+    span.select2-dropdown {
+        span.select2-search {
+            input.select2-search__field,
+            input.select2-search__field:focus,
+            input.select2-search__field:active {
+                border-radius: 10px !important;
+            }
+        }
+
+        span.select2-results {
+            ul {
+                li {
+                }
+                li:hover {
+                    background-color: color(red);
+                    color: color(white);
+                }
+                li:active {
+                    color: color(blue2);
+                }
+            }
+        }
+    }
+}
+
+/**
+** Evara Seletc
+*/
+@mixin evara-select {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #141432;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #cfdbe6;
+    border-radius: 0.25rem;
+    -webkit-box-shadow: 0;
+    box-shadow: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    background-color: #f4f5f9;
+    border: 2px solid #f4f5f9;
+    font-size: 13px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    padding-left: 20px;
+    color: #4f5d77;
+    width: 100%;
+    border-radius: 4px;
+    height: 45px;
+}
+
+@mixin boostrap-select {
+    //select
+    word-wrap: normal;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+
+    //.form-select
+    display: block;
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    -moz-padding-start: calc(0.75rem - 3px);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    &:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+}
+
+// Custom Essay
+@mixin formEssay {
+    .custom-essay,
+    .shadow-box {
+        div.header-section {
+            border-bottom: 3px solid #12689f;
+        }
+
+        div {
+            label {
+                font-weight: bold;
+                color: #072358;
+            }
+        }
+
+        div.line-btm {
+            border-bottom: 2px solid #970404;
+            margin-bottom: 10px;
+        }
+
+        span.selection {
+            span.select2-selection {
+                height: 5% !important;
+
+                .select2-selection__rendered {
+                    padding: 2% !important;
+                }
+            }
+        }
+
+        div.order-place {
+            border: 0.9px solid #0daaf740;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            border-bottom-left-radius: 1px;
+            border-bottom-right-radius: 1px;
+
+            padding: 4% 3%;
+
+            @include shadow3;
+        }
+    }
+}
+
+// Essay Pricing Show
+@mixin pricingShow {
+    div.essay-pricing-show {
+        padding: 5% 10% 0 0;
+        margin-top: 20%;
+        div.card {
+            @include shadow1;
+        }
+    }
+}
+
+// RATING
+@mixin rating-style {
+    .rating {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        align-items: center; /* added to center the rating number vertically */
+
+        padding: 2px 1px;
+        border-radius: 5px;
+    }
+
+    .star {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        display: inline-block; /* Make the stars display inline */
+        position: relative; /* Position the stars relative */
+        color: #ffd700; /* Set the color of the full stars to yellow */
+        font-size: 20px; /* Adjust font size for better visibility */
+    }
+
+    .star:before {
+        content: "★"; /* Full star */
+        position: absolute; /* Position the star absolutely */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        text-align: center; /* Center the star horizontally */
+        line-height: 20px; /* Center the star vertically */
+    }
+
+    .half-star {
+        background-color: transparent; /* Transparent background for half-star */
+    }
+
+    .half-star:before {
+        // content: "☆"; /* Half star */
+        content: "★"; /* Full star */
+
+        background: linear-gradient(
+            to right,
+            #ffd700 50%,
+            #fff 50%
+        ); /* Gradient for half-filled effect */
+        background-clip: text; /* Clip background to text */
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent; /* Make text transparent to show gradient */
+        position: absolute; /* Position the half-star absolutely */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        text-align: center; /* Center the half-star horizontally */
+        line-height: 20px; /* Center the half-star vertically */
+    }
+
+    .empty-star {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        display: inline-block; /* Make the stars display inline */
+        position: relative; /* Position the stars relative */
+        color: #ccc; /* Set the color of the empty stars to grey */
+        font-size: 20px; /* Adjust font size for better visibility */
+    }
+
+    .empty-star:before {
+        content: "☆"; /* Empty star */
+        position: absolute; /* Position the star absolutely */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        text-align: center; /* Center the star horizontally */
+        line-height: 20px; /* Center the star vertically */
+    }
+
+    .rating-number {
+        font-size: 16px;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+}
+
+// CHAT BOX
+@mixin chat-field {
+    div.chat-box-header {
+        div.chat-list {
+            div.chat-user-list {
+                div.chat-user-list-box {
+                    border: 1px solid #ededed;
+                    padding: 2%;
+                    border-radius: 7px;
+                    background: #ededed;
+                    height: 65vh !important;
+                    position: relative !important;
+                    overflow-y: scroll;
+
+                    div.user-user {
+                        background: #087a2c;
+                        color: #fff;
+                        padding: 5px 5%;
+                        border-radius: 5px;
+                        font-size: 14px;
+                        div.search-list-item-content {
+                            h6 {
+                                color: #faff00;
+                                float: right;
+                                display: block;
+                                width: 100%;
+                            }
+                        }
+                    }
+
+                    div.user-admin {
+                        background: #0b6c9d;
+                        color: #fff;
+                        padding: 5px 3%;
+                        font-size: 14px;
+                        border-radius: 5px;
+                        div.search-list-item-content {
+                            h6 {
+                                color: #07dbff;
+                                float: left;
+                                display: block;
+                                width: 100%;
+                            }
+                        }
+                    }
+                }
+            }
+
+            div.chat-user-send,
+            form.chat-user-send,
+            .chat-user-send {
+                textarea {
+                    resize: none;
+                }
+            }
+
+            .sel-chat-send {
+                border: 1.5px solid #e80e0e;
+            }
+        }
+    }
+}
+
+// Comment/ Note Box
+@mixin note-comment {
+    .note-comment-box {
+        @include shadow3;
+
+        display: flex;
+        align-items: flex-start;
+        padding: 16px;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        margin-top: 4px;
+
+        .note-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+            margin-right: 16px;
+        }
+
+        .note-content {
+            flex-grow: 1;
+
+            .note-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+
+                h4 {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0;
+                }
+
+                .timestamp {
+                    font-size: 14px;
+                    color: #666;
+                }
+
+                .note-comment-id {
+                    font-size: 14px;
+                    color: #d50909;
+                }
+            }
+
+            .note-message {
+                p {
+                    font-size: 14px;
+                    color: #333;
+                    margin: 0;
+                }
+            }
+
+            .note-actions {
+                // display: flex;
+                // justify-content: space-between;
+                // align-items: center;
+                margin-top: 12px;
+
+                .note-reply {
+                    display: flex;
+                    align-items: center;
+                    background-color: transparent;
+                    border: none;
+                    color: #0077b6;
+                    font-size: 14px;
+                    cursor: pointer;
+
+                    img {
+                        width: 16px;
+                        height: 16px;
+                        margin-right: 4px;
+                    }
+                }
+
+                .note-comment-id {
+                    font-size: 14px;
+                    color: #666;
+                }
+            }
+        }
+    }
+}
