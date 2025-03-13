@@ -9,11 +9,11 @@ class InstallCommand extends Command
 {
     protected $signature = 'vormia:install {--no-interaction : Run without asking for confirmation}';
 
-    protected $description = 'Install Vormia CMS Starter Kit';
+    protected $description = 'Install Vormia Starter Kit';
 
     public function handle()
     {
-        $this->info('Installing Vormia CMS Starter Kit...');
+        $this->info('Installing Vormia Starter Kit...');
 
         // Make sure Sanctum is installed
         if (!class_exists(\Laravel\Sanctum\HasApiTokens::class)) {
@@ -33,10 +33,13 @@ class InstallCommand extends Command
             '/public/media'
         ]);
 
-        $this->info('Vormia CMS Starter Kit files have been installed successfully!');
+        $this->info('Vormia Starter Kit files have been installed successfully!');
+
+        // Run API installation
+        $this->call('install:api');
 
         // Check if we should run database commands
-        if (!$this->option('no-interaction') && !$this->confirm('Would you like to set up the database now? This will wipe your current database.', true)) {
+        if (!$this->option('no-interaction') && !$this->confirm('Would you like to set up the database now? Backup your database.', true)) {
             $this->info('Database setup skipped.');
             return;
         }
@@ -47,10 +50,7 @@ class InstallCommand extends Command
         $this->call('migrate');
         $this->call('db:seed');
 
-        // Run API installation
-        $this->call('install:api');
-
-        $this->info('Vormia CMS Starter Kit has been completely installed!');
+        $this->info('Vormia Starter Kit has been completely installed!');
         $this->info('Remember to run "php artisan serve" to start your application.');
     }
 
