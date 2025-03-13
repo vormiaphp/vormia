@@ -8,7 +8,7 @@ use VormiaCms\StarterKit\VormiaStarterKit;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'vormia:install {--no-interaction : Run without asking for confirmation}';
+    protected $signature = 'vormia:install';
 
     protected $description = 'Install Vormia Starter Kit';
 
