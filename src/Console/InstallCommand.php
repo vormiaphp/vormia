@@ -17,11 +17,13 @@ class InstallCommand extends Command
         $this->info('Installing Vormia Starter Kit...');
 
         // Make sure Sanctum is installed
+        /*
         if (!class_exists(\Laravel\Sanctum\HasApiTokens::class)) {
             $this->error('Laravel Sanctum is required but not installed.');
             $this->info('Please run: composer require laravel/sanctum');
             return 1;
         }
+        */
 
         $starter = new VormiaStarterKit();
         $starter->install();
