@@ -2,10 +2,9 @@
 
 namespace VormiaCms\StarterKit;
 
-use Illuminate\Contracts\Support\Starter;
 use Illuminate\Filesystem\Filesystem;
 
-class VormiaStarterKit implements Starter
+class VormiaStarterKit
 {
     /**
      * Get the name of the starter kit.
@@ -31,30 +30,37 @@ class VormiaStarterKit implements Starter
         $filesystem = new Filesystem();
 
         // Copy migrations
-        $this->copyDirectory($filesystem, 'migrations', database_path('migrations'));
+        $this->copyDirectory($filesystem, 'migrations', $this->databasePath('migrations'));
 
         // Copy models
-        $this->copyDirectory($filesystem, 'models', app_path('Models'));
+        $this->copyDirectory($filesystem, 'models', $this->appPath('Models'));
 
         // Copy controllers
-        $this->copyDirectory($filesystem, 'controllers', app_path('Http/Controllers'));
+        $this->copyDirectory($filesystem, 'controllers', $this->appPath('Http/Controllers'));
+
+        // Copy livewire components
+        $this->copyDirectory($filesystem, 'livewire', $this->appPath('Livewire'));
+
+        // Copy middleware
+        $this->copyDirectory($filesystem, 'middleware', $this->appPath('Http/Middleware'));
+
+        // Copy rules
+        $this->copyDirectory($filesystem, 'rules', $this->appPath('Rules'));
+
+        // Copy services
+        $this->copyDirectory($filesystem, 'services', $this->appPath('Services'));
 
         // Copy views
-        $this->copyDirectory($filesystem, 'views', resource_path('views'));
+        $this->copyDirectory($filesystem, 'views', $this->resourcePath('views'));
 
         // Copy seeders
-        $this->copyDirectory($filesystem, 'seeders', database_path('seeders'));
+        $this->copyDirectory($filesystem, 'seeders', $this->databasePath('seeders'));
 
-        // Copy routes if available
-        $this->copyDirectory($filesystem, 'routes', base_path('routes'));
+        // Copy routes
+        $this->copyDirectory($filesystem, 'routes', $this->basePath('routes'));
 
-        // Copy configs if available
-        $this->copyDirectory($filesystem, 'config', config_path());
-
-        // Copy assets if available
-        $this->copyDirectory($filesystem, 'assets', public_path('assets'));
-
-        // Add any additional setup logic here
+        // Copy public assets
+        $this->copyDirectory($filesystem, 'public', $this->publicPath());
     }
 
     /**
@@ -68,5 +74,53 @@ class VormiaStarterKit implements Starter
             $filesystem->ensureDirectoryExists($destination);
             $filesystem->copyDirectory($source, $destination);
         }
+    }
+
+    /**
+     * Get the application path.
+     */
+    protected function appPath($path = ''): string
+    {
+        return app_path($path);
+    }
+
+    /**
+     * Get the database path.
+     */
+    protected function databasePath($path = ''): string
+    {
+        return database_path($path);
+    }
+
+    /**
+     * Get the resource path.
+     */
+    protected function resourcePath($path = ''): string
+    {
+        return resource_path($path);
+    }
+
+    /**
+     * Get the base path.
+     */
+    protected function basePath($path = ''): string
+    {
+        return base_path($path);
+    }
+
+    /**
+     * Get the config path.
+     */
+    protected function configPath($path = ''): string
+    {
+        return config_path($path);
+    }
+
+    /**
+     * Get the public path.
+     */
+    protected function publicPath($path = ''): string
+    {
+        return public_path($path);
     }
 }

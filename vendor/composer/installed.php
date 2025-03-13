@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'vormia-cms/starterkit',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '64aeedd95162beb2ca8cbf5b6e5ab60198a074e0',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -933,9 +933,9 @@
             'dev_requirement' => false,
         ),
         'vormia-cms/starterkit' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '64aeedd95162beb2ca8cbf5b6e5ab60198a074e0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
