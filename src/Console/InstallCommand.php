@@ -26,7 +26,25 @@ class InstallCommand extends Command
             '/public/media'
         ]);
 
-        $this->info('Vormia CMS Starter Kit has been installed successfully!');
+        $this->info('Vormia CMS Starter Kit files have been installed successfully!');
+
+        // Check if we should run database commands
+        if (!$this->option('no-interaction') && !$this->confirm('Would you like to set up the database now? This will wipe your current database.', true)) {
+            $this->info('Database setup skipped.');
+            return;
+        }
+
+        $this->info('Setting up the database...');
+
+        // Run database commands
+        // $this->call('db:wipe');
+        $this->call('migrate');
+        $this->call('db:seed');
+
+        // Run API installation
+        $this->call('install:api');
+
+        $this->info('Vormia CMS Starter Kit has been completely installed!');
     }
 
     /**
