@@ -7,13 +7,20 @@ use VormiaCms\StarterKit\VormiaStarterKit;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'vormia:install';
+    protected $signature = 'vormia:install {--no-interaction : Run without asking for confirmation}';
 
     protected $description = 'Install Vormia CMS Starter Kit';
 
     public function handle()
     {
         $this->info('Installing Vormia CMS Starter Kit...');
+
+        // Make sure Sanctum is installed
+        if (!class_exists(\Laravel\Sanctum\HasApiTokens::class)) {
+            $this->error('Laravel Sanctum is required but not installed.');
+            $this->info('Please run: composer require laravel/sanctum');
+            return 1;
+        }
 
         $starter = new VormiaStarterKit();
         $starter->install();
@@ -37,7 +44,6 @@ class InstallCommand extends Command
         $this->info('Setting up the database...');
 
         // Run database commands
-        // $this->call('db:wipe');
         $this->call('migrate');
         $this->call('db:seed');
 
@@ -45,6 +51,7 @@ class InstallCommand extends Command
         $this->call('install:api');
 
         $this->info('Vormia CMS Starter Kit has been completely installed!');
+        $this->info('Remember to run "php artisan serve" to start your application.');
     }
 
     /**

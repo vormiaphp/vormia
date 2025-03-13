@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +16,6 @@ class DatabaseSeeder extends Seeder
         // Add SettingSeeder
         $this->call(SettingSeeder::class);
 
-        // User::factory(10)->create();
         $admin = User::with(['roles'])->create([
             'username' => 'admin',
             'name' => 'John Doe',
