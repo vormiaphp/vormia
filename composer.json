@@ -1,6 +1,6 @@
 {
     "name": "vormia-cms/starterkit",
-    "version": "0.1.1", 
+    "version": "0.1.2", 
     "description": "Vormia CMS Starter Kit for Laravel 12",
     "type": "library",
     "homepage": "https://github.com/vormia-cms/starterkit",
