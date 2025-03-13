@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->string('username')->nullable()->unique()->default(null);
             $table->string('phone', 20)->unique()->nullable()->after('email');
             $table->timestamp('phone_verified_at')->nullable()->after('phone');
             $table->integer('flag')->default(1)->after('remember_token');
