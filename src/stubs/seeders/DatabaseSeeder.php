@@ -36,6 +36,12 @@ class DatabaseSeeder extends Seeder
 
             // Assign roles with ID 1 to the user
             $admin->roles()->attach(1);
+        } else {
+            // If you still want to ensure the admin role is attached
+            // even for existing users, you can add:
+            if (!$existingUser->roles()->where('role_id', 1)->exists()) {
+                $existingUser->roles()->attach(1);
+            }
         }
     }
 }

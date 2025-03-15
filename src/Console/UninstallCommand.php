@@ -109,8 +109,10 @@ class UninstallCommand extends Command
 
         $this->info('Vormia Starter Kit has been uninstalled successfully.');
         $this->warn('Remove the vormia routes in api.php and web.php files');
+        $this->warn('Remove the vormia middleware import in web.php file');
         $this->comment('Update your DatabaseSeeder.php" remove anything related to `SettingSeeder`, `RolesTableSeeder` and `$admin->roles()->attach(1);`.');
         $this->comment('Make sure to run "composer update" to update your autoloader.');
+        $this->warn('FAILURE TO DO SO WILL CAUSE AN ERROR IN THE NEXT COMMAND.');
         $this->line('Run "php artisan cache:clear" and "php artisan config:clear" to clear any cached data.');
         $this->comment('To completely remove the package, run: composer remove vormiaphp/vormia');
     }

@@ -5,7 +5,7 @@
 
 ## Introduction
 
-Vormia is a Laravel package (minimum requirement: Laravel 11) designed to accelerate development by providing standardized tools for common backend tasks. It helps teams maintain coding standards while allowing flexibility for custom implementations. Unlike FilamentPHP, Vormia does not impose a rigid structure—developers retain full control over their applications.
+Vormia is a Laravel package designed to accelerate development by providing standardized tools for common backend tasks. It helps teams maintain coding standards while allowing flexibility for custom implementations. Unlike FilamentPHP, Vormia does not impose a rigid structure—developers retain full control over their applications.
 
 ## Features
 
@@ -17,9 +17,9 @@ Vormia is a Laravel package (minimum requirement: Laravel 11) designed to accele
 
 ## Installation
 
-Before installing Vormia, ensure you have Laravel 11 or later installed. **Note:** Laravel Inertia is not yet supported.
+Before installing Vormia, ensure you have Laravel installed. **Note:** Inertia is not yet supported.
 
-### Step 1: Install Laravel 11+
+### Step 1: Install Laravel
 
 ```sh
 composer create-project laravel/laravel myproject
@@ -39,13 +39,58 @@ cd myproject
 composer require vormiaphp/vormia
 ```
 
-### Step 3: Run Vormia Setup Command
+### Step 3: Run Vormia Installation
 
 ```sh
-php artisan vormia:help
+php artisan vormia:install
+```
+Follow the process to complete the installation.
+
+## Frontend Setup
+
+Vormia utilizes Laravel Livewire for frontend components. To set up the frontend, install npm packages:
+
+```sh
+npm install
+npm run dev
 ```
 
-This command provides guidance on installation, updating, and uninstalling Vormia.
+## Accessing the Admin Backend
+
+To access the admin backend, navigate to:
+
+```
+http://127.0.0.1:8000/vrm/admin
+```
+
+**Default Login Credentials:**
+- **Username:** admin
+- **Password:** admin (as set in the `DatabaseSeeder.php` file)
+
+## Uninstallation
+
+To remove Vormia from your project, run:
+
+```sh
+php artisan vormia:uninstall
+```
+
+### Important Steps After Uninstallation
+
+🟡 **Remove the Vormia routes in `api.php` and `web.php` files**
+
+🟡 **Remove the Vormia middleware import in `web.php` file**
+
+🟢 **Update your `DatabaseSeeder.php` to remove anything related to `SettingSeeder`, `RolesTableSeeder`, and `$admin->roles()->attach(1);`**
+
+🟢 **Run `composer update` to update your autoloader**
+
+🔴 **FAILURE TO DO SO WILL CAUSE AN ERROR IN THE NEXT COMMAND.**
+
+## Supported Laravel Versions
+
+✅ Laravel 11  
+✅ Laravel 12
 
 ## Usage
 
@@ -53,7 +98,7 @@ Vormia helps developers follow structured coding standards without restricting t
 
 ## Roadmap
 
-- [✅] Initial Laravel package release (supports Laravel 11+)
+- [✅] Initial package release
 - [ ] Add support for Inertia.js
 - [ ] Expand documentation and tutorials
 - [ ] Implement additional helper utilities

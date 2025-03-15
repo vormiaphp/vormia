@@ -99,6 +99,20 @@ class InstallCommand extends Command
             return true;
         }
 
+        // Add the import statement after the Route import
+        $importPattern = '/use Illuminate\\Support\\Facades\\Route;/';
+        $importReplacement = "use Illuminate\\Support\\Facades\\Route;\nuse App\\Http\\Middleware\\CheckRolePermission;";
+
+        // Check if the middleware import already exists
+        if (!str_contains($content, 'use App\Http\Middleware\CheckRolePermission;')) {
+            // Add the import statement after the Route import
+            $importPattern = '/use Illuminate\\\\Support\\\\Facades\\\\Route;/';
+            $importReplacement = "use Illuminate\\Support\\Facades\\Route;\nuse App\\Http\\Middleware\\CheckRolePermission;";
+
+            // Replace the import line
+            $content = preg_replace($importPattern, $importReplacement, $content);
+        }
+
         // Add your routes at the end of the file
         $vormiaRoutes = <<<'EOT'
         
