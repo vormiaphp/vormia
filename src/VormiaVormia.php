@@ -89,6 +89,10 @@ class VormiaVormia
 
         // Copy public assets
         $this->copyDirectory($filesystem, 'public', $this->publicPath());
+
+        // Handle compressed directories
+        $this->extractCompressedDirectory('admin.zip', $this->publicPath() . '/admin');
+        $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
     }
 
     /**
@@ -286,5 +290,34 @@ class VormiaVormia
     protected function publicPath($path = ''): string
     {
         return public_path($path);
+    }
+
+    /**
+     * Extract the zipped files
+     */
+    protected function extractCompressedDirectory($archiveName, $destinationPath)
+    {
+        $archivePath = __DIR__ . '/stubs/' . $archiveName;
+
+        // Create destination directory if it doesn't exist
+        if (!is_dir($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        // Extract using ZipArchive
+        $zip = new \ZipArchive;
+        if ($zip->open($archivePath) === TRUE) {
+            $zip->extractTo($destinationPath);
+            $zip->close();
+
+            // Delete the archive file after successful extraction
+            if (file_exists($archivePath)) {
+                unlink($archivePath);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

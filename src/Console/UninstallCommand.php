@@ -108,6 +108,7 @@ class UninstallCommand extends Command
         }
 
         $this->info('Vormia Starter Kit has been uninstalled successfully.');
+        $this->line('Remove the vormia routes in api.php and web.php files');
         $this->line('Update your DatabaseSeeder.php" remove anything related to `SettingSeeder`, `RolesTableSeeder` and `$admin->roles()->attach(1);`.');
         $this->line('Make sure to run "composer update" to update your autoloader.');
         $this->line('Run "php artisan cache:clear" and "php artisan config:clear" to clear any cached data.');
@@ -118,6 +119,7 @@ class UninstallCommand extends Command
      */
     protected function removeVormiaRoutes()
     {
+        /*
         // Web routes
         $webRoutesPath = base_path('routes/web.php');
         if (file_exists($webRoutesPath)) {
@@ -157,6 +159,7 @@ class UninstallCommand extends Command
             file_put_contents($apiRoutesPath, $content);
             $this->info('✓ Vormia routes removed from api.php');
         }
+        */
     }
 
     /**

@@ -30,10 +30,10 @@ class RefreshCommand extends Command
         // Check if we should reset the database
         if (!$this->option('no-interaction') && $this->confirm('Would you like to refresh the database tables as well? This will delete all your data!', false)) {
             $this->call('migrate:fresh', [
-                '--path' => 'database/migrations/vormia'
+                '--path' => 'database/migrations'
             ]);
             $this->call('db:seed', [
-                '--class' => 'VormiaSeeder'
+                '--class' => 'DatabaseSeeder'
             ]);
         }
 
