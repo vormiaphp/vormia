@@ -2,8 +2,9 @@
 
 namespace VormiaPHP\Vormia;
 
-use Illuminate\Filesystem\Filesystem;
+use ZipArchive;
 use Illuminate\Support\Facades\File;
+use Illuminate\Filesystem\Filesystem;
 
 class VormiaVormia
 {
@@ -87,10 +88,11 @@ class VormiaVormia
         // Copy routes
         // $this->copyDirectory($filesystem, 'routes', $this->basePath('routes'));
 
-        // Copy public assets
-        $this->copyDirectory($filesystem, 'public', $this->publicPath());
+        // Only copy specific folders from public, not the entire public directory
+        $this->copyDirectory($filesystem, 'public/media', $this->publicPath('media'));
+        // Add any other specific public folders you want to copy directly
 
-        // Handle compressed directories
+        // Extract compressed directories
         $this->extractCompressedDirectory('admin.zip', $this->publicPath() . '/admin');
         $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
     }
@@ -297,7 +299,25 @@ class VormiaVormia
      */
     protected function extractCompressedDirectory($archiveName, $destinationPath)
     {
-        $archivePath = __DIR__ . '/stubs/' . $archiveName;
+        $possiblePaths = [
+            __DIR__ . '/stubs/' . $archiveName,
+            __DIR__ . '/stubs/public/' . $archiveName,
+            __DIR__ . '/../stubs/' . $archiveName,
+            __DIR__ . '/../stubs/public/' . $archiveName
+        ];
+
+        $archivePath = null;
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                $archivePath = $path;
+                break;
+            }
+        }
+
+        if (!$archivePath) {
+            error_log("ZIP file not found: tried paths: " . implode(', ', $possiblePaths));
+            return false;
+        }
 
         // Create destination directory if it doesn't exist
         if (!is_dir($destinationPath)) {
@@ -306,18 +326,39 @@ class VormiaVormia
 
         // Extract using ZipArchive
         $zip = new \ZipArchive;
-        if ($zip->open($archivePath) === TRUE) {
-            $zip->extractTo($destinationPath);
+        $result = $zip->open($archivePath);
+
+        if ($result === TRUE) {
+            // Get the base folder name from the destination path
+            $baseFolder = basename($destinationPath);
+
+            // First, extract to a temporary directory
+            $tempDir = sys_get_temp_dir() . '/vormia_extract_' . time();
+            mkdir($tempDir, 0755, true);
+
+            $zip->extractTo($tempDir);
             $zip->close();
 
-            // Delete the archive file after successful extraction
-            if (file_exists($archivePath)) {
-                unlink($archivePath);
+            // Now copy the contents from the extracted directory to the destination
+            $extractedDir = $tempDir . '/' . $baseFolder;
+
+            // If the extracted directory exists (with the duplicated structure)
+            if (is_dir($extractedDir)) {
+                $filesystem = new Filesystem();
+                $filesystem->copyDirectory($extractedDir, $destinationPath);
+            } else {
+                // If there's no duplicated structure, just copy everything
+                $filesystem = new Filesystem();
+                $filesystem->copyDirectory($tempDir, $destinationPath);
             }
 
-            return true;
-        }
+            // Clean up the temporary directory
+            $filesystem->deleteDirectory($tempDir);
 
-        return false;
+            return true;
+        } else {
+            error_log("Failed to open zip file $archiveName: Error code $result");
+            return false;
+        }
     }
 }

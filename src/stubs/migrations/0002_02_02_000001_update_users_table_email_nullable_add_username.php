@@ -12,11 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Make email nullable
-            $table->string('email')->nullable()->default(null)->change();
+            // Only modify email if it exists
+            if (Schema::hasColumn('users', 'email')) {
+                $table->string('email')->nullable()->default(null)->change();
+            }
 
-            // Add username column and make it unique
-            $table->string('username')->nullable()->unique()->default(null)->after('name');
+            // Only add username if it doesn't exist
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username')->nullable()->unique()->default(null)->after('name');
+            }
         });
     }
 
@@ -26,11 +30,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Revert email to NOT NULL (assuming original was NOT NULL)
-            $table->string('email')->nullable(false)->change();
+            // Only revert email if it exists
+            if (Schema::hasColumn('users', 'email')) {
+                $table->string('email')->nullable(false)->change();
+            }
 
-            // Drop the username column
-            $table->dropColumn('username');
+            // Only drop username if it exists
+            if (Schema::hasColumn('users', 'username')) {
+                $table->dropColumn('username');
+            }
         });
     }
 };
