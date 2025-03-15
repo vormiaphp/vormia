@@ -41,6 +41,28 @@ class InstallCommand extends Command
         // Run API installation
         $this->call('install:api');
 
+        // Adding Web Route
+        if (!$this->option('no-interaction') && !$this->confirm('Would you like to add vormia web route?', true)) {
+            $this->info('Web route skipped.');
+            return;
+        }
+
+        $this->info('Adding web routes...');
+
+        // Adding Web Route
+        $this->addWebRoutesToExistingFile();
+
+        // Adding Api Route
+        if (!$this->option('no-interaction') && !$this->confirm('Would you like to add vormia api route?', true)) {
+            $this->info('Api route skipped.');
+            return;
+        }
+
+        $this->info('Adding api routes...');
+
+        // Adding Api Route
+        $this->addApiRoutesToExistingFile();
+
         // Check if we should run database commands
         if (!$this->option('no-interaction') && !$this->confirm('Would you like to set up the database now? Backup your database.', true)) {
             $this->info('Database setup skipped.');

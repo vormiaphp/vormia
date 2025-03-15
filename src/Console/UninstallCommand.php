@@ -25,9 +25,11 @@ class UninstallCommand extends Command
             'resources/views/livewire/setting',
         ],
         'controllers' => [
-            'app/Http/Controllers/Vrm',
+            'app/Http/Controllers/Admin',
             'app/Http/Controllers/Front',
+            'app/Http/Controllers/Setup',
             'app/Http/Controllers/Api',
+            'app/Http/Controllers/Livewire/Setting',
         ],
         'models' => [
             'app/Models/Api',
@@ -52,6 +54,10 @@ class UninstallCommand extends Command
             'database/migrations/0002_02_02_000008_create_hierarchy_table.php',
             'database/migrations/0002_02_02_000009_create_hierarchy_meta_table.php',
             'database/migrations/0002_02_02_000010_create_user_tokens_table.php',
+        ],
+        'seeders' => [
+            'database/seeders/RolesTableSeeder.php',
+            'database/seeders/SettingSeeder.php',
         ],
         'middleware' => [
             'app/Http/Middleware/CheckRolePermission.php',
@@ -102,6 +108,7 @@ class UninstallCommand extends Command
         }
 
         $this->info('Vormia Starter Kit has been uninstalled successfully.');
+        $this->line('Update your DatabaseSeeder.php" remove anything related to `SettingSeeder`, `RolesTableSeeder` and `$admin->roles()->attach(1);`.');
         $this->line('Make sure to run "composer update" to update your autoloader.');
         $this->line('Run "php artisan cache:clear" and "php artisan config:clear" to clear any cached data.');
     }
@@ -194,10 +201,17 @@ class UninstallCommand extends Command
 
             foreach ($tables as $tableName) {
                 try {
+                    // Temporarily disable foreign key checks
+                    DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
                     Schema::dropIfExists($tableName);
                     $this->info("✓ Dropped table: {$tableName}");
                     $removed++;
+
+                    // Re-enable foreign key checks
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
                 } catch (\Exception $e) {
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
                     $this->error("Failed to drop table {$tableName}: {$e->getMessage()}");
                 }
             }
@@ -269,10 +283,19 @@ class UninstallCommand extends Command
         foreach ($tables as $tableName) {
             if (strpos($tableName, $prefix) === 0) {
                 try {
+                    // Temporarily disable foreign key checks
+                    DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
                     Schema::dropIfExists($tableName);
                     $this->info("✓ Dropped table: {$tableName}");
                     $removed++;
+
+                    // Re-enable foreign key checks
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
                 } catch (\Exception $e) {
+                    // Make sure to re-enable foreign key checks even if an error occurs
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
                     $this->error("Failed to drop table {$tableName}: {$e->getMessage()}");
                 }
             }
