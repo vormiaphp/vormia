@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
         // Add SettingSeeder
         $this->call(SettingSeeder::class);
 
+        // Add RolesTableSeeder
+        $roles = RolesTableSeeder::class;
+        $this->call($roles);
+
         // Check if admin user already exists
         $existingUser = User::where('username', 'admin')
             ->orWhere('email', 'admin@vormia.com')
@@ -29,10 +33,6 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@vormia.com',
                 'password' => Hash::make('admin')
             ]);
-
-            // Add RolesTableSeeder
-            $roles = RolesTableSeeder::class;
-            $this->call($roles);
 
             // Assign roles with ID 1 to the user
             $admin->roles()->attach(1);
