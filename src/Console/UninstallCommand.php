@@ -218,6 +218,22 @@ class UninstallCommand extends Command
 
             if ($removed > 0) {
                 $this->info("✓ Successfully removed {$removed} database tables");
+
+                // Extract migration file names without the path and extension
+                $migrationRecords = collect($this->paths['migrations'])
+                    ->map(fn($file) => pathinfo($file, PATHINFO_FILENAME))
+                    ->toArray();
+
+                // Delete migration records from database
+                $deleted = DB::table('migrations')
+                    ->whereIn('migration', $migrationRecords)
+                    ->delete();
+
+                if ($deleted) {
+                    $this->info('Migration records removed successfully.');
+                } else {
+                    $this->info('No matching migration records found.');
+                }
             } else {
                 $this->warn("No Vormia tables found");
 
@@ -303,6 +319,22 @@ class UninstallCommand extends Command
 
         if ($removed > 0) {
             $this->info("✓ Successfully removed {$removed} tables with prefix '{$prefix}'");
+
+            // Extract migration file names without the path and extension
+            $migrationRecords = collect($this->paths['migrations'])
+                ->map(fn($file) => pathinfo($file, PATHINFO_FILENAME))
+                ->toArray();
+
+            // Delete migration records from database
+            $deleted = DB::table('migrations')
+                ->whereIn('migration', $migrationRecords)
+                ->delete();
+
+            if ($deleted) {
+                $this->info('Migration records removed successfully.');
+            } else {
+                $this->info('No matching migration records found.');
+            }
         } else {
             $this->warn("No tables found with prefix '{$prefix}'");
         }
