@@ -85,7 +85,7 @@ class VormiaVormia
         $this->copyDirectory($filesystem, 'seeders', $this->databasePath('seeders'));
 
         // Copy routes
-        $this->copyDirectory($filesystem, 'routes', $this->basePath('routes'));
+        // $this->copyDirectory($filesystem, 'routes', $this->basePath('routes'));
 
         // Copy public assets
         $this->copyDirectory($filesystem, 'public', $this->publicPath());

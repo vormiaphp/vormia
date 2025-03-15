@@ -16,6 +16,7 @@ class VormiaServiceProvider extends ServiceProvider
                 Console\UpdateCommand::class,
                 Console\RefreshCommand::class,
                 Console\UninstallCommand::class,
+                Console\HelpCommand::class,
             ]);
         }
 
