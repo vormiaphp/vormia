@@ -1,6 +1,6 @@
 {
     "name": "vormiaphp/vormia",
-    "version": "0.1.3", 
+    "version": "2.0.1", 
     "description": "Vormia PHP Framework for Laravel 12",
     "type": "library",
     "homepage": "https://github.com/vormiaphp/vormia",
