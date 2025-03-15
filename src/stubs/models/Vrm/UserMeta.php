@@ -27,7 +27,7 @@ class UserMeta extends Model
 
     /**
      * Todo: Users
-     * ? One or more meta values can be related to a single user
+     * One or more meta values can be related to a single user
      */
     public function user()
     {

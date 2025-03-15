@@ -27,7 +27,7 @@ class UserController extends Controller
     private $SubFolder = "/users"; //Sub Folder Name inside the resources/views/$ThemePath/pages/$MainFolder/
     private $Upload = ""; //Upload Folder Name inside the public/admin/media
 
-    private $ParentRoute = "vrm/users"; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = "vrm/users"; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = 'vrm/users/add'; // New
@@ -213,10 +213,10 @@ class UserController extends Controller
         $data = $this->loadSettings($page);
         $data['other']->view = $page;
 
-        // ? Get the id
+        // Get the id
         $id = $request->get('id');
 
-        // ? Fetch customer
+        // Fetch customer
         $customerInfo = User::with(['usermetas', 'roles'])->where('id', $id)->first();
 
         if (is_null($customerInfo)) {
@@ -255,13 +255,13 @@ class UserController extends Controller
 
         //Check Validation
         if ($action == 'activate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Hierarchy
+            // Select Hierarchy
             $user = User::where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($user)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -270,7 +270,7 @@ class UserController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $user->update(['flag' => 1]);
 
             // Notification
@@ -279,13 +279,13 @@ class UserController extends Controller
             // Open Page
             return $this->index('<strong>Success:</strong> User was activated successfully.');
         } elseif ($action == 'deactivate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Hierarchy
+            // Select Hierarchy
             $user = User::where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($user)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -294,7 +294,7 @@ class UserController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $user->update(['flag' => 0]);
 
             // Notification
@@ -353,10 +353,10 @@ class UserController extends Controller
         /**
          * Todo: Check if the phone number is already in use
          */
-        //? Remove + from phone number
+        //  Remove + from phone number
         $user_mobile = Str::replaceFirst('+', '', $request->get('phone'));
 
-        // ? Select from User where phone = $user_mobile or phone = $request->get('user_mobile')
+        // Select from User where phone = $user_mobile or phone = $request->get('user_mobile')
         $existing = User::where('phone', $user_mobile)->orWhere('phone', $request->get('phone'))->first()?->phone;
 
         // Check Email
@@ -540,52 +540,52 @@ class UserController extends Controller
      */
     public function delete(Request $request, $action = '')
     {
-        // ? Check if the request is ajax
+        // Check if the request is ajax
         if ($request->ajax()) {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Check if the id is valid
+            // Check if the id is valid
             if (is_null($id)) {
-                // ? Return error
+                // Return error
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Invalid request, please try again.'
                 ]);
             }
 
-            // ? Delete the record
+            // Delete the record
             if (User::where('id', $id)->delete()) {
-                // ? Return success
+                // Return success
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Record deleted successfully.'
                 ]);
             }
 
-            // ? Return error
+            // Return error
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to delete, please try again.'
             ]);
         }
 
-        // ? Check if is ID is in GET or POST
+        // Check if is ID is in GET or POST
         $id = $request->get('id');
 
-        // ? delete the record
+        // delete the record
         if (User::where('id', $id)->delete()) {
             // Notification
             session()->flash('notification', 'success');
 
-            // ? Return success
+            // Return success
             return $this->index('<strong>Success:</strong> Record deleted successfully.');
         }
 
         // Notification
         session()->flash('notification', 'error');
 
-        // ? Return error
+        // Return error
         return $this->index('<strong>Error:</strong> Failed to delete, please try again.');
     }
 }

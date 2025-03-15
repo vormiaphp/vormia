@@ -7,16 +7,16 @@ use App\Http\Middleware\CheckRolePermission;
  * Todo: ADMIN ROUTES
  */
 Route::controller(App\Http\Controllers\Admin\LoginController::class)->group(function () {
-    Route::get('/vrm-admin', 'index')->name('/vrm-admin');
-    Route::post('/vrm-admin/access', 'login');
-    Route::get('/vrm-admin/logout', 'logout')->name('/vrm-admin/logout');
+    Route::get('/vrm/admin', 'index')->name('/vrm/admin');
+    Route::post('/vrm/admin/access', 'login');
+    Route::get('/vrm/admin/logout', 'logout')->name('/vrm/admin/logout');
 });
-// ? Vormia Manage
+// Vormia Manage
 Route::group(['prefix' => 'vrm'], function () {
     Route::middleware([CheckRolePermission::class . ':permissions'])->group(function () {
 
         Route::middleware([CheckRolePermission::class . ':users'])->group(function () {
-            // ? Users
+            // Users
             Route::controller(App\Http\Controllers\Admin\UserController::class)->group(function () {
                 Route::get('/users', 'index');
                 Route::post('/users/save', 'store');
@@ -28,7 +28,7 @@ Route::group(['prefix' => 'vrm'], function () {
             });
         });
 
-        // ? Roles
+        // Roles
         Route::controller(App\Http\Controllers\Admin\RoleController::class)->group(function () {
             Route::get('/roles', 'index');
             Route::post('/roles/save', 'store');
@@ -41,15 +41,15 @@ Route::group(['prefix' => 'vrm'], function () {
 
     // Protect a group of routes
     Route::middleware([CheckRolePermission::class . ':dashboard'])->group(function () {
-        // ? Dashboard
+        // Dashboard
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('vrm/dashboard')->middleware(CheckRolePermission::class . ':dashboard');;
     });
 
     // Protect a group of routes
     Route::middleware([CheckRolePermission::class . ':setup'])->group(function () {
-        // ? Setup
+        // Setup
         Route::group(['prefix' => 'setup'], function () {
-            // ? Continent Hierarchies
+            // Continent Hierarchies
             Route::controller(App\Http\Controllers\Setup\ContinentController::class)->group(function () {
                 Route::get('/continent', 'index');
                 Route::post('/continent/save', 'store');
@@ -59,7 +59,7 @@ Route::group(['prefix' => 'vrm'], function () {
                 Route::get('/continent/{action}', 'valid');
             });
 
-            // ? Currency
+            // Currency
             Route::controller(App\Http\Controllers\Setup\CurrencyController::class)->group(function () {
                 Route::get('/currency', 'index');
                 Route::post('/currency/save', 'store');

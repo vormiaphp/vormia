@@ -36,7 +36,7 @@ class Auto extends Model
     /**
      *
      * Todo:: This function is used to load all your public data
-     * ? This will be loaded globally
+     * This will be loaded globally
      */
     public function loadData()
     {
@@ -76,13 +76,13 @@ class Auto extends Model
     /**
      * Todo: Uploading Files
      *
-     * ? This method is used to intiate the image uploading
-     * ? This will be used in the controller
-     * ? When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
-     * ? This will return the image upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to intiate the image uploading
+     * This will be used in the controller
+     * When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
+     * This will return the image upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $images
      * @param string $upload_path
@@ -110,13 +110,13 @@ class Auto extends Model
     /**
      * Todo: Images Uploading
      *
-     * ? This method is used to intiate the image uploading
-     * ? This will be used in the controller
-     * ? When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
-     * ? This will return the image upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to intiate the image uploading
+     * This will be used in the controller
+     * When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
+     * This will return the image upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $images
      * @param string $upload_path
@@ -145,7 +145,7 @@ class Auto extends Model
             // resize image
             $image_resized = ImageControl::resizeImage($img, width: 400, height: 160, add_background: true);
 
-            // ? Temporarily fix
+            // Temporarily fix
             $image_resized = $img;
 
             // Images

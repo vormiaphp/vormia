@@ -19,7 +19,7 @@ class HomeController extends Controller
     private $SubFolder = ""; //Sub Folder Name inside the resources/views/$ThemePath/pages/$MainFolder/
     private $Upload = ""; //Upload Folder Name inside the public/admin/media
 
-    private $ParentRoute = ""; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = ""; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = ''; // New

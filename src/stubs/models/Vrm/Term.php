@@ -34,8 +34,8 @@ class Term extends Model
 
     /**
      * Todo: Check Slug
-     * ? Check if slug exists
-     * ? Return false or term id if exits
+     * Check if slug exists
+     * Return false or term id if exits
      * @param string $slug
      *
      */
@@ -50,8 +50,8 @@ class Term extends Model
 
     /**
      * Todo: Check Slug
-     * ? Check if slug exists
-     * ? Return false or term id if exits
+     * Check if slug exists
+     * Return false or term id if exits
      * @param string $slug
      *
      */
@@ -66,11 +66,11 @@ class Term extends Model
 
     /**
      * Todo: Generate Slug
-     * ? Pass string to slugify limit to 200 characters
-     * ? If turn is true then append number to slug
-     * ? Check if slug exists
-     * ? If exists, append number to slug
-     * ? Return slug
+     * Pass string to slugify limit to 200 characters
+     * If turn is true then append number to slug
+     * Check if slug exists
+     * If exists, append number to slug
+     * Return slug
      *
      * @param string $string
      * @param int $id default null - article ID
@@ -101,11 +101,11 @@ class Term extends Model
 
     /**
      * Todo: Generate Slug & Username
-     * ? Pass string to slugify limit to 200 characters
-     * ? If turn is true then append number to slug
-     * ? Check if slug exists
-     * ? If exists, append number to slug
-     * ? Return slug
+     * Pass string to slugify limit to 200 characters
+     * If turn is true then append number to slug
+     * Check if slug exists
+     * If exists, append number to slug
+     * Return slug
      *
      * @param string $string
      * @param int $id default null - article ID
@@ -141,7 +141,7 @@ class Term extends Model
 
     /**
      * Todo: Get Slug
-     * ? 1: Pass array of search terms
+     * 1: Pass array of search terms
      *
      * @param array $search
      */

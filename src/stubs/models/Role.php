@@ -9,7 +9,7 @@ class Role extends Model
 {
     use HasFactory;
 
-    // ? Fillable
+    // Fillable
     protected $fillable = [
         'name',
         'module',

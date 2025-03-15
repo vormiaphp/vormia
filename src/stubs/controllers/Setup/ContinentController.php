@@ -23,7 +23,7 @@ class ContinentController extends Controller
     private $SubFolder = "/continent"; //Sub Folder Name inside the resources/views/$ThemePath/pages/$MainFolder/
     private $Upload = ""; //Upload Folder Name inside the public/admin/media
 
-    private $ParentRoute = "vrm/setup/continent"; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = "vrm/setup/continent"; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = ''; // New
@@ -203,10 +203,10 @@ class ContinentController extends Controller
         $data = $this->loadSettings($page);
         $data['other']->view = $page;
 
-        // ? Get the id
+        // Get the id
         $id = $request->get('id');
 
-        // ? Fetch Hierarchy
+        // Fetch Hierarchy
         $hierarchyInfo = Hierarchy::with(['attributes'])->where('id', $id)->where('parent', 0)->first();
 
         if (is_null($hierarchyInfo)) {
@@ -245,13 +245,13 @@ class ContinentController extends Controller
 
         //Check Validation
         if ($action == 'activate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Hierarchy
+            // Select Hierarchy
             $hierarchy = Hierarchy::with('attributes')->where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($hierarchy)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -260,7 +260,7 @@ class ContinentController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $hierarchy->update(['flag' => 1]);
 
             // Notification
@@ -269,13 +269,13 @@ class ContinentController extends Controller
             // Open Page
             return $this->index('<strong>Success:</strong> Status was activated successfully.');
         } elseif ($action == 'deactivate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Hierarchy
+            // Select Hierarchy
             $hierarchy = Hierarchy::with('attributes')->where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($hierarchy)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -284,7 +284,7 @@ class ContinentController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $hierarchy->update(['flag' => 0]);
 
             // Notification
@@ -342,7 +342,7 @@ class ContinentController extends Controller
         $saved =  Hierarchy::create($save);
         if ($saved) {
 
-            // ? Term
+            // Term
             \App\Models\Vrm\Term::create([
                 "table" => "hierarchy",
                 "type" => null,
@@ -438,52 +438,52 @@ class ContinentController extends Controller
      */
     public function delete(Request $request, $action = '')
     {
-        // ? Check if the request is ajax
+        // Check if the request is ajax
         if ($request->ajax()) {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Check if the id is valid
+            // Check if the id is valid
             if (is_null($id)) {
-                // ? Return error
+                // Return error
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Invalid request, please try again.'
                 ]);
             }
 
-            // ? Delete the record
+            // Delete the record
             if (Hierarchy::where('id', $id)->delete()) {
-                // ? Return success
+                // Return success
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Record deleted successfully.'
                 ]);
             }
 
-            // ? Return error
+            // Return error
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to delete, please try again.'
             ]);
         }
 
-        // ? Check if is ID is in GET or POST
+        // Check if is ID is in GET or POST
         $id = $request->get('id');
 
-        // ? delete the record
+        // delete the record
         if (Hierarchy::where('id', $id)->delete()) {
             // Notification
             session()->flash('notification', 'success');
 
-            // ? Return success
+            // Return success
             return $this->index('<strong>Success:</strong> Record deleted successfully.');
         }
 
         // Notification
         session()->flash('notification', 'error');
 
-        // ? Return error
+        // Return error
         return $this->index('<strong>Error:</strong> Failed to delete, please try again.');
     }
 }

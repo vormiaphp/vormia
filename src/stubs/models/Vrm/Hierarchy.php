@@ -34,9 +34,9 @@ class Hierarchy extends Model
     /**
      * Todo: Relate this model to the Term Model
      *
-     * ? 1 Participant can have only 1 slug from Terms
-     * ? To match the two look for terms.table = 'participants' and terms.related = participants.id
-     * ? Return the terms.slug
+     * 1 Participant can have only 1 slug from Terms
+     * To match the two look for terms.table = 'participants' and terms.related = participants.id
+     * Return the terms.slug
      */
     public function term()
     {
@@ -46,7 +46,7 @@ class Hierarchy extends Model
     /**
      * Todo: Add hierarchy_attributes
      *
-     * ? 1 This will related table hierarchy with table hierarchy_attributes where the hierarchy_attributes.hierarchy is the same
+     * 1 This will related table hierarchy with table hierarchy_attributes where the hierarchy_attributes.hierarchy is the same
      */
     public function attributes()
     {
@@ -56,7 +56,7 @@ class Hierarchy extends Model
     /**
      * Todo: Add hierarchy_attributes
      *
-     * ? 1 This will related table hierarchy with table hierarchy_attributes where the hierarchy_attributes.hierarchy is the same
+     * 1 This will related table hierarchy with table hierarchy_attributes where the hierarchy_attributes.hierarchy is the same
      */
     public function attributeinfo()
     {

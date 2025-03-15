@@ -21,7 +21,7 @@ class RoleController extends Controller
     private $SubFolder = "/roles"; //Sub Folder Name inside the resources/views/$ThemePath/pages/$MainFolder/
     private $Upload = ""; //Upload Folder Name inside the public/admin/media
 
-    private $ParentRoute = "vrm/roles"; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = "vrm/roles"; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = 'vrm/roles/add'; // New
@@ -201,10 +201,10 @@ class RoleController extends Controller
         $data = $this->loadSettings($page);
         $data['other']->view = $page;
 
-        // ? Get the id
+        // Get the id
         $id = $request->get('id');
 
-        // ? Fetch Role
+        // Fetch Role
         $roleInfo = Role::where('id', $id)->first();
 
         if (is_null($roleInfo)) {
@@ -243,13 +243,13 @@ class RoleController extends Controller
 
         //Check Validation
         if ($action == 'activate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Role
+            // Select Role
             $thisrole = Role::where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($thisrole)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -258,7 +258,7 @@ class RoleController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $thisrole->update(['flag' => 1]);
 
             // Notification
@@ -267,13 +267,13 @@ class RoleController extends Controller
             // Open Page
             return $this->index('<strong>Success:</strong> Status was activated successfully.');
         } elseif ($action == 'deactivate') {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Select Role
+            // Select Role
             $thisrole = Role::where('id', $id)->first();
 
-            // ? Check if the hierarchy exists
+            // Check if the hierarchy exists
             if (is_null($thisrole)) {
                 // Notification
                 session()->flash('notification', 'error');
@@ -282,7 +282,7 @@ class RoleController extends Controller
                 return $this->index('<strong>Error:</strong> Invalid request, please try again.');
             }
 
-            // ? Update the hierarchy
+            // Update the hierarchy
             $thisrole->update(['flag' => 0]);
 
             // Notification
@@ -331,14 +331,14 @@ class RoleController extends Controller
         // Validate Form Data
         $validated = $validator->validated();
 
-        // ? Module
+        // Module
         $modules = explode(',', trim($validated['module']));
-        // ? loop and trim
+        // loop and trim
         foreach ($modules as $key => $value) {
             $modules[$key] = trim($value);
         }
 
-        // ? TO String
+        // TO String
         $module = implode(',', $modules);
 
         // Save Form Data
@@ -346,7 +346,7 @@ class RoleController extends Controller
         $role->name = $validated['name'];
         $role->authority = $validated['authority'];
         $role->module = $module;
-        // ? Slug
+        // Slug
         $role->slug = Str::slug($validated['name'], '-');
         $role->flag = 1;
         $saved = $role->save();
@@ -401,21 +401,21 @@ class RoleController extends Controller
         // Validate Form Data
         $validated = $validator->validated();
 
-        // ? Module
+        // Module
         $modules = explode(',', trim($validated['module']));
-        // ? loop and trim
+        // loop and trim
         foreach ($modules as $key => $value) {
             $modules[$key] = trim($value);
         }
-        // ? TO String
+        // TO String
         $module = implode(',', $modules);
 
-        // ? Get Role
+        // Get Role
         $role = Role::where('id', $thisroleId)->first();
         $role->name = $validated['name'];
         $role->authority = $validated['authority'];
         $role->module = $module;
-        // ? Save
+        // Save
         $saved = $role->save();
         if (!$saved) {
             // Notification
@@ -445,52 +445,52 @@ class RoleController extends Controller
      */
     public function delete(Request $request, $action = '')
     {
-        // ? Check if the request is ajax
+        // Check if the request is ajax
         if ($request->ajax()) {
-            // ? Get the id
+            // Get the id
             $id = $request->get('id');
 
-            // ? Check if the id is valid
+            // Check if the id is valid
             if (is_null($id)) {
-                // ? Return error
+                // Return error
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Invalid request, please try again.'
                 ]);
             }
 
-            // ? Delete the record
+            // Delete the record
             if (Role::where('id', $id)->delete()) {
-                // ? Return success
+                // Return success
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Record deleted successfully.'
                 ]);
             }
 
-            // ? Return error
+            // Return error
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to delete, please try again.'
             ]);
         }
 
-        // ? Check if is ID is in GET or POST
+        // Check if is ID is in GET or POST
         $id = $request->get('id');
 
-        // ? delete the record
+        // delete the record
         if (Role::where('id', $id)->delete()) {
             // Notification
             session()->flash('notification', 'success');
 
-            // ? Return success
+            // Return success
             return $this->index('<strong>Success:</strong> Record deleted successfully.');
         }
 
         // Notification
         session()->flash('notification', 'error');
 
-        // ? Return error
+        // Return error
         return $this->index('<strong>Error:</strong> Failed to delete, please try again.');
     }
 }

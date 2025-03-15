@@ -19,7 +19,7 @@ class HierarchyMeta extends Model
     /**
      * Todo: Add hierarchy
      *
-     * ? 1 This will related with table hierarchy
+     * 1 This will related with table hierarchy
      */
     public function hierarchy()
     {

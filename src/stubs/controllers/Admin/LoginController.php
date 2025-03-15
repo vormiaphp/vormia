@@ -24,11 +24,11 @@ class LoginController extends Controller
     private $SubFolder = ""; //Sub Folder Name inside the resources/views/$ThemePath/pages/$MainFolder/
     private $Upload = "media"; //Upload Folder Name inside the public/admin/media
 
-    private $ParentRoute = "vrm-admin"; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = "vrm/admin"; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = ''; // New
-    private $Login = 'vrm-admin/access'; // Add New
+    private $Login = 'vrm/admin/access'; // Add New
     private $Action = ''; // Multiple Entry Action
 
     private $HeaderName = ""; // (Optional) Name
@@ -185,32 +185,32 @@ class LoginController extends Controller
     public function login(Request $request)
     {
 
-        // ? Validate Form Data
+        // Validate Form Data
         $validator = Validator::make($request->all(), [
             'username' => "required|max:200|exists:users,username",
             'password' => "required|max:20",
         ]);
 
-        // ? On Validation Failphp
+        // On Validation Failphp
         if ($validator->fails()) {
             session()->flash('notification', 'error');
             $message = 'Please check the form for errors.';
 
-            // ? Return Error Message
+            // Return Error Message
             return redirect()->back()->withErrors($validator)->withInput($request->input())->with('message', $message);
         }
 
-        // ? Validate Form Credentials
+        // Validate Form Credentials
         $credentials = $request->only('username', 'password');
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             return redirect()->intended('/vrm/dashboard');
         }
 
-        // ? Return Error Message
+        // Return Error Message
         session()->flash('notification', 'error');
         $message = 'Invalid credentials';
 
-        // ? Return Error Message
+        // Return Error Message
         return redirect()->back()->withErrors($validator)->withInput($request->input())->with('message', $message);
     }
 
@@ -224,6 +224,6 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         // Redirect the user to the login page
-        return redirect()->route('/vrm-admin');
+        return redirect()->route('/vrm/admin');
     }
 }

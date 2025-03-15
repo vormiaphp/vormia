@@ -45,7 +45,7 @@
 @endif
 
 <li>
-	<a href='{{ url('vrm-admin/logout') }}' class="waves-effect sks-color-red">
+	<a href='{{ url('vrm/admin/logout') }}' class="waves-effect sks-color-red">
 		<i class="mdi mdi-login-variant sks-color-red"></i>
 		<span>Logout</span>
 	</a>

@@ -22,13 +22,13 @@ class ImageControl extends Model
     /**
      * Todo: Images File
      *
-     * ? This method is used to intiate the image uploading
-     * ? This will be used in the controller
-     * ? When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
-     * ? This will return the file upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to intiate the image uploading
+     * This will be used in the controller
+     * When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
+     * This will return the file upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $files
      * @param string $upload_path
@@ -39,7 +39,7 @@ class ImageControl extends Model
      *
      * @return array
      */
-    public static function uploadFile(array $files, string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
+    public static function uploadFile(array $files, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
     {
 
         // Year/Month/Date
@@ -122,13 +122,13 @@ class ImageControl extends Model
 
     /**
      * Todo: Upload From URL
-     * ? This method is used to upload images from URL
-     * ? This will be used in the controller
-     * ? When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
-     * ? This will return the file upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to upload images from URL
+     * This will be used in the controller
+     * When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
+     * This will return the file upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $urls
      * @param string $upload_path
@@ -139,7 +139,7 @@ class ImageControl extends Model
      *
      * @return array
      */
-    public static function uploadImageFromUrl(array $urls, string $upload_path = null, string $image_name = null, string $extension = 'jpg', bool $year_folder = true, bool $private_upload = false): array
+    public static function uploadImageFromUrl(array $urls, ?string $upload_path = null, ?string $image_name = null, string $extension = 'jpg', bool $year_folder = true, bool $private_upload = false): array
     {
         // Year/Month/Date
         $auto_folder = date('Y') . '/' . date('m') . '/' . date('d');
@@ -211,13 +211,13 @@ class ImageControl extends Model
     /**
      * Todo: Images Uploading
      *
-     * ? This method is used to intiate the image uploading
-     * ? This will be used in the controller
-     * ? When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
-     * ? This will return the image upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to intiate the image uploading
+     * This will be used in the controller
+     * When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
+     * This will return the image upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $images
      * @param string $upload_path
@@ -228,7 +228,7 @@ class ImageControl extends Model
      *
      * @return array
      */
-    public static function uploadImage(array $images, string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, string $convert = 'webp'): array
+    public static function uploadImage(array $images, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, string $convert = 'webp'): array
     {
 
         // Upload Files First
@@ -249,17 +249,17 @@ class ImageControl extends Model
 
     /**
      * Todo: Generate Thumbnail
-     * ? This will be used to add thumbnail of images
-     * ? Pass the image path
-     * ? Pass the width and height (in pixels)
-     * ? Pass Maintain Ratio (true or false)
-     * ? Pass add background (true or false)
-     * ? Pass background color
-     * ? By default the thumbnail will be created as _thumb
-     * ? Override allow to override the original _thumb if is false then new thumbnail will be created as _thumb_1 and so on
-     * ? Override the original image (true or false)
+     * This will be used to add thumbnail of images
+     * Pass the image path
+     * Pass the width and height (in pixels)
+     * Pass Maintain Ratio (true or false)
+     * Pass add background (true or false)
+     * Pass background color
+     * By default the thumbnail will be created as _thumb
+     * Override allow to override the original _thumb if is false then new thumbnail will be created as _thumb_1 and so on
+     * Override the original image (true or false)
      *
-     * ? Utillize the resizeImage() method
+     * Utillize the resizeImage() method
      *
      * @param string $image_path
      * @param integer $width
@@ -347,12 +347,12 @@ class ImageControl extends Model
 
     /**
      * Todo : Resize Images
-     * ? This will be used to resize images
-     * ? Pass the image path
-     * ? Pass the width and height (in pixels)
-     * ? Pass Maintain Ratio (true or false)
-     * ? Pass add background (true or false)
-     * ? Pass background color
+     * This will be used to resize images
+     * Pass the image path
+     * Pass the width and height (in pixels)
+     * Pass Maintain Ratio (true or false)
+     * Pass add background (true or false)
+     * Pass background color
      *
      * @param string $image_path
      * @param integer $width
@@ -433,11 +433,11 @@ class ImageControl extends Model
 
     /**
      * Todo: Compress Images
-     * ? This will be used to compress images
-     * ? Pass the image path
-     * ? Pass the convert type (webp, png, jpg, etc)
-     * ? Pass the quality (0 - 100)
-     * ? Override the original image (true or false)
+     * This will be used to compress images
+     * Pass the image path
+     * Pass the convert type (webp, png, jpg, etc)
+     * Pass the quality (0 - 100)
+     * Override the original image (true or false)
      *
      * @param string $image_path
      * @param string $convert
@@ -446,7 +446,7 @@ class ImageControl extends Model
      *
      * @return string image_path
      */
-    public static function compressImage(string $image_path, string $convert = null, int $quality = 100, bool $override = true): string
+    public static function compressImage(string $image_path, ?string $convert = null, int $quality = 100, bool $override = true): string
     {
         // Check If the image exists
         if (self::existImage($image_path) == false) {
@@ -514,11 +514,11 @@ class ImageControl extends Model
 
     /**
      * Todo: Convert Images
-     * ? This will be used to convert images
-     * ? Pass the image path
-     * ? Pass the convert type (webp, png, jpg, etc)
-     * ? Pass the quality (0 - 100)
-     * ? Pass the override (true or false)
+     * This will be used to convert images
+     * Pass the image path
+     * Pass the convert type (webp, png, jpg, etc)
+     * Pass the quality (0 - 100)
+     * Pass the override (true or false)
      *
      * @param string $image_path
      * @param string $convert
@@ -590,14 +590,14 @@ class ImageControl extends Model
 
     /**
      * Todo: Add Watermark
-     * ? This will be used to add watermark to images
-     * ? Pass the image path
-     * ? Pass the watermark image path
-     * ? Pass the position (top-left, top-right, bottom-left, bottom-right, center)
-     * ? Pass the opacity (0 - 100)
-     * ? Pass the x-axis offset
-     * ? Pass the y-axis offset
-     * ? Override the original image (true or false)
+     * This will be used to add watermark to images
+     * Pass the image path
+     * Pass the watermark image path
+     * Pass the position (top-left, top-right, bottom-left, bottom-right, center)
+     * Pass the opacity (0 - 100)
+     * Pass the x-axis offset
+     * Pass the y-axis offset
+     * Override the original image (true or false)
      *
      * @param string $image_path
      * @param string $watermark_image_path
@@ -682,17 +682,17 @@ class ImageControl extends Model
 
     /**
      * Todo: Add Text Watermark
-     * ? This will be used to add text watermark to images
-     * ? Pass the image path
-     * ? Pass Watermark text
-     * ? Pass the position - align (left, right, center)
-     * ? Pass the position - [valign] vertical (top, bottom, center)
-     * ? Pass the font size
-     * ? Pass the font color
-     * ? Pass the opacity (0 - 100)
-     * ? Pass the x-axis offset
-     * ? Pass the y-axis offset
-     * ? Override the original image (true or false)
+     * This will be used to add text watermark to images
+     * Pass the image path
+     * Pass Watermark text
+     * Pass the position - align (left, right, center)
+     * Pass the position - [valign] vertical (top, bottom, center)
+     * Pass the font size
+     * Pass the font color
+     * Pass the opacity (0 - 100)
+     * Pass the x-axis offset
+     * Pass the y-axis offset
+     * Override the original image (true or false)
      *
      * @param string $image_path
      * @param string $text
@@ -797,9 +797,9 @@ class ImageControl extends Model
 
     /**
      * Todo: Method to check if Image exist
-     * ? Pass the image path
-     * ? Allow generating new image name if current exist
-     * ? Numerate the image name start from 1x
+     * Pass the image path
+     * Allow generating new image name if current exist
+     * Numerate the image name start from 1x
      *
      * @param string $image_path
      * @param boolean $generate_new_name
@@ -866,7 +866,7 @@ class ImageControl extends Model
 
     /**
      * Todo: Method Clear Path
-     * ? Pass the path
+     * Pass the path
      *
      * @param string $image_path
      *
@@ -903,13 +903,13 @@ class ImageControl extends Model
     /**
      * Todo: Convert File
      *
-     * ? This method is used to convert File Format
-     * ? This will be used in the controller
-     * ? When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
-     * ? This will return the file upload path
-     * ? State if is private upload or not (Bolean)
-     * ? If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
-     * ? Download will be possible (good for pdfs & receipts)
+     * This method is used to convert File Format
+     * This will be used in the controller
+     * When passing files, also pass upload path, allow year/date folder to be created or not, lastest randomize file name
+     * This will return the file upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
      *
      * @param array $files
      * @param string $upload_path
@@ -920,7 +920,7 @@ class ImageControl extends Model
      *
      * @return array
      */
-    public static function convertFile(array $files, string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, $convert = 'pdf')
+    public static function convertFile(array $files, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, $convert = 'pdf')
     {
 
         // Year/Month/Date
@@ -1007,7 +1007,7 @@ class ImageControl extends Model
 
     /**
      * Todo: Method Get File Extension from passed url/path/name
-     * ? Pass the path
+     * Pass the path
      *
      * @param string $file_path
      */
@@ -1024,7 +1024,7 @@ class ImageControl extends Model
 
     /**
      * Todo: Method Get File Name from passed url/path/name
-     * ? Pass the path
+     * Pass the path
      *
      * @param string $file_path
      */

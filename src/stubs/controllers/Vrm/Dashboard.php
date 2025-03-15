@@ -24,7 +24,7 @@ class Dashboard extends Controller
     private $Upload = ""; //Upload Folder Name inside the public/admin/media
 
     private $Access = "main"; // Access level for this controller
-    private $ParentRoute = ""; // Parent Route Name Eg. vrm-settings
+    private $ParentRoute = ""; // Parent Route Name Eg. vrm/settings
     private $AllowedFile = null; //Set Default allowed file extension, remember you can pass this upon upload to override default allowed file type. jpg|jpeg|png|doc|docx|
 
     private $New = ''; // New
@@ -126,7 +126,7 @@ class Dashboard extends Controller
             // Add Layout
             $data['layoutName'] = $layout;
             //Load Page View
-            return view("vrm-admin/pages/" . $data['page_name'], $data);
+            return view("vrm/admin/pages/" . $data['page_name'], $data);
         } else {
             // redirect
             return redirect('/');

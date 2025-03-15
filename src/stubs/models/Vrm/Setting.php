@@ -24,8 +24,8 @@ class Setting extends Model
      * Todo: Load all Global Active Settings
      *
      * * This method is used to load all data requred to be present for the system/website to operate well
-     * ? E.g Site Title, Active Themes, Meta Data e.t.c
-     * ? All values are return as one array (data)
+     * E.g Site Title, Active Themes, Meta Data e.t.c
+     * All values are return as one array (data)
      */
     public static function globalSetting($allow_autoload = true)
     {
@@ -151,7 +151,7 @@ class Setting extends Model
      */
     public static function user_info($user_id = null)
     {
-        // ? Check the authenticated user
+        // Check the authenticated user
         if (Auth::user() && is_null($user_id)) {
             $user_id = Auth::user()->id;
         }

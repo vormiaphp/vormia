@@ -24,12 +24,12 @@ class CheckRolePermission
             return $next($request);
         }
 
-        // ? If not logged in, redirect to login page
+        // If not logged in, redirect to login page
         if (!$user) {
             return redirect()->route('account-signin');
         }
 
-        // ? If logged in but does not have the required role, redirect to not authorized page 401
+        // If logged in but does not have the required role, redirect to not authorized page 401
         return response('Unauthorized.', 401);
         //return $next($request);
     }
@@ -53,7 +53,7 @@ class CheckRolePermission
             // Check if the role's module includes the requested action
             $modules = explode(',', $role->module);
 
-            // ? Trim empty spaces in array $modules
+            // Trim empty spaces in array $modules
             $modules = array_map('trim', $modules);
             return in_array($action, $modules);
         }

@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('phone', 20)->unique()->nullable()->default(null)->after('email');
-            $table->timestamp('phone_verified_at')->nullable()->default(null)->after('phone');
-            $table->integer('flag')->default(1)->after('remember_token');
+            // Make email nullable
+            $table->string('email')->nullable()->default(null)->change();
+
+            // Add username column and make it unique
+            $table->string('username')->nullable()->unique()->default(null)->after('name');
         });
     }
 
@@ -24,7 +26,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['phone', 'phone_verified_at', 'flag']);
+            // Revert email to NOT NULL (assuming original was NOT NULL)
+            $table->string('email')->nullable(false)->change();
+
+            // Drop the username column
+            $table->dropColumn('username');
         });
     }
 };

@@ -13,7 +13,7 @@
 				<i class="bx bx-user font-size-16 align-middle mr-1"></i> Profile
 			</a>
 			<div class="dropdown-divider"></div>
-			<a class="dropdown-item text-danger" href='{{ url('vrm-admin/logout') }}'>
+			<a class="dropdown-item text-danger" href='{{ url('vrm/admin/logout') }}'>
 				<i class="bx bx-power-off font-size-16 align-middle mr-1 text-danger"></i> Logout
 			</a>
 		</div>
