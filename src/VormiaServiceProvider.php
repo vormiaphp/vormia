@@ -1,16 +1,21 @@
 <?php
 
-namespace VormiaCms\StarterKit;
+namespace VormiaPHP\Vormia;
 
 use Illuminate\Support\ServiceProvider;
 
-class StarterServiceProvider extends ServiceProvider
+class VormiaServiceProvider extends ServiceProvider
 {
     public function boot()
     {
+
+        // Register commands
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\InstallCommand::class,
+                Console\UpdateCommand::class,
+                Console\RefreshCommand::class,
+                Console\UninstallCommand::class,
             ]);
         }
 

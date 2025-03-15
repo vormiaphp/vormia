@@ -1,9 +1,9 @@
 {
-    "name": "vormia-cms/starterkit",
+    "name": "vormiaphp/vormia",
     "version": "0.1.3", 
-    "description": "Vormia CMS Starter Kit for Laravel 12",
+    "description": "Vormia PHP Framework for Laravel 12",
     "type": "library",
-    "homepage": "https://github.com/vormia-cms/starterkit",
+    "homepage": "https://github.com/vormiaphp/vormia",
     "license": "MIT",
     "authors": [
         {
@@ -15,13 +15,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "VormiaCms\\StarterKit\\": "src/"
+            "VormiaPHP\\Vormia\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "VormiaCms\\StarterKit\\StarterServiceProvider"
+                "VormiaPHP\\Vormia\\VormiaServiceProvider"
             ]
         }
     },
