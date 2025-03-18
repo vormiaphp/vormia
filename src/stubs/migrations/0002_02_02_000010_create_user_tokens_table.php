@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('token'); // Store the encrypted token here
             $table->timestamps();
+            $table->timestamp('expires_at')->nullable()->default(null);
         });
     }
 

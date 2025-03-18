@@ -14,7 +14,7 @@ class UserToken extends Model
 
     protected $with = ['this_user'];
 
-    protected $fillable = ['user', 'name', 'token'];
+    protected $fillable = ['user', 'name', 'token', 'expires_at'];
 
     // Todo: User
     public function this_user()

@@ -18,20 +18,21 @@ class Verification
      *
      * return string
      */
-    public function generateVerificationCode(int $userId): string
+    public function generateVerificationCode(int $user_id, ?string $token = null, string $token_name = 'usertoken'): string
     {
         // Token
-        $token = Str::random(60);
+        $token = (!is_null($token) && !empty($token)) ? $token : Str::random(60);
 
         // Save in database, table `verifications`
         \App\Models\Vrm\ActivationToken::create([
-            'user_id' => $userId,
+            'user' => $user_id,
+            'name' => strtolower(trim($token_name)),
             'token' => $token,
             'expires_at' => now()->addMinutes(60),
         ]);
 
         // Save user id in session for 65 minutes
-        session(['token_user' => $userId]);
+        session(['token_user' => $user_id]);
         // Set the OTP to expire after 65 minutes
         session(['token_expiry' => now()->addMinutes(65)]);
 
