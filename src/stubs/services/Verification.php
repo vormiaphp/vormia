@@ -24,7 +24,7 @@ class Verification
         $token = (!is_null($token) && !empty($token)) ? $token : Str::random(60);
 
         // Save in database, table `verifications`
-        \App\Models\Vrm\ActivationToken::create([
+        \App\Models\UserToken::create([
             'user' => $user_id,
             'name' => strtolower(trim($token_name)),
             'token' => $token,
@@ -49,10 +49,10 @@ class Verification
     public function verifyVerificationCode(string $token)
     {
         // Get user id from session
-        $userId = session('token_user');
+        $user_id = session('token_user');
 
         // If user id is not found
-        if (!$userId) {
+        if (!$user_id) {
             return false;
         }
 
@@ -62,23 +62,23 @@ class Verification
         }
 
         // Get token from database
-        $verification = \App\Models\Vrm\ActivationToken::where('user_id', $userId)
+        $token = \App\Models\UserToken::where('user', $user_id)
             ->where('token', $token)
             ->where('expires_at', '>', now())
             ->first();
 
         // If token is not found
-        if (!$verification) {
+        if (!$token) {
             return false;
         }
 
         // Delete token from database
-        $verification->delete();
+        $token->delete();
 
         // Remove user id from session
         session()->forget('token_user');
         session()->forget('token_expiry');
 
-        return $userId;
+        return $user_id;
     }
 }
