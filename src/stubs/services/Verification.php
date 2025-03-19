@@ -81,4 +81,25 @@ class Verification
 
         return $user_id;
     }
+
+    /**
+     * Todo: Generate Random Numbers
+     * Pass lenght
+     * Pass limit (by default is 9)
+     * @param integer $length
+     * @param integer $maxDigit (Default 9)
+     *
+     */
+    public function generateRandomNumbers(int $length, int $maxDigit = 9): int
+    {
+        // Random Number
+        $randomNumber = '';
+        for ($i = 0; $i < $length; $i++) {
+            // Generate using Rand
+            $randomNumber .= rand(0, $maxDigit);
+        }
+
+        // Return
+        return (int) $randomNumber;
+    }
 }
