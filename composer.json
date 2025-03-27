@@ -1,7 +1,7 @@
 {
     "name": "vormiaphp/vormia",
-    "version": "2.1.2", 
-    "description": "Vormia PHP Framework for Laravel 12",
+    "version": "3.0.0", 
+    "description": "Vormia PHP Framework for Laravel",
     "type": "library",
     "homepage": "https://github.com/vormiaphp/vormia",
     "license": "MIT",
@@ -31,7 +31,8 @@
         "intervention/image": "^3.6",
         "illuminate/filesystem": "^12.0",
         "livewire/livewire": "^3.5",
-        "laravel/sanctum": "^4.0"
+        "laravel/sanctum": "^4.0",
+        "africastalking/africastalking": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

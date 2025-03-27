@@ -46,26 +46,35 @@ class Verification
      * @param string $token
      *
      */
-    public function verifyVerificationCode(string $token)
+    public function verifyVerificationCode(string $token, ?string $token_name = null, ?string $user_id = null)
     {
         // Get user id from session
-        $user_id = session('token_user');
+        $user_id = session('token_user') ?? $user_id;
 
-        // If user id is not found
-        if (!$user_id) {
-            return false;
-        }
-
-        // Check if token has expired
-        if (session('token_expiry') < now()) {
-            return false;
+        // Expiry
+        if (!is_null(session('token_expiry'))) {
+            // Check if token has expired
+            if (session('token_expiry') < now()) {
+                return false;
+            }
         }
 
         // Get token from database
-        $token = \App\Models\UserToken::where('user', $user_id)
-            ->where('token', $token)
-            ->where('expires_at', '>', now())
-            ->first();
+        $query = \App\Models\UserToken::where('token', $token)
+            ->where('expires_at', '>', now());
+
+        // User
+        if ($user_id) {
+            $query->where('user', $user_id);
+        }
+
+        // Token
+        if (!is_null($token_name) && !empty($token_name)) {
+            $query->where('name', $token_name);
+        }
+
+        // Query
+        $token = $query->first();
 
         // If token is not found
         if (!$token) {
@@ -79,7 +88,7 @@ class Verification
         session()->forget('token_user');
         session()->forget('token_expiry');
 
-        return $user_id;
+        return $token;
     }
 
     /**

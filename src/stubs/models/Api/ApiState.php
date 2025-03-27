@@ -5,6 +5,9 @@ namespace App\Models\Api;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// Helpers
+use Illuminate\Support\Str;
+
 class ApiState extends Model
 {
     use HasFactory;
@@ -20,30 +23,21 @@ class ApiState extends Model
         // Example 400 => Bad Request
         $response_code = array(
             '200' => 'Success',
-            '400' => 'Bad Request',
-            '401' => 'Unauthorized',
-            '402' => 'Payment Required',
-            '403' => 'Forbidden',
-            '404' => 'Not Found',
-            '405' => 'Method Not Allowed',
-            '406' => 'Not Acceptable',
-            '407' => 'Proxy Authentication Required',
-            '408' => 'Request Timeout',
-            '409' => 'Conflict',
-            '410' => 'Gone',
-            '411' => 'Length Required',
-            '412' => 'Precondition Failed',
-            '413' => 'Request Entity Too Large',
-            '414' => 'Request-URI Too Long',
-            '415' => 'Unsupported Media Type',
-            '416' => 'Requested Range Not Satisfiable',
-            '417' => 'Expectation Failed',
+            '201' => 'Created - Resource Created',
+            '202' => 'Accepted - Processing',
+            '204' => 'Success, No Data',
+
+            '400' => 'Bad Request - Invalid Input',
+            '401' => 'Unauthorized - Authentication Required',
+            '403' => 'Access Denied',
+            '404' => 'Resource Not Found',
+            '405' => 'Method Not Allowed - Wrong HTTP Method',
+            '422' => 'Validation Failed',
+
             '500' => 'Internal Server Error',
-            '501' => 'Not Implemented',
             '502' => 'Bad Gateway',
             '503' => 'Service Unavailable',
             '504' => 'Gateway Timeout',
-            '505' => 'HTTP Version Not Supported',
         );
 
         http_response_code($code);
@@ -52,7 +46,7 @@ class ApiState extends Model
         if (array_key_exists($code, $response_code)) {
             return array('status' => $code, 'value' => $response_code[$code]);
         } else {
-            return array('status' => '500', 'value' => 'Internal Server Error');
+            return array('status' => '500', 'value' => $response_code[500]);
         }
     }
 }

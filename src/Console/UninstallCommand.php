@@ -22,6 +22,8 @@ class UninstallCommand extends Command
         'views' => [
             'resources/views/admin',
             'resources/views/content',
+            'resources/views/emails/general',
+            'resources/views/emails/partials',
             'resources/views/livewire/setting',
         ],
         'controllers' => [
@@ -37,6 +39,12 @@ class UninstallCommand extends Command
             'app/Models/Auto.php',
             'app/Models/Role.php',
             'app/Models/UserToken.php',
+        ],
+        'jobs' => [
+            'app/Jobs/Auth/SendUserVerificationEmail.php',
+            'app/Jobs/Auth/SendUserVerificationSms.php',
+            'app/Jobs/Email/SendEmail.php',
+            'app/Jobs/Sms/SendSms.php',
         ],
         'assets' => [
             'public/admin',
@@ -75,7 +83,7 @@ class UninstallCommand extends Command
             'app/Rules/NumericFormat.php',
         ],
         'services' => [
-            'app/Services/TokenService.php',
+            'app/Services/AfricasTalkingService.php',
             'app/Services/Verification.php',
         ],
     ];
@@ -92,9 +100,6 @@ class UninstallCommand extends Command
 
         $this->info('Uninstalling Vormia Starter Kit...');
 
-        // Remove routes from web.php and api.php
-        $this->removeVormiaRoutes();
-
         // Remove files and directories unless --keep-files option is set
         if (!$this->option('keep-files')) {
             $this->removeVormiaFiles();
@@ -110,59 +115,12 @@ class UninstallCommand extends Command
         $this->info('Vormia Starter Kit has been uninstalled successfully.');
         $this->warn('Remove the vormia routes in api.php and web.php files');
         $this->warn('Remove the vormia middleware import in web.php file');
+        $this->warn('Remove the config/services keys related to africastalking and other used by vormia also in .env file');
         $this->comment('Update your DatabaseSeeder.php" remove anything related to `SettingSeeder`, `RolesTableSeeder` and `$admin->roles()->attach(1);`.');
         $this->comment('Make sure to run "composer update" to update your autoloader.');
         $this->warn('FAILURE TO DO SO WILL CAUSE AN ERROR IN THE NEXT COMMAND.');
         $this->line('Run "php artisan cache:clear" and "php artisan config:clear" to clear any cached data.');
         $this->comment('To completely remove the package, run: composer remove vormiaphp/vormia');
-    }
-
-    /**
-     * Remove Vormia routes from web.php and api.php
-     */
-    protected function removeVormiaRoutes()
-    {
-        /*
-        // Web routes
-        $webRoutesPath = base_path('routes/web.php');
-        if (file_exists($webRoutesPath)) {
-            $content = file_get_contents($webRoutesPath);
-
-            // Look specifically for the vrm route group
-            $pattern = '/\/\/\s*TODO:\s*VORMIA\s*ROUTES\s*\n\s*Route::group\(\[\'prefix\'\s*=>\s*\'vrm\'\].*?\}\);/s';
-            $content = preg_replace($pattern, '', $content);
-
-            // Remove the Livewire route specifically (with comment)
-            $livewirePattern = '/\/\/\s*TODO:\s*VORMIA\s*LIVEWIRE\s*\n\s*Route::get\(\'\/\',\s*App\\\\Livewire\\\\LiveSetting::class\).*?;/s';
-            $content = preg_replace($livewirePattern, '', $content);
-
-            // Clean up any extra blank lines
-            $content = preg_replace('/\n{3,}/', "\n\n", $content);
-
-            file_put_contents($webRoutesPath, $content);
-            $this->info('✓ Vormia routes removed from web.php');
-        }
-
-        // API routes
-        $apiRoutesPath = base_path('routes/api.php');
-        if (file_exists($apiRoutesPath)) {
-            $content = file_get_contents($apiRoutesPath);
-
-            // Look for the Todo: API VERSION 1 comment and route group
-            $pattern = '/\/\/\s*Todo:\s*API\s*VERSION\s*1\s*\n\s*Route::group\(\[\'prefix\'\s*=>\s*\'v1\'\].*?\}\);/s';
-            $content = preg_replace($pattern, '', $content);
-
-            // Alternative pattern for API
-            $altPattern = '/\/\/\s*Todo:\s*VORMIA\s*API\s*\n\s*Route::group\(\[\'prefix\'\s*=>\s*\'vrm\'\].*?\}\);/s';
-            $content = preg_replace($altPattern, '', $content);
-
-            // Clean up any extra blank lines
-            $content = preg_replace('/\n{3,}/', "\n\n", $content);
-
-            file_put_contents($apiRoutesPath, $content);
-            $this->info('✓ Vormia routes removed from api.php');
-        }
-        */
     }
 
     /**

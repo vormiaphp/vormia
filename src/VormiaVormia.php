@@ -64,6 +64,12 @@ class VormiaVormia
         // Copy models
         $this->copyDirectory($filesystem, 'models', $this->appPath('Models'));
 
+        // Copy jobs
+        $this->copyDirectory($filesystem, 'jobs', $this->appPath('Jobs'));
+
+        // Copy mails
+        $this->copyDirectory($filesystem, 'mail', $this->appPath('Mail'));
+
         // Copy controllers
         $this->copyDirectory($filesystem, 'controllers', $this->appPath('Http/Controllers'));
 
@@ -109,6 +115,12 @@ class VormiaVormia
 
         // Update models
         $this->updateDirectory($filesystem, __DIR__ . '/stubs/models', $this->appPath('Models'));
+
+        // Copy jobs
+        $this->updateDirectory($filesystem, __DIR__ . '/stubs/jobs', $this->appPath('Jobs'));
+
+        // Copy mails
+        $this->updateDirectory($filesystem, __DIR__ . '/stubs/mail', $this->appPath('Mail'));
 
         // Update controllers
         $this->updateDirectory($filesystem, __DIR__ . '/stubs/controllers', $this->appPath('Http/Controllers'));
