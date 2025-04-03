@@ -4,3 +4,8 @@
 ._*
 .Spotlight-V100
 .Trashes
+php.xml
+.idea/
+*.iml
+*.log
+.workspace.xml
