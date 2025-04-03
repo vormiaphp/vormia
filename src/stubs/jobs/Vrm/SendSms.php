@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Jobs\Auth;
+namespace App\Jobs\Vrm;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class SendUserVerificationSms implements ShouldQueue
+class SendSms implements ShouldQueue
 {
     use Queueable;
 

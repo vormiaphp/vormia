@@ -41,10 +41,7 @@ class UninstallCommand extends Command
             'app/Models/UserToken.php',
         ],
         'jobs' => [
-            'app/Jobs/Auth/SendUserVerificationEmail.php',
-            'app/Jobs/Auth/SendUserVerificationSms.php',
-            'app/Jobs/Email/SendEmail.php',
-            'app/Jobs/Sms/SendSms.php',
+            'app/Jobs/Vrm',
         ],
         'assets' => [
             'public/admin',

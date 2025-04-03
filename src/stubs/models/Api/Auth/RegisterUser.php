@@ -59,13 +59,13 @@ class RegisterUser extends Model
             // Todo: send email & phone number verification
             // Dispatch email job to the queue
             if ($_notify_message['email']) {
-                dispatch(new \App\Jobs\Auth\SendUserVerificationEmail($userInfo['email'], $_notify_message['email'], "VERIFY YOUR USER ACCOUNT – ACTION REQUIRED"));
+                dispatch(new \App\Jobs\Vrm\SendMail($userInfo['email'], $_notify_message['email'], "VERIFY YOUR USER ACCOUNT – ACTION REQUIRED"));
             }
 
             // Dispatch SMS job to the queue
             if ($_notify_message['sms']) {
                 $_phoneNo = \App\Services\AfricasTalkingService::formatPhoneNumber($userInfo["phone"]);
-                dispatch(new \App\Jobs\Auth\SendUserVerificationSms(
+                dispatch(new \App\Jobs\Vrm\SendSms(
                     $_phoneNo,
                     $_notify_message['sms']
                 ));

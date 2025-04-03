@@ -42,7 +42,7 @@ class PasswordReset extends Model
         // Todo: send email
         // Dispatch email job to the queue
         if ($_notify_message['email']) {
-            dispatch(new \App\Jobs\Email\SendEmail($_user->email, $_notify_message['email'], "RESET YOUR PASSWORD – ACTION REQUIRED"));
+            dispatch(new \App\Jobs\Vrm\SendMail($_user->email, $_notify_message['email'], "RESET YOUR PASSWORD – ACTION REQUIRED"));
 
             // Return
             return $_user->id;
@@ -84,7 +84,7 @@ class PasswordReset extends Model
         // Dispatch SMS job to the queue
         if ($_notify_message['sms']) {
             $_phoneNo = \App\Services\AfricasTalkingService::formatPhoneNumber($_user->phone);
-            dispatch(new \App\Jobs\Sms\SendSms(
+            dispatch(new \App\Jobs\Vrm\SendSms(
                 $_phoneNo,
                 $_notify_message['sms']
             ));
@@ -124,12 +124,12 @@ class PasswordReset extends Model
                 // todo: send email to confirm new password
                 if (strtolower($_type) == 'phone') {
                     $_phoneNo = \App\Services\AfricasTalkingService::formatPhoneNumber($_user->phone);
-                    dispatch(new \App\Jobs\Sms\SendSms(
+                    dispatch(new \App\Jobs\Vrm\SendSms(
                         $_phoneNo,
                         $_notify_message['sms']
                     ));
                 } else {
-                    dispatch(new \App\Jobs\Email\SendEmail($_user->email, $_notify_message['email'], "YOUR PASSWORD HAS BEEN SUCCESSFULLY UPDATED"));
+                    dispatch(new \App\Jobs\Vrm\SendMail($_user->email, $_notify_message['email'], "YOUR PASSWORD HAS BEEN SUCCESSFULLY UPDATED"));
                 }
 
                 // Return

@@ -26,8 +26,8 @@ class InstallCommand extends Command
         $this->appendToGitIgnore([
             '# Custom Ignore',
             '.DS_Store',
+            '/public/media',
             '/storage/app/public/media',
-            '/public/media'
         ]);
 
         $dotenv = [

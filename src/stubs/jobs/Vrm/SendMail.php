@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Jobs\Auth;
+namespace App\Jobs\Vrm;
 
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Mail;
 
-class SendUserVerificationEmail implements ShouldQueue
+class SendMail implements ShouldQueue
 {
     use Queueable;
 
