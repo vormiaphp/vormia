@@ -44,7 +44,15 @@ composer require vormiaphp/vormia
 ```sh
 php artisan vormia:install
 ```
+
 Follow the process to complete the installation.
+
+🟢 **Introducing `api first vormia verion`**
+Due to need of making vormia easier to bootstrap your small to medium sized projects, we have introduced new command.
+
+```sh
+php artisan vormia:install --api
+```
 
 ## Frontend Setup
 
@@ -64,6 +72,7 @@ http://127.0.0.1:8000/vrm/admin
 ```
 
 **Default Login Credentials:**
+
 - **Username:** admin
 - **Password:** admin (as set in the `DatabaseSeeder.php` file)
 

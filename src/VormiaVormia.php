@@ -27,10 +27,10 @@ class VormiaVormia
     /**
      * Install the vormia kit.
      */
-    public function install(): void
+    public function install(bool $apiOnly = false): void
     {
         // Your existing installation logic
-        $this->copyStubs();
+        $this->copyStubs($apiOnly);
     }
 
     /**
@@ -54,7 +54,7 @@ class VormiaVormia
     /**
      * Copy Stubs to directories.
      */
-    protected function copyStubs(): void
+    protected function copyStubs(bool $apiOnly = false): void
     {
         $filesystem = new Filesystem();
 
@@ -71,7 +71,9 @@ class VormiaVormia
         $this->copyDirectory($filesystem, 'mail', $this->appPath('Mail'));
 
         // Copy controllers
-        $this->copyDirectory($filesystem, 'controllers', $this->appPath('Http/Controllers'));
+        if (!$apiOnly) {
+            $this->copyDirectory($filesystem, 'controllers', $this->appPath('Http/Controllers'));
+        }
 
         // Copy livewire components
         $this->copyDirectory($filesystem, 'livewire', $this->appPath('Livewire'));
@@ -86,7 +88,9 @@ class VormiaVormia
         $this->copyDirectory($filesystem, 'services', $this->appPath('Services'));
 
         // Copy views
-        $this->copyDirectory($filesystem, 'views', $this->resourcePath('views'));
+        if (!$apiOnly) {
+            $this->copyDirectory($filesystem, 'views', $this->resourcePath('views'));
+        }
 
         // Copy seeders
         $this->copyDirectory($filesystem, 'seeders', $this->databasePath('seeders'));
@@ -99,8 +103,76 @@ class VormiaVormia
         // Add any other specific public folders you want to copy directly
 
         // Extract compressed directories
-        $this->extractCompressedDirectory('admin.zip', $this->publicPath() . '/admin');
-        $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
+        if ($apiOnly) {
+            $this->copyApiControllers($filesystem, 'controllers');
+            $this->copyApiControllers($filesystem, 'views');
+            $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
+        } else {
+            $this->extractCompressedDirectory('admin.zip', $this->publicPath() . '/admin');
+            $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
+        }
+    }
+
+    /**
+     * Copy only API controllers (excluding admin controllers).
+     * 
+     * @param Filesystem $filesystem
+     * @param string $source
+     * @param string $destination
+     */
+    protected function copyApiControllers(Filesystem $filesystem, $source): void
+    {
+        // Controller
+        if ($source === 'controllers') {
+            $destination = $this->appPath('Http/Controllers');
+            $controller_folder = __DIR__ . '/stubs/' . $source . '/Api';
+
+            if ($filesystem->isDirectory($controller_folder)) {
+                // Create the Api folder in the destination
+                $api_destination = $destination . '/Api';
+                $filesystem->ensureDirectoryExists($api_destination);
+
+                // Copy the contents of the Api folder to the destination/Api folder
+                $filesystem->copyDirectory($controller_folder, $api_destination);
+            }
+        }
+
+        // Views - Content
+        if ($source == 'views') {
+            $destination = $this->resourcePath('views');
+
+            $view_folder_content = __DIR__ . '/stubs/' . $source . '/content';
+            if ($filesystem->isDirectory($view_folder_content)) {
+                // Create the Api folder in the destination
+                $api_destination = $destination . '/content';
+                $filesystem->ensureDirectoryExists($api_destination);
+
+                // Copy the contents of the Api folder to the destination/Api folder
+                $filesystem->copyDirectory($view_folder_content, $api_destination);
+            }
+
+            // Views - Email
+            $view_folder_email = __DIR__ . '/stubs/' . $source . '/email';
+            if ($filesystem->isDirectory($view_folder_email)) {
+                // Create the Api folder in the destination
+                $api_destination = $destination . '/email';
+                $filesystem->ensureDirectoryExists($api_destination);
+
+                // Copy the contents of the Api folder to the destination/Api folder
+                $filesystem->copyDirectory($view_folder_email, $api_destination);
+            }
+
+            // Views - Livewire
+            $view_folder_livewire = __DIR__ . '/stubs/' . $source . '/livewire';
+            if ($filesystem->isDirectory($view_folder_livewire)) {
+                // Create the Api folder in the destination
+                $api_destination = $destination . '/livewire';
+                $filesystem->ensureDirectoryExists($api_destination);
+
+                // Copy the contents of the Api folder to the destination/Api folder
+                $filesystem->copyDirectory($view_folder_livewire, $api_destination);
+            }
+        }
     }
 
     /**

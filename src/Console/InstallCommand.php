@@ -8,7 +8,7 @@ use VormiaPHP\Vormia\VormiaVormia;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'vormia:install';
+    protected $signature = 'vormia:install {--api : Install only API components, skip admin UI}';
 
     protected $description = 'Install Vormia Starter Kit';
 
@@ -20,7 +20,15 @@ class InstallCommand extends Command
         $this->checkAndInstallDependencies();
 
         $starter = new VormiaVormia();
-        $starter->install();
+
+        // Pass the API flag to the install method
+        $isApiOnly = $this->option('api');
+
+        if ($isApiOnly) {
+            $this->info('API-only installation selected. Admin UI components will be skipped.');
+        }
+
+        $starter->install($isApiOnly);
 
         // Add .gitignore entries
         $this->appendToGitIgnore([
@@ -60,11 +68,7 @@ class InstallCommand extends Command
             ]
         ]);
 
-
         $this->info('Vormia Starter Kit files have been installed successfully!');
-
-        // Run API installation
-        // $this->call('install:api');
 
         // Run API installation only if not already installed
         if (!$this->isApiInstalled()) {
@@ -82,7 +86,7 @@ class InstallCommand extends Command
         $this->info('Adding web routes...');
 
         // Adding Web Route
-        $this->addWebRoutesToExistingFile();
+        $this->addWebRoutesToExistingFile($isApiOnly);
 
         // Adding Api Route
         if (!$this->option('no-interaction') && !$this->confirm('Would you like to add vormia api route?', true)) {
@@ -116,7 +120,7 @@ class InstallCommand extends Command
     /**
      * Add routes to the existing web.php file
      */
-    protected function addWebRoutesToExistingFile()
+    protected function addWebRoutesToExistingFile(bool $apiOnly = false)
     {
         $webRoutesPath = base_path('routes/web.php');
 
@@ -148,80 +152,87 @@ class InstallCommand extends Command
         }
 
         // Add your routes at the end of the file
-        $vormiaRoutes = <<<'EOT'
+        if (!$apiOnly) {
+            $vormiaRoutes = <<<'EOT'
         
-        // TODO: VORMIA ROUTES
-        Route::group(['prefix' => 'vrm'], function () {
-        // todo: login - admin
-        Route::controller(App\Http\Controllers\Admin\LoginController::class)->group(function () {
-            Route::get('/admin', 'index')->name('/vrm/admin');
-            Route::post('/admin/access', 'login');
-            Route::get('/admin/logout', 'logout')->name('/vrm/admin/logout');
-        });
+            // TODO: VORMIA ROUTES
+            Route::group(['prefix' => 'vrm'], function () {
+            // todo: login - admin
+            Route::controller(App\Http\Controllers\Admin\LoginController::class)->group(function () {
+                Route::get('/admin', 'index')->name('/vrm/admin');
+                Route::post('/admin/access', 'login');
+                Route::get('/admin/logout', 'logout')->name('/vrm/admin/logout');
+            });
 
-        Route::middleware([CheckRolePermission::class . ':permissions'])->group(function () {
+            Route::middleware([CheckRolePermission::class . ':permissions'])->group(function () {
 
-            Route::middleware([CheckRolePermission::class . ':users'])->group(function () {
-                // ? Users
-                Route::controller(App\Http\Controllers\Admin\UserController::class)->group(function () {
-                    Route::get('/users', 'index');
-                    Route::post('/users/save', 'store');
-                    Route::post('/users/update', 'update');
-                    Route::get('/users/edit/{page?}', 'edit'); // Edit
-                    Route::get('/users/delete', 'delete'); // Delete
-                    Route::get('/users/status/{action?}', 'valid'); // Valid
-                    Route::get('/users/{view}', 'open'); // Open
+                Route::middleware([CheckRolePermission::class . ':users'])->group(function () {
+                    // ? Users
+                    Route::controller(App\Http\Controllers\Admin\UserController::class)->group(function () {
+                        Route::get('/users', 'index');
+                        Route::post('/users/save', 'store');
+                        Route::post('/users/update', 'update');
+                        Route::get('/users/edit/{page?}', 'edit'); // Edit
+                        Route::get('/users/delete', 'delete'); // Delete
+                        Route::get('/users/status/{action?}', 'valid'); // Valid
+                        Route::get('/users/{view}', 'open'); // Open
+                    });
+                });
+
+                // ? Roles
+                Route::controller(App\Http\Controllers\Admin\RoleController::class)->group(function () {
+                    Route::get('/roles', 'index');
+                    Route::post('/roles/save', 'store');
+                    Route::post('/roles/update', 'update');
+                    Route::get('/roles/edit/{page?}', 'edit');
+                    Route::get('/roles/delete', 'delete');
+                    Route::get('/roles/{action}', 'valid');
                 });
             });
 
-            // ? Roles
-            Route::controller(App\Http\Controllers\Admin\RoleController::class)->group(function () {
-                Route::get('/roles', 'index');
-                Route::post('/roles/save', 'store');
-                Route::post('/roles/update', 'update');
-                Route::get('/roles/edit/{page?}', 'edit');
-                Route::get('/roles/delete', 'delete');
-                Route::get('/roles/{action}', 'valid');
+            // Protect a group of routes
+            Route::middleware([CheckRolePermission::class . ':dashboard'])->group(function () {
+                // ? Dashboard
+                Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('vrm/dashboard')->middleware(CheckRolePermission::class . ':dashboard');;
             });
-        });
 
-        // Protect a group of routes
-        Route::middleware([CheckRolePermission::class . ':dashboard'])->group(function () {
-            // ? Dashboard
-            Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('vrm/dashboard')->middleware(CheckRolePermission::class . ':dashboard');;
-        });
+            // Protect a group of routes
+            Route::middleware([CheckRolePermission::class . ':setup'])->group(function () {
+                // ? Setup
+                Route::group(['prefix' => 'setup'], function () {
+                    // ? Continent Hierarchies
+                    Route::controller(App\Http\Controllers\Setup\ContinentController::class)->group(function () {
+                        Route::get('/continent', 'index');
+                        Route::post('/continent/save', 'store');
+                        Route::post('/continent/update', 'update');
+                        Route::get('/continent/edit/{page?}', 'edit');
+                        Route::get('/continent/delete', 'delete');
+                        Route::get('/continent/{action}', 'valid');
+                    });
 
-        // Protect a group of routes
-        Route::middleware([CheckRolePermission::class . ':setup'])->group(function () {
-            // ? Setup
-            Route::group(['prefix' => 'setup'], function () {
-                // ? Continent Hierarchies
-                Route::controller(App\Http\Controllers\Setup\ContinentController::class)->group(function () {
-                    Route::get('/continent', 'index');
-                    Route::post('/continent/save', 'store');
-                    Route::post('/continent/update', 'update');
-                    Route::get('/continent/edit/{page?}', 'edit');
-                    Route::get('/continent/delete', 'delete');
-                    Route::get('/continent/{action}', 'valid');
-                });
-
-                // ? Currency
-                Route::controller(App\Http\Controllers\Setup\CurrencyController::class)->group(function () {
-                    Route::get('/currency', 'index');
-                    Route::post('/currency/save', 'store');
-                    Route::post('/currency/update', 'update');
-                    Route::get('/currency/edit/{page?}', 'edit'); // Edit
-                    Route::get('/currency/delete', 'delete'); // Delete
-                    Route::get('/currency/status/{action?}', 'valid'); // Valid
-                    Route::get('/currency/{view}', 'open'); // Open
+                    // ? Currency
+                    Route::controller(App\Http\Controllers\Setup\CurrencyController::class)->group(function () {
+                        Route::get('/currency', 'index');
+                        Route::post('/currency/save', 'store');
+                        Route::post('/currency/update', 'update');
+                        Route::get('/currency/edit/{page?}', 'edit'); // Edit
+                        Route::get('/currency/delete', 'delete'); // Delete
+                        Route::get('/currency/status/{action?}', 'valid'); // Valid
+                        Route::get('/currency/{view}', 'open'); // Open
+                    });
                 });
             });
-        });
-        });
+            });
 
-        // TODO: VORMIA LIVEWIRE
-        Route::get('/', App\Livewire\LiveSetting::class)->name('home');
-        EOT;
+            // TODO: VORMIA LIVEWIRE
+            Route::get('/', App\Livewire\LiveSetting::class)->name('home');
+            EOT;
+        } else {
+            $vormiaRoutes = <<<'EOT'
+            // TODO: VORMIA LIVEWIRE
+            Route::get('/', App\Livewire\LiveSetting::class)->name('home');
+            EOT;
+        }
 
         file_put_contents($webRoutesPath, $content . $vormiaRoutes);
         $this->info('Added Vormia routes to web.php');
