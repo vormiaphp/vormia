@@ -2,22 +2,15 @@
 
 namespace App\Models\Vrm;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-// Upload Image
 use Intervention\Image\ImageManager as Image;
-// use Intervention\Image\ImageManagerStatic as Image;
-//use Intervention\Image\Drivers\Imagick\Driver;
 use Intervention\Image\Drivers\Gd\Driver;
-
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class ImageControl extends Model
 {
-    use HasFactory;
 
     /**
      * Todo: Images File
@@ -117,6 +110,120 @@ class ImageControl extends Model
         }
 
         // Return array
+        return $uploaded;
+    }
+
+    /**
+     * Upload file from Livewire's temporary storage
+     *
+     * @param \Livewire\TemporaryUploadedFile|\Illuminate\Http\UploadedFile $file Single file from Livewire upload
+     * @param string|null $upload_path Path to upload the file
+     * @param bool $year_folder Create year/month/date folder structure
+     * @param bool $randomize_file_name Use random name instead of original
+     * @param bool $private_upload Store in private directory or public
+     * @return string Uploaded file path
+     */
+    public static function uploadLiveFile($file, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
+    {
+        // Year/Month/Date
+        $auto_folder = date('Y') . '/' . date('m') . '/' . date('d');
+
+        // Generate file name - either random or original
+        $file_name = ($randomize_file_name)
+            ? uniqid() . '.' . $file->getClientOriginalExtension()
+            : $file->getClientOriginalName();
+
+        // Create the directory if it doesn't exist
+        $directory = (!is_null($upload_path)) ? 'public/media-private/' . $upload_path : 'public/media-private';
+
+        // Year/Month/Date
+        if ($year_folder) {
+            $directory = $directory . '/' . $auto_folder;
+        }
+
+        // Generate Folder if it doesn't exist
+        if (!Storage::exists($directory)) {
+            Storage::makeDirectory($directory);
+        }
+
+        // Check if the file exists and get a new name if needed
+        $image_path_name = self::existImage($directory . '/' . $file_name, true);
+
+        // Get the value after the last slash
+        $new_file_name = substr($image_path_name, strrpos($image_path_name, '/') + 1);
+
+        // For Livewire temporary uploads, we need to use storeAs differently
+        if (method_exists($file, 'storeAs')) {
+            $file->storeAs($directory, $new_file_name);
+        } else {
+            // Fallback for regular uploads
+            Storage::putFileAs($directory, $file, $new_file_name);
+        }
+
+        // Get the URL path for the uploaded file
+        $url_path = Storage::url($directory . '/' . $new_file_name);
+
+        // For Public Upload
+        if ($private_upload == false) {
+            // Create the directory if it doesn't exist
+            $public_directory = (!is_null($upload_path)) ? 'media/' . $upload_path : 'media';
+
+            // Year/Month/Date
+            if ($year_folder) {
+                $public_directory = $public_directory . '/' . $auto_folder;
+            }
+
+            // Generate Folder if it doesn't exist
+            if (!File::exists($public_directory)) {
+                File::makeDirectory($public_directory, 0755, true);
+            }
+
+            // Call to check if the image exists
+            $image_path_name = self::existImage("$public_directory/$new_file_name", true);
+
+            // Get the value after the last slash
+            $public_file_name = substr($image_path_name, strrpos($image_path_name, '/') + 1);
+
+            // Copy from storage to public directory
+            $file_content = Storage::get($directory . '/' . $new_file_name);
+            File::put($public_directory . '/' . $public_file_name, $file_content);
+
+            // Delete from the storage directory
+            Storage::delete($directory . '/' . $new_file_name);
+
+            // Get the URL path for the uploaded file
+            $url_path = $public_directory . '/' . $public_file_name;
+        }
+
+        return $url_path;
+    }
+
+    /**
+     * Upload multiple files from Livewire's temporary storage
+     *
+     * @param array $files Array of Livewire temporary uploaded files
+     * @param string|null $upload_path Path to upload the files
+     * @param bool $year_folder Create year/month/date folder structure
+     * @param bool $randomize_file_name Use random name instead of original
+     * @param bool $private_upload Store in private directory or public
+     * @return array Array of uploaded file paths
+     */
+    public static function uploadLiveFiles(array $files, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
+    {
+        // Uploaded files array
+        $uploaded = [];
+
+        // Process each file
+        foreach ($files as $file) {
+            $uploaded[] = self::uploadLiveFile(
+                $file,
+                $upload_path,
+                $year_folder,
+                $randomize_file_name,
+                $private_upload
+            );
+        }
+
         return $uploaded;
     }
 
@@ -1037,5 +1144,42 @@ class ImageControl extends Model
         $filename = pathinfo($path, PATHINFO_FILENAME);
 
         return $filename;
+    }
+
+    /**
+     * Todo: Method to delete/remove File
+     * Pass the file path (can be array of file path or single file path)
+     * Pass the storage type (public or private)
+     */
+    public static function deleteFile($file_path, $storage_type = 'public')
+    {
+        // If is not array, convert to array
+        if (!is_array($file_path)) {
+            $file_path = [$file_path];
+        }
+        // Loop through the file path
+        foreach ($file_path as $path) {
+            // For public disk
+            if (strtolower(trim($storage_type)) == 'public') {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                    // Optional: Log successful deletion or notify user
+                }
+
+                // continue to next
+                continue;
+            }
+
+            // For private storage
+            if (strtolower(trim($storage_type)) == 'private') {
+                // Check if the file exists in the private storage
+                if (Storage::exists($path)) {
+                    Storage::delete($path);
+                    // Optional: Log successful deletion or notify user
+                }
+                // continue to next
+                continue;
+            }
+        }
     }
 }

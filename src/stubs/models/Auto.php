@@ -90,10 +90,44 @@ class Auto extends Model
      * @param boolean $randomize_file_name
      * @param boolean $private_upload = false
      */
-    public static function uploadFile(array $files, string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
+    public static function uploadFile(array $files, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
     {
         // Uploaded
         $uploaded = ImageControl::uploadFile($files, $upload_path, $year_folder, $randomize_file_name, $private_upload);
+
+        //  and if is null return null
+        if (count($uploaded) == 0) {
+            return null;
+        }
+
+        // Reset array keys,
+        $uploaded = array_values($uploaded);
+
+        // Return, check if there is only one image
+        return (count($uploaded) == 1) ? $uploaded[0] : $uploaded;
+    }
+
+    /**
+     * Todo: Uploading Files
+     *
+     * This method is used to intiate the image uploading
+     * This will be used in the controller
+     * When passing images, also pass upload path, allow year/date folder to be created or not, lastest randomize image file name
+     * This will return the image upload path
+     * State if is private upload or not (Bolean)
+     * If is private, upload will be done in the storage folder NB: if the file will be accessed via http, it will not be accessible
+     * Download will be possible (good for pdfs & receipts)
+     *
+     * @param array $images
+     * @param string $upload_path
+     * @param boolean $year_folder
+     * @param boolean $randomize_file_name
+     * @param boolean $private_upload = false
+     */
+    public static function uploadLiveFile(array $files, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false)
+    {
+        // Uploaded
+        $uploaded = ImageControl::uploadLiveFiles($files, $upload_path, $year_folder, $randomize_file_name, $private_upload);
 
         //  and if is null return null
         if (count($uploaded) == 0) {
@@ -124,7 +158,7 @@ class Auto extends Model
      * @param boolean $randomize_file_name
      * @param boolean $private_upload = false
      */
-    public static function uploadImage(array $images, string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, string $convert = 'webp')
+    public static function uploadImage(array $images, ?string $upload_path = null, bool $year_folder = true, bool $randomize_file_name = true, bool $private_upload = false, string $convert = 'webp')
     {
 
         // Uploaded

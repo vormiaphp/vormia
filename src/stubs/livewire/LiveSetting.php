@@ -7,6 +7,7 @@ use App\Models\Vrm\Notify;
 use App\Models\Vrm\Setting;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
+//use Livewire\WithFileUploads; - Uncomment this when you want to use file upload
 use Illuminate\Support\Facades\Log;
 
 class LiveSetting extends Component
@@ -145,7 +146,7 @@ class LiveSetting extends Component
         $data['notify'] =  $this->notify;
 
         // This page & layout
-        $_this_page = $data['theme_dir'] . "/pages/" . $data['page_name'];
+        $_this_page = $data['theme_dir'] . "/pages" . $data['page_name'];
         $_this_layout = $data['theme_dir'] . "/layouts/livewire/$layout_name";
 
         // Render
