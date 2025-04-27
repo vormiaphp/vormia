@@ -152,10 +152,10 @@ class VormiaVormia
             }
 
             // Views - Email
-            $view_folder_email = __DIR__ . '/stubs/' . $source . '/email';
+            $view_folder_email = __DIR__ . '/stubs/' . $source . '/emails';
             if ($filesystem->isDirectory($view_folder_email)) {
                 // Create the Api folder in the destination
-                $api_destination = $destination . '/email';
+                $api_destination = $destination . '/emails';
                 $filesystem->ensureDirectoryExists($api_destination);
 
                 // Copy the contents of the Api folder to the destination/Api folder
