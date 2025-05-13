@@ -378,7 +378,7 @@ class ImageControl extends Model
      *
      * @return string image_path
      */
-    public static function thumbnailImage(string $image_path, int $width = 72, int $height = 72, bool $maintain_ratio = true, bool $add_background = true, string $background_color = '#041419', bool $override = true): string
+    public static function thumbnailImage(string $image_path, int $width = 72, int $height = 72, bool $maintain_ratio = true, bool $add_background = true, string $background_color = '#041419', string $default_name = '_thumb', bool $override = true): string
     {
 
         // Resize the image
@@ -417,7 +417,7 @@ class ImageControl extends Model
         // Get the image directory
         $image_directory = pathinfo($image_path, PATHINFO_DIRNAME);
         // New Image Name
-        $image_file_name = $image_name . '_thumb.' . $extension;
+        $image_file_name = $image_name . $default_name . '.' . $extension;
 
         // Create the new image path
         $image_path = $image_directory . '/' . $image_file_name;
