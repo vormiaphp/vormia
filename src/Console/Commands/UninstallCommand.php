@@ -94,7 +94,7 @@ class UninstallCommand extends Command
         $this->step('Clearing application caches...');
         $this->clearCaches();
 
-        // Attempt to rollback Vormia (vrm_) migrations
+        // Attempt to rollback Vormia (vrm_) migrations BEFORE deleting migration files
         $this->info('Attempting to rollback Vormia (vrm_) migrations...');
         $prefix = 'vrm_';
         $migrationPath = database_path('migrations');
@@ -116,6 +116,17 @@ class UninstallCommand extends Command
         }
         if (!$rolledBack) {
             $this->warn('No Vormia (vrm_) migrations were rolled back automatically. You may need to manually drop Vormia tables from your database.');
+        }
+
+        // Remove Vormia migration files
+        $migrationPath = database_path('migrations');
+        if (File::isDirectory($migrationPath)) {
+            foreach (File::files($migrationPath) as $file) {
+                if (strpos($file->getFilename(), 'vrm_') !== false) {
+                    File::delete($file->getPathname());
+                    $this->line("  Removed migration: " . $file->getFilename());
+                }
+            }
         }
 
         $this->displayCompletionMessage($keepData);
@@ -203,17 +214,6 @@ class UninstallCommand extends Command
             if (File::exists($file)) {
                 File::delete($file);
                 $this->line("  Removed file: {$file}");
-            }
-        }
-
-        // Remove Vormia migration files
-        $migrationPath = database_path('migrations');
-        if (File::isDirectory($migrationPath)) {
-            foreach (File::files($migrationPath) as $file) {
-                if (strpos($file->getFilename(), 'vrm_') !== false) {
-                    File::delete($file->getPathname());
-                    $this->line("  Removed migration: " . $file->getFilename());
-                }
             }
         }
 

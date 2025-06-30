@@ -111,7 +111,7 @@ class VormiaVormia
         }
 
         // Copy migration files directly into database/migrations
-        $migrationSource = __DIR__ . '/stubs/migrations/Vrm';
+        $migrationSource = __DIR__ . '/stubs/migrations';
         $migrationDest = $this->databasePath('migrations');
         if ($this->filesystem->isDirectory($migrationSource)) {
             foreach ($this->filesystem->files($migrationSource) as $file) {
@@ -163,7 +163,7 @@ class VormiaVormia
         }
 
         // Update migration files directly into database/migrations
-        $migrationSource = __DIR__ . '/stubs/migrations/Vrm';
+        $migrationSource = __DIR__ . '/stubs/migrations';
         $migrationDest = $this->databasePath('migrations');
         if ($this->filesystem->isDirectory($migrationSource)) {
             foreach ($this->filesystem->files($migrationSource) as $file) {
