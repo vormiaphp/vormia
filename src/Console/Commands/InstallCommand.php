@@ -131,9 +131,6 @@ class InstallCommand extends Command
 
         $content = File::get($bootstrapPath);
 
-        // Create backup
-        File::copy($bootstrapPath, $bootstrapPath . '.backup.' . date('Y-m-d-H-i-s'));
-
         // Add middleware aliases
         $middlewareAliases = "
             'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class,
