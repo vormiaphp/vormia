@@ -160,6 +160,32 @@ class InstallCommand extends Command
 
         File::put($bootstrapPath, $content);
         $this->info('✅ bootstrap/app.php updated successfully (backup created).');
+
+        // --- Manual fallback instructions ---
+        $finalContent = File::get($bootstrapPath);
+        $missing = [];
+        if (strpos($finalContent, "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class") === false) $missing[] = "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class";
+        if (strpos($finalContent, "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class") === false) $missing[] = "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class";
+        if (strpos($finalContent, "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class") === false) $missing[] = "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class";
+        $providersList = [
+            'App\\Providers\\Vrm\\NotificationServiceProvider::class',
+            'App\\Providers\\Vrm\\TokenServiceProvider::class',
+            'App\\Providers\\Vrm\\MediaForgeServiceProvider::class',
+            'App\\Providers\\Vrm\\UtilitiesServiceProvider::class',
+            'App\\Providers\\Vrm\\GlobalDataServiceProvider::class',
+        ];
+        $missingProviders = array_filter($providersList, fn($p) => strpos($finalContent, $p) === false);
+        if ($missing || $missingProviders) {
+            $this->warn('Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:');
+            if ($missing) {
+                $this->line("\nAdd these to your middleware aliases array:");
+                foreach ($missing as $m) $this->line('    ' . $m);
+            }
+            if ($missingProviders) {
+                $this->line("\nAdd these to your providers array:");
+                foreach ($missingProviders as $p) $this->line('    ' . $p . ',');
+            }
+        }
     }
 
     /**

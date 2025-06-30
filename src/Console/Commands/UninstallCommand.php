@@ -181,6 +181,29 @@ class UninstallCommand extends Command
             }
         }
 
+        // Remove Vormia migration files
+        $migrationPath = database_path('migrations');
+        if (File::isDirectory($migrationPath)) {
+            foreach (File::files($migrationPath) as $file) {
+                if (strpos($file->getFilename(), 'vrm_') !== false) {
+                    File::delete($file->getPathname());
+                    $this->line("  Removed migration: " . $file->getFilename());
+                }
+            }
+        }
+
+        // Automatically restore User.php from backup if available
+        $userModelPath = app_path('Models/User.php');
+        $backupFiles = glob($userModelPath . '.backup.*');
+        if (!empty($backupFiles)) {
+            $latestBackup = end($backupFiles);
+            File::copy($latestBackup, $userModelPath);
+            $this->info('✅ User model restored from backup: ' . basename($latestBackup));
+        } else {
+            $this->warn('⚠️  No User model backup found. You may need to manually clean up User model changes.');
+            $this->line('   Vormia-specific methods and properties should be removed manually.');
+        }
+
         $this->info('✅ Vormia files removed successfully.');
     }
 

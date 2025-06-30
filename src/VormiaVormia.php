@@ -93,7 +93,7 @@ class VormiaVormia
     protected function copyStubs(bool $apiOnly = false): void
     {
         $stubs = [
-            'migrations' => $this->databasePath('migrations'),
+            // Migrations handled separately below
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
             'helpers' => $this->appPath('Helpers'),
@@ -105,8 +105,18 @@ class VormiaVormia
             'middleware' => $this->appPath('Http/Middleware'),
         ];
 
+        // Copy all non-migration stubs
         foreach ($stubs as $source => $destination) {
             $this->copyDirectory($source, $destination);
+        }
+
+        // Copy migration files directly into database/migrations
+        $migrationSource = __DIR__ . '/stubs/migrations/Vrm';
+        $migrationDest = $this->databasePath('migrations');
+        if ($this->filesystem->isDirectory($migrationSource)) {
+            foreach ($this->filesystem->files($migrationSource) as $file) {
+                $this->filesystem->copy($file->getPathname(), $migrationDest . '/' . $file->getFilename());
+            }
         }
     }
 
@@ -132,7 +142,7 @@ class VormiaVormia
     protected function updateStubs(): void
     {
         $stubs = [
-            'migrations' => $this->databasePath('migrations'),
+            // Migrations handled separately below
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
             'helpers' => $this->appPath('Helpers'),
@@ -144,10 +154,20 @@ class VormiaVormia
             'middleware' => $this->appPath('Http/Middleware'),
         ];
 
+        // Update all non-migration stubs
         foreach ($stubs as $source => $destination) {
             $sourcePath = __DIR__ . "/stubs/{$source}";
             if ($this->filesystem->isDirectory($sourcePath)) {
                 $this->updateDirectory($sourcePath, $destination);
+            }
+        }
+
+        // Update migration files directly into database/migrations
+        $migrationSource = __DIR__ . '/stubs/migrations/Vrm';
+        $migrationDest = $this->databasePath('migrations');
+        if ($this->filesystem->isDirectory($migrationSource)) {
+            foreach ($this->filesystem->files($migrationSource) as $file) {
+                $this->filesystem->copy($file->getPathname(), $migrationDest . '/' . $file->getFilename());
             }
         }
     }

@@ -136,6 +136,17 @@ class UpdateCommand extends Command
             }
         }
 
+        // Remove old migration files (those with vormia prefix)
+        $migrationPath = database_path('migrations');
+        if (File::isDirectory($migrationPath)) {
+            foreach (File::files($migrationPath) as $file) {
+                if (strpos($file->getFilename(), 'vrm_') !== false) {
+                    File::delete($file->getPathname());
+                    $this->line("  Removed migration: " . $file->getFilename());
+                }
+            }
+        }
+
         $this->info('✅ Old files removed successfully.');
     }
 
@@ -236,6 +247,32 @@ class UpdateCommand extends Command
             $this->line("  ✅ bootstrap/app.php updated (backup created)");
         } else {
             $this->line("  ✅ bootstrap/app.php is up to date");
+        }
+
+        // --- Manual fallback instructions ---
+        $finalContent = File::get($bootstrapPath);
+        $missing = [];
+        if (strpos($finalContent, "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class") === false) $missing[] = "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class";
+        if (strpos($finalContent, "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class") === false) $missing[] = "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class";
+        if (strpos($finalContent, "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class") === false) $missing[] = "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class";
+        $providersList = [
+            'App\\Providers\\Vrm\\NotificationServiceProvider::class',
+            'App\\Providers\\Vrm\\TokenServiceProvider::class',
+            'App\\Providers\\Vrm\\MediaForgeServiceProvider::class',
+            'App\\Providers\\Vrm\\UtilitiesServiceProvider::class',
+            'App\\Providers\\Vrm\\GlobalDataServiceProvider::class',
+        ];
+        $missingProviders = array_filter($providersList, fn($p) => strpos($finalContent, $p) === false);
+        if ($missing || $missingProviders) {
+            $this->warn('Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:');
+            if ($missing) {
+                $this->line("\nAdd these to your middleware aliases array:");
+                foreach ($missing as $m) $this->line('    ' . $m);
+            }
+            if ($missingProviders) {
+                $this->line("\nAdd these to your providers array:");
+                foreach ($missingProviders as $p) $this->line('    ' . $p . ',');
+            }
         }
     }
 
