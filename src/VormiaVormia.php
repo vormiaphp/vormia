@@ -2,12 +2,32 @@
 
 namespace VormiaPHP\Vormia;
 
-use ZipArchive;
 use Illuminate\Support\Facades\File;
 use Illuminate\Filesystem\Filesystem;
+use ZipArchive;
+use RuntimeException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class VormiaVormia
 {
+    /**
+     * The filesystem instance.
+     *
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    protected $filesystem;
+
+    /**
+     * Create a new VormiaVormia instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->filesystem = new Filesystem();
+    }
+
     /**
      * Get the name of the vormia kit.
      */
@@ -21,144 +41,137 @@ class VormiaVormia
      */
     public function description(): string
     {
-        return 'Vormia - A complete vormia kit for Laravel 12';
+        return 'Vormia - A complete kit for Laravel';
     }
 
     /**
      * Install the vormia kit.
      */
-    public function install(bool $apiOnly = false): void
+    public function install(bool $apiOnly = false): bool
     {
-        // Your existing installation logic
-        $this->copyStubs($apiOnly);
+        try {
+            $this->copyStubs($apiOnly);
+            $this->publishAssets();
+            $this->runMigrations();
+            return true;
+        } catch (\Exception $e) {
+            $this->handleError($e);
+            return false;
+        }
     }
 
     /**
      * Update the vormia kit.
      */
-    public function update(): void
+    public function update(): bool
     {
-        // Update only changed files
-        $this->updateStubs();
+        try {
+            $this->updateStubs();
+            $this->publishAssets(true);
+            return true;
+        } catch (\Exception $e) {
+            $this->handleError($e);
+            return false;
+        }
     }
 
     /**
      * Uninstall the vormia kit.
      */
-    public function uninstall(): void
+    public function uninstall(): bool
     {
-        // Remove installed files
-        $this->removeInstalledFiles();
+        try {
+            $this->removeInstalledFiles();
+            return true;
+        } catch (\Exception $e) {
+            $this->handleError($e);
+            return false;
+        }
     }
 
     /**
-     * Copy Stubs to directories.
+     * Copy all stubs to their respective directories.
      */
     protected function copyStubs(bool $apiOnly = false): void
     {
-        $filesystem = new Filesystem();
+        $stubs = [
+            'migrations' => $this->databasePath('migrations'),
+            'models' => $this->appPath('Models'),
+            'jobs' => $this->appPath('Jobs'),
+            'mail' => $this->appPath('Mail'),
+            'livewire' => $this->appPath('Livewire'),
+            'middleware' => $this->appPath('Http/Middleware'),
+            'services' => $this->appPath('Services'),
+        ];
 
-        // Copy migrations
-        $this->copyDirectory($filesystem, 'migrations', $this->databasePath('migrations'));
-
-        // Copy models
-        $this->copyDirectory($filesystem, 'models', $this->appPath('Models'));
-
-        // Copy jobs
-        $this->copyDirectory($filesystem, 'jobs', $this->appPath('Jobs'));
-
-        // Copy mails
-        $this->copyDirectory($filesystem, 'mail', $this->appPath('Mail'));
-
-        // Copy controllers
         if (!$apiOnly) {
-            $this->copyDirectory($filesystem, 'controllers', $this->appPath('Http/Controllers'));
+            $stubs['controllers'] = $this->appPath('Http/Controllers');
+            $stubs['views'] = $this->resourcePath('views');
         }
 
-        // Copy livewire components
-        $this->copyDirectory($filesystem, 'livewire', $this->appPath('Livewire'));
-
-        // Copy middleware
-        $this->copyDirectory($filesystem, 'middleware', $this->appPath('Http/Middleware'));
-
-        // Copy services
-        $this->copyDirectory($filesystem, 'services', $this->appPath('Services'));
-
-        // Copy views
-        if (!$apiOnly) {
-            $this->copyDirectory($filesystem, 'views', $this->resourcePath('views'));
+        foreach ($stubs as $source => $destination) {
+            $this->copyDirectory($source, $destination);
         }
 
-
-        // Only copy specific folders from public, not the entire public directory
-        $this->copyDirectory($filesystem, 'public/media', $this->publicPath('media'));
-        // Add any other specific public folders you want to copy directly
-
-        // Extract compressed directories
         if ($apiOnly) {
-            $this->copyApiControllers($filesystem, 'controllers');
-            $this->copyApiControllers($filesystem, 'views');
+            $this->copyApiControllers();
         }
     }
 
     /**
-     * Copy only API controllers (excluding admin controllers).
-     * 
-     * @param Filesystem $filesystem
-     * @param string $source
-     * @param string $destination
+     * Publish package assets.
      */
-    protected function copyApiControllers(Filesystem $filesystem, $source): void
+    protected function publishAssets(bool $force = false): void
     {
-        // Controller
-        if ($source === 'controllers') {
-            $destination = $this->appPath('Http/Controllers');
-            $controller_folder = __DIR__ . '/stubs/' . $source . '/Api';
+        $assets = [
+            'public/media' => $this->publicPath('media'),
+            'public/js' => $this->publicPath('js/vormia'),
+            'public/css' => $this->publicPath('css/vormia'),
+        ];
 
-            if ($filesystem->isDirectory($controller_folder)) {
-                // Create the Api folder in the destination
-                $api_destination = $destination . '/Api';
-                $filesystem->ensureDirectoryExists($api_destination);
-
-                // Copy the contents of the Api folder to the destination/Api folder
-                $filesystem->copyDirectory($controller_folder, $api_destination);
+        foreach ($assets as $source => $destination) {
+            if ($force || !$this->filesystem->exists($destination)) {
+                $this->copyDirectory($source, $destination);
             }
         }
+    }
 
-        // Views - Content
-        if ($source == 'views') {
-            $destination = $this->resourcePath('views');
+    /**
+     * Run database migrations.
+     */
+    protected function runMigrations(): void
+    {
+        Artisan::call('migrate', ['--force' => true]);
+    }
 
-            $view_folder_content = __DIR__ . '/stubs/' . $source . '/content';
-            if ($filesystem->isDirectory($view_folder_content)) {
-                // Create the Api folder in the destination
-                $api_destination = $destination . '/content';
-                $filesystem->ensureDirectoryExists($api_destination);
+    /**
+     * Copy only API controllers and related files.
+     */
+    protected function copyApiControllers(): void
+    {
+        // Copy API controllers
+        $apiControllersSource = __DIR__ . '/stubs/controllers/Api';
+        $apiControllersDest = $this->appPath('Http/Controllers/Api');
 
-                // Copy the contents of the Api folder to the destination/Api folder
-                $filesystem->copyDirectory($view_folder_content, $api_destination);
-            }
+        if ($this->filesystem->isDirectory($apiControllersSource)) {
+            $this->filesystem->ensureDirectoryExists($apiControllersDest);
+            $this->filesystem->copyDirectory($apiControllersSource, $apiControllersDest);
+        }
 
-            // Views - Email
-            $view_folder_email = __DIR__ . '/stubs/' . $source . '/emails';
-            if ($filesystem->isDirectory($view_folder_email)) {
-                // Create the Api folder in the destination
-                $api_destination = $destination . '/emails';
-                $filesystem->ensureDirectoryExists($api_destination);
+        // Copy API views
+        $apiViews = [
+            'content' => 'content',
+            'emails' => 'emails',
+            'livewire' => 'livewire'
+        ];
 
-                // Copy the contents of the Api folder to the destination/Api folder
-                $filesystem->copyDirectory($view_folder_email, $api_destination);
-            }
+        foreach ($apiViews as $source => $dest) {
+            $sourcePath = __DIR__ . "/stubs/views/{$source}";
+            $destPath = $this->resourcePath("views/{$dest}");
 
-            // Views - Livewire
-            $view_folder_livewire = __DIR__ . '/stubs/' . $source . '/livewire';
-            if ($filesystem->isDirectory($view_folder_livewire)) {
-                // Create the Api folder in the destination
-                $api_destination = $destination . '/livewire';
-                $filesystem->ensureDirectoryExists($api_destination);
-
-                // Copy the contents of the Api folder to the destination/Api folder
-                $filesystem->copyDirectory($view_folder_livewire, $api_destination);
+            if ($this->filesystem->isDirectory($sourcePath)) {
+                $this->filesystem->ensureDirectoryExists(dirname($destPath));
+                $this->filesystem->copyDirectory($sourcePath, $destPath);
             }
         }
     }
@@ -168,160 +181,60 @@ class VormiaVormia
      */
     protected function updateStubs(): void
     {
-        $filesystem = new Filesystem();
-
-        // Update migrations
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/migrations', $this->databasePath('migrations'));
-
-        // Update models
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/models', $this->appPath('Models'));
-
-        // Copy jobs
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/jobs', $this->appPath('Jobs'));
-
-        // Copy mails
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/mail', $this->appPath('Mail'));
-
-        // Update controllers
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/controllers', $this->appPath('Http/Controllers'));
-
-        // Update livewire components
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/livewire', $this->appPath('Livewire'));
-
-        // Update middleware
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/middleware', $this->appPath('Http/Middleware'));
-
-        // Update rules
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/rules', $this->appPath('Rules'));
-
-        // Update services
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/services', $this->appPath('Services'));
-
-        // Update views
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/views', $this->resourcePath('views'));
-
-        // Update seeders
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/seeders', $this->databasePath('seeders'));
-
-        // Update routes - be careful with routes as they might be heavily customized
-        // You might want to skip this or implement special handling
-        // $this->updateDirectory($filesystem, __DIR__ . '/stubs/routes', $this->basePath('routes'));
-
-        // Update public assets
-        $this->updateDirectory($filesystem, __DIR__ . '/stubs/public', $this->publicPath());
-    }
-
-    /**
-     * Update a directory with new files.
-     */
-    protected function updateDirectory($filesystem, $source, $destination): void
-    {
-        if (!File::isDirectory($source)) {
-            return;
-        }
-
-        // Create destination directory if it doesn't exist
-        if (!File::isDirectory($destination)) {
-            File::makeDirectory($destination, 0755, true);
-        }
-
-        $files = $filesystem->files($source);
-
-        foreach ($files as $file) {
-            $destPath = $destination . '/' . $file->getFilename();
-
-            // Check if destination file exists and compare modification times
-            if (!File::exists($destPath) || filemtime($file->getPathname()) > filemtime($destPath)) {
-                File::copy($file->getPathname(), $destPath);
-            }
-        }
-
-        // Recursively update subdirectories
-        $directories = $filesystem->directories($source);
-
-        foreach ($directories as $directory) {
-            $dirName = basename($directory);
-            $this->updateDirectory(
-                $filesystem,
-                $directory,
-                $destination . '/' . $dirName
-            );
-        }
-    }
-
-    /**
-     * Remove all installed files.
-     */
-    protected function removeInstalledFiles(): void
-    {
-        $filesystem = new Filesystem();
-
-        // Define directories to remove - these should match what was installed
-        $directoriesToRemove = [
-            // Controllers
-            $this->appPath('Http/Controllers/Admin'),
-            $this->appPath('Http/Controllers/Api/V1/Auth'),
-            $this->appPath('Http/Controllers/Setup'),
-
-            // Livewire components - use appropriate path
-            $this->appPath('Livewire/LiveSetting.php'),
-
-            // Middleware - only remove Vormia specific middleware
-            $this->appPath('Http/Middleware/CheckRolePermission.php'),
-
-            // Views - only remove Vormia specific views
-            $this->resourcePath('views/vormia'),
-
-            // Public assets
-            $this->publicPath('vormia'),
+        $stubs = [
+            'migrations' => $this->databasePath('migrations'),
+            'models' => $this->appPath('Models'),
+            'jobs' => $this->appPath('Jobs'),
+            'mail' => $this->appPath('Mail'),
+            'controllers' => $this->appPath('Http/Controllers'),
+            'livewire' => $this->appPath('Livewire'),
+            'middleware' => $this->appPath('Http/Middleware'),
+            'rules' => $this->appPath('Rules'),
+            'services' => $this->appPath('Services'),
+            'views' => $this->resourcePath('views'),
+            'seeders' => $this->databasePath('seeders'),
+            'public' => $this->publicPath()
         ];
 
-        // Remove specific files from migrations, seeders, etc.
-        $filesToRemove = [
-            // Add specific migration, seeder, or other files
-            // E.g., $this->databasePath('migrations/2023_01_01_000000_create_vormia_tables.php'),
-        ];
-
-        // Remove directories
-        foreach ($directoriesToRemove as $directory) {
-            $this->removeDirectory($filesystem, $directory);
-        }
-
-        // Remove specific files
-        foreach ($filesToRemove as $file) {
-            if (File::exists($file)) {
-                File::delete($file);
+        foreach ($stubs as $source => $destination) {
+            $sourcePath = __DIR__ . "/stubs/{$source}";
+            if ($this->filesystem->isDirectory($sourcePath)) {
+                $this->updateDirectory($sourcePath, $destination);
             }
         }
     }
 
     /**
-     * Remove a directory if it exists.
+     * Handle errors during installation/update.
+     *
+     * @param \Exception $e
+     * @throws \Exception
      */
-    protected function removeDirectory($filesystem, $path): void
+    protected function handleError(\Exception $e): void
     {
-        if (File::isDirectory($path)) {
-            $filesystem->deleteDirectory($path);
-        }
+        Log::error('Vormia installation error: ' . $e->getMessage());
+        throw $e;
     }
 
     /**
-     * Helper to copy directories.
+     * Copy a directory from source to destination.
      */
-    protected function copyDirectory(Filesystem $filesystem, $source, $destination): void
+    protected function copyDirectory(string $source, string $destination): void
     {
         $source = __DIR__ . '/stubs/' . $source;
 
-        if ($filesystem->isDirectory($source)) {
-            $filesystem->ensureDirectoryExists($destination);
-            $filesystem->copyDirectory($source, $destination);
+        if (!$this->filesystem->exists($source)) {
+            throw new RuntimeException("Source directory does not exist: {$source}");
         }
+
+        $this->filesystem->ensureDirectoryExists(dirname($destination));
+        $this->filesystem->copyDirectory($source, $destination);
     }
 
     /**
      * Get the application path.
      */
-    protected function appPath($path = ''): string
+    protected function appPath(string $path = ''): string
     {
         return app_path($path);
     }
@@ -329,23 +242,31 @@ class VormiaVormia
     /**
      * Get the database path.
      */
-    protected function databasePath($path = ''): string
+    protected function databasePath(string $path = ''): string
     {
         return database_path($path);
     }
 
     /**
-     * Get the resource path.
+     * Get the resources path.
      */
-    protected function resourcePath($path = ''): string
+    protected function resourcePath(string $path = ''): string
     {
         return resource_path($path);
     }
 
     /**
+     * Get the public path.
+     */
+    protected function publicPath(string $path = ''): string
+    {
+        return public_path($path);
+    }
+
+    /**
      * Get the base path.
      */
-    protected function basePath($path = ''): string
+    protected function basePath(string $path = ''): string
     {
         return base_path($path);
     }
@@ -353,17 +274,95 @@ class VormiaVormia
     /**
      * Get the config path.
      */
-    protected function configPath($path = ''): string
+    protected function configPath(string $path = ''): string
     {
         return config_path($path);
     }
 
     /**
-     * Get the public path.
+     * Remove installed files during uninstallation.
      */
-    protected function publicPath($path = ''): string
+    protected function removeInstalledFiles(): void
     {
-        return public_path($path);
+        $directoriesToRemove = [
+            // Controllers
+            $this->appPath('Http/Controllers/Admin'),
+            $this->appPath('Http/Controllers/Api'),
+            $this->appPath('Http/Controllers/Auth'),
+
+            // Livewire components
+            $this->appPath('Http/Livewire'),
+
+            // Middleware
+            $this->appPath('Http/Middleware/Vormia'),
+
+            // Models
+            $this->appPath('Models/Vormia'),
+
+            // Services
+            $this->appPath('Services/Vormia'),
+
+            // Views
+            $this->resourcePath('views/vormia'),
+
+            // Public assets
+            $this->publicPath('vendor/vormia'),
+            $this->publicPath('js/vormia'),
+            $this->publicPath('css/vormia'),
+        ];
+
+        foreach ($directoriesToRemove as $directory) {
+            if ($this->filesystem->exists($directory)) {
+                $this->filesystem->deleteDirectory($directory);
+            }
+        }
+    }
+
+    /**
+     * Update a directory with new files.
+     */
+    protected function updateDirectory(string $source, string $destination): void
+    {
+        if (!$this->filesystem->isDirectory($source)) {
+            return;
+        }
+
+        // Create destination directory if it doesn't exist
+        $this->filesystem->ensureDirectoryExists($destination);
+
+        // Copy files
+        $files = $this->filesystem->files($source);
+        foreach ($files as $file) {
+            $destPath = $destination . '/' . $file->getFilename();
+
+            // Only copy if file doesn't exist or is newer
+            if (
+                !$this->filesystem->exists($destPath) ||
+                $this->filesystem->lastModified($file->getPathname()) > $this->filesystem->lastModified($destPath)
+            ) {
+                $this->filesystem->copy($file->getPathname(), $destPath);
+            }
+        }
+
+        // Process subdirectories
+        $directories = $this->filesystem->directories($source);
+        foreach ($directories as $directory) {
+            $dirName = basename($directory);
+            $this->updateDirectory(
+                $directory,
+                $destination . '/' . $dirName
+            );
+        }
+    }
+
+    /**
+     * Remove a directory and its contents.
+     */
+    protected function removeDirectory(string $path): void
+    {
+        if ($this->filesystem->exists($path)) {
+            $this->filesystem->deleteDirectory($path);
+        }
     }
 
     /**

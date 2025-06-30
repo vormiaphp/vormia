@@ -5,6 +5,7 @@ namespace Vormia\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use VormiaPHP\Vormia\VormiaVormia;
 
 class InstallCommand extends Command
 {
@@ -30,6 +31,7 @@ class InstallCommand extends Command
         $this->info('🚀 Installing Vormia Package...');
 
         $isApi = $this->option('api');
+        $vormia = new VormiaVormia();
 
         // Step 1: Publish config
         $this->step('Publishing configuration files...');
@@ -39,48 +41,40 @@ class InstallCommand extends Command
             '--force' => true
         ]);
 
-        // Step 2: Publish all package files
-        $this->step('Publishing package files...');
-        Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
-            '--tag' => 'vormia-files',
-            '--force' => true
-        ]);
+        // Step 2: Install Vormia kit
+        $this->step('Installing Vormia kit...');
+        if ($vormia->install($isApi)) {
+            $this->info('✅ Vormia kit installed successfully.');
+        } else {
+            $this->error('❌ Failed to install Vormia kit.');
+            return 1;
+        }
 
-        // Step 3: Publish migrations
-        $this->step('Publishing migrations...');
-        Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
-            '--tag' => 'vormia-migrations',
-            '--force' => true
-        ]);
-
-        // Step 4: Update User model
+        // Step 3: Update User model
         $this->step('Updating User model...');
         $this->updateUserModel();
 
-        // Step 5: Update bootstrap/app.php
+        // Step 4: Update bootstrap/app.php
         $this->step('Updating bootstrap/app.php...');
         $this->updateBootstrapApp();
 
-        // Step 6: Update .env files
+        // Step 5: Update .env files
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
-        // Step 7: Install API if requested
+        // Step 6: Install API if requested
         if ($isApi) {
             $this->step('Installing API support with Sanctum...');
             $this->installApiSupport();
         }
 
-        // Step 8: Run migrations
-        if ($this->confirm('Do you want to run migrations now?', true)) {
-            $this->step('Running migrations...');
-            Artisan::call('migrate');
-            $this->info('✅ Migrations completed successfully.');
-        }
-
         $this->displayCompletionMessage($isApi);
+
+        // Final message
+        $this->info(PHP_EOL . '🎉 Vormia has been installed successfully!');
+        $this->info('Run `php artisan serve` to start your application.');
+
+        return 0;
     }
 
     /**
@@ -97,70 +91,30 @@ class InstallCommand extends Command
     private function updateUserModel()
     {
         $userModelPath = app_path('Models/User.php');
+        $stubPath = base_path('vendor/vormiaphp/vormia/src/stubs/models/User.php');
+        // If developing inside the package, use local stub path
+        if (!file_exists($stubPath)) {
+            $stubPath = base_path('src/stubs/models/User.php');
+        }
 
         if (!File::exists($userModelPath)) {
             $this->error('❌ User model not found. Please ensure it exists.');
             return;
         }
-
-        $userModelContent = File::get($userModelPath);
-
-        // Check if already updated
-        if (strpos($userModelContent, 'User meta') !== false) {
-            $this->warn('⚠️  User model appears to already be updated.');
+        if (!File::exists($stubPath)) {
+            $this->error('❌ User.php stub not found in vormia package.');
             return;
         }
 
-        // Create backup
-        File::copy($userModelPath, $userModelPath . '.backup.' . date('Y-m-d-H-i-s'));
-
-        // Update fillable
-        $fillablePattern = '/protected\s+\$fillable\s*=\s*\[(.*?)\];/s';
-        $newFillable = "protected \$fillable = [
-        'name',
-        'email',
-        'password',
-        'username',
-        'phone',
-        'is_active',
-    ];";
-
-        $userModelContent = preg_replace($fillablePattern, $newFillable, $userModelContent);
-
-        // Update casts
-        $castsPattern = '/protected\s+function\s+casts\(\)\s*:\s*array\s*\{(.*?)\}/s';
-        $newCasts = "protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'phone_verified_at' => 'datetime',
-            'is_active' => 'boolean',
-            'password' => 'hashed',
-        ];
-    }";
-
-        if (preg_match($castsPattern, $userModelContent)) {
-            $userModelContent = preg_replace($castsPattern, $newCasts, $userModelContent);
-        } else {
-            // Add casts method if it doesn't exist
-            $userModelContent = str_replace(
-                $newFillable,
-                $newFillable . "\n\n    " . $newCasts,
-                $userModelContent
-            );
+        $this->newLine();
+        if ($this->confirm('Do you have a backup of your current User.php model?', true) === false) {
+            $backupPath = $userModelPath . '.backup.' . date('Y-m-d-H-i-s');
+            File::copy($userModelPath, $backupPath);
+            $this->info('✅ Backup created: ' . $backupPath);
         }
 
-        // Add Vormia methods
-        $vormiaMethodsPath = __DIR__ . '/../../stubs/user-methods.stub';
-        if (File::exists($vormiaMethodsPath)) {
-            $vormiaMethods = File::get($vormiaMethodsPath);
-
-            // Add before the closing class brace
-            $userModelContent = preg_replace('/(\n\s*})(\s*)$/', "\n" . $vormiaMethods . "$1$2", $userModelContent);
-        }
-
-        File::put($userModelPath, $userModelContent);
-        $this->info('✅ User model updated successfully (backup created).');
+        File::copy($stubPath, $userModelPath);
+        $this->info('✅ User model replaced with Vormia stub.');
     }
 
     /**
