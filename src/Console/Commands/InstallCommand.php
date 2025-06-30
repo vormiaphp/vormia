@@ -234,7 +234,7 @@ class InstallCommand extends Command
         $this->newLine();
 
         $this->comment('📋 Next steps:');
-        $this->line('   1. Review your User model and bootstrap/app.php changes');
+        $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
         $this->line('   2. Configure your .env file with VORMIA_TABLE_PREFIX');
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
 
