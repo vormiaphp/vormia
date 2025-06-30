@@ -107,7 +107,7 @@ class InstallCommand extends Command
         }
 
         $this->newLine();
-        if ($this->confirm('Do you have a backup of your current User.php model?', true) === false) {
+        if ($this->confirm('Would you like to create a backup of your current User.php model?', true)) {
             $backupPath = $userModelPath . '.backup.' . date('Y-m-d-H-i-s');
             File::copy($userModelPath, $backupPath);
             $this->info('✅ Backup created: ' . $backupPath);
@@ -146,17 +146,17 @@ class InstallCommand extends Command
         App\\Providers\\Vrm\\GlobalDataServiceProvider::class,";
 
         // Pattern to find middleware aliases section
-        if (preg_match('/(->withMiddleware\(function\s*\([^)]*\)\s*\{[^}]*alias\(\s*\[[^]]*)/s', $content, $matches)) {
+        if (preg_match('/(->withMiddleware\\(function\\s*\\([^)]*\\)\\s*\\{[^}]*alias\\(\\s*\\[[^]]*)/s', $content, $matches)) {
             $content = str_replace($matches[1], $matches[1] . $middlewareAliases, $content);
         }
 
         // Pattern to find providers section  
-        if (preg_match('/(Application::configure[^}]*providers:\s*\[[^]]*)/s', $content, $matches)) {
+        if (preg_match('/(Application::configure[^}]*providers:\\s*\\[[^]]*)/s', $content, $matches)) {
             $content = str_replace($matches[1], $matches[1] . $providers, $content);
         }
 
         File::put($bootstrapPath, $content);
-        $this->info('✅ bootstrap/app.php updated successfully (backup created).');
+        $this->info('✅ bootstrap/app.php updated successfully.');
 
         // --- Manual fallback instructions ---
         $finalContent = File::get($bootstrapPath);
