@@ -118,14 +118,15 @@ class UpdateCommand extends Command
     private function removeOldFiles()
     {
         $directoriesToRemove = [
-            app_path('Facades/Vrm'),
             app_path('Helpers/Vrm'),
+            app_path('Facades/Vrm'),
             app_path('Jobs/Vrm'),
             app_path('Http/Middleware/Vrm'),
             app_path('Models/Vrm'),
             app_path('Providers/Vrm'),
             app_path('Services/Vrm'),
             app_path('Traits/Vrm'),
+            public_path('vendor/vormia'),
         ];
 
         foreach ($directoriesToRemove as $directory) {

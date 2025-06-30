@@ -51,7 +51,6 @@ class VormiaVormia
     {
         try {
             $this->copyStubs($apiOnly);
-            $this->publishAssets();
             $this->runMigrations();
             return true;
         } catch (\Exception $e) {
@@ -67,7 +66,6 @@ class VormiaVormia
     {
         try {
             $this->updateStubs();
-            $this->publishAssets(true);
             return true;
         } catch (\Exception $e) {
             $this->handleError($e);
@@ -98,41 +96,17 @@ class VormiaVormia
             'migrations' => $this->databasePath('migrations'),
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            'mail' => $this->appPath('Mail'),
-            'livewire' => $this->appPath('Livewire'),
-            'middleware' => $this->appPath('Http/Middleware'),
+            'helpers' => $this->appPath('Helpers'),
+            'facades' => $this->appPath('Facades'),
+            'config' => $this->configPath(),
+            'providers' => $this->appPath('Providers'),
+            'traits' => $this->appPath('Traits'),
             'services' => $this->appPath('Services'),
+            'middleware' => $this->appPath('Http/Middleware'),
         ];
-
-        if (!$apiOnly) {
-            $stubs['controllers'] = $this->appPath('Http/Controllers');
-            $stubs['views'] = $this->resourcePath('views');
-        }
 
         foreach ($stubs as $source => $destination) {
             $this->copyDirectory($source, $destination);
-        }
-
-        if ($apiOnly) {
-            $this->copyApiControllers();
-        }
-    }
-
-    /**
-     * Publish package assets.
-     */
-    protected function publishAssets(bool $force = false): void
-    {
-        $assets = [
-            'public/media' => $this->publicPath('media'),
-            'public/js' => $this->publicPath('js/vormia'),
-            'public/css' => $this->publicPath('css/vormia'),
-        ];
-
-        foreach ($assets as $source => $destination) {
-            if ($force || !$this->filesystem->exists($destination)) {
-                $this->copyDirectory($source, $destination);
-            }
         }
     }
 
@@ -149,31 +123,7 @@ class VormiaVormia
      */
     protected function copyApiControllers(): void
     {
-        // Copy API controllers
-        $apiControllersSource = __DIR__ . '/stubs/controllers/Api';
-        $apiControllersDest = $this->appPath('Http/Controllers/Api');
-
-        if ($this->filesystem->isDirectory($apiControllersSource)) {
-            $this->filesystem->ensureDirectoryExists($apiControllersDest);
-            $this->filesystem->copyDirectory($apiControllersSource, $apiControllersDest);
-        }
-
-        // Copy API views
-        $apiViews = [
-            'content' => 'content',
-            'emails' => 'emails',
-            'livewire' => 'livewire'
-        ];
-
-        foreach ($apiViews as $source => $dest) {
-            $sourcePath = __DIR__ . "/stubs/views/{$source}";
-            $destPath = $this->resourcePath("views/{$dest}");
-
-            if ($this->filesystem->isDirectory($sourcePath)) {
-                $this->filesystem->ensureDirectoryExists(dirname($destPath));
-                $this->filesystem->copyDirectory($sourcePath, $destPath);
-            }
-        }
+        // No API controllers or views to copy, so this method is now empty.
     }
 
     /**
@@ -185,15 +135,13 @@ class VormiaVormia
             'migrations' => $this->databasePath('migrations'),
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            'mail' => $this->appPath('Mail'),
-            'controllers' => $this->appPath('Http/Controllers'),
-            'livewire' => $this->appPath('Livewire'),
-            'middleware' => $this->appPath('Http/Middleware'),
-            'rules' => $this->appPath('Rules'),
+            'helpers' => $this->appPath('Helpers'),
+            'facades' => $this->appPath('Facades'),
+            'config' => $this->configPath(),
+            'providers' => $this->appPath('Providers'),
+            'traits' => $this->appPath('Traits'),
             'services' => $this->appPath('Services'),
-            'views' => $this->resourcePath('views'),
-            'seeders' => $this->databasePath('seeders'),
-            'public' => $this->publicPath()
+            'middleware' => $this->appPath('Http/Middleware'),
         ];
 
         foreach ($stubs as $source => $destination) {
@@ -285,30 +233,26 @@ class VormiaVormia
     protected function removeInstalledFiles(): void
     {
         $directoriesToRemove = [
-            // Controllers
-            $this->appPath('Http/Controllers/Admin'),
-            $this->appPath('Http/Controllers/Api'),
-            $this->appPath('Http/Controllers/Auth'),
-
-            // Livewire components
-            $this->appPath('Http/Livewire'),
-
+            // Helpers
+            $this->appPath('Helpers/Vrm'),
+            // Facades
+            $this->appPath('Facades/Vrm'),
+            // Jobs
+            $this->appPath('Jobs/Vrm'),
             // Middleware
-            $this->appPath('Http/Middleware/Vormia'),
-
+            $this->appPath('Http/Middleware/Vrm'),
             // Models
-            $this->appPath('Models/Vormia'),
-
+            $this->appPath('Models/Vrm'),
+            // Providers
+            $this->appPath('Providers/Vrm'),
             // Services
-            $this->appPath('Services/Vormia'),
-
-            // Views
-            $this->resourcePath('views/vormia'),
-
-            // Public assets
+            $this->appPath('Services/Vrm'),
+            // Traits
+            $this->appPath('Traits/Vrm'),
+            // Config
+            $this->configPath('vormia.php'),
+            // Public assets (if any were ever published)
             $this->publicPath('vendor/vormia'),
-            $this->publicPath('js/vormia'),
-            $this->publicPath('css/vormia'),
         ];
 
         foreach ($directoriesToRemove as $directory) {
