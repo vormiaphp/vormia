@@ -5,6 +5,7 @@ namespace Vormia\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 
 class UninstallCommand extends Command
 {
@@ -92,6 +93,30 @@ class UninstallCommand extends Command
         // Step 6: Clear caches
         $this->step('Clearing application caches...');
         $this->clearCaches();
+
+        // Attempt to rollback Vormia (vrm_) migrations
+        $this->info('Attempting to rollback Vormia (vrm_) migrations...');
+        $prefix = 'vrm_';
+        $migrationPath = database_path('migrations');
+        $rolledBack = false;
+        if (File::isDirectory($migrationPath)) {
+            foreach (File::files($migrationPath) as $file) {
+                if (strpos($file->getFilename(), $prefix) !== false) {
+                    // Try to rollback this migration
+                    $migrationName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                    try {
+                        Artisan::call('migrate:rollback', ['--path' => 'database/migrations/' . $file->getFilename(), '--force' => true]);
+                        $this->line('  Rolled back migration: ' . $file->getFilename());
+                        $rolledBack = true;
+                    } catch (\Exception $e) {
+                        $this->warn('  Could not rollback migration: ' . $file->getFilename() . ' (' . $e->getMessage() . ')');
+                    }
+                }
+            }
+        }
+        if (!$rolledBack) {
+            $this->warn('No Vormia (vrm_) migrations were rolled back automatically. You may need to manually drop Vormia tables from your database.');
+        }
 
         $this->displayCompletionMessage($keepData);
     }

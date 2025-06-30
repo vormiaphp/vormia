@@ -48,7 +48,37 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
-Follow the process to complete the installation.
+2. If you see a message like:
+
+```
+Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:
+Add these to your middleware aliases array:
+    'role' => \App\Http\Middleware\Vrm\CheckRole::class
+    'module' => \App\Http\Middleware\Vrm\CheckModule::class
+    'permission' => \App\Http\Middleware\Vrm\CheckPermission::class
+```
+
+then open `bootstrap/app.php` and add the above lines to the appropriate arrays.
+
+```
+Add these to your providers array bootstrap/providers.php:
+
+    App\Providers\Vrm\NotificationServiceProvider::class,
+    App\Providers\Vrm\TokenServiceProvider::class,
+    App\Providers\Vrm\MediaForgeServiceProvider::class,
+    App\Providers\Vrm\UtilitiesServiceProvider::class,
+    App\Providers\Vrm\GlobalDataServiceProvider::class,
+```
+
+open `bootstrap/providers.php` and add the above lines to the appropriate arrays.
+
+3. Configure your `.env` file as needed.
+
+4. Run migrations:
+
+```
+php artisan migrate
+```
 
 🟢 **Introducing `api first vormia verion`**
 Due to need of making vormia easier to bootstrap your small to medium sized projects, we have introduced new command.
@@ -59,11 +89,26 @@ php artisan vormia:install --api
 
 ## Uninstallation
 
-To remove Vormia from your project, run:
+1. Run the uninstall command:
 
-```sh
+```
 php artisan vormia:uninstall
 ```
+
+2. **Note:** The uninstall process does **not** rollback or undo the Vormia (vrm\_) migrations. To remove Vormia tables, you must manually run:
+
+```
+php artisan migrate:rollback
+```
+
+or manually drop the tables from your database.
+
+3. If you see a message about manual cleanup for middleware aliases or providers, remove those lines from `bootstrap/app.php` as well.
+
+## Additional Notes
+
+- The uninstall process will restore your `User.php` model from backup if a backup exists.
+- No backup of `bootstrap/app.php` is created or needed for Vormia operations.
 
 🟢 **Run `composer update` to update your autoloader**
 
