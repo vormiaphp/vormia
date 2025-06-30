@@ -81,9 +81,6 @@ class VormiaVormia
         // Copy middleware
         $this->copyDirectory($filesystem, 'middleware', $this->appPath('Http/Middleware'));
 
-        // Copy rules
-        $this->copyDirectory($filesystem, 'rules', $this->appPath('Rules'));
-
         // Copy services
         $this->copyDirectory($filesystem, 'services', $this->appPath('Services'));
 
@@ -92,11 +89,6 @@ class VormiaVormia
             $this->copyDirectory($filesystem, 'views', $this->resourcePath('views'));
         }
 
-        // Copy seeders
-        $this->copyDirectory($filesystem, 'seeders', $this->databasePath('seeders'));
-
-        // Copy routes
-        // $this->copyDirectory($filesystem, 'routes', $this->basePath('routes'));
 
         // Only copy specific folders from public, not the entire public directory
         $this->copyDirectory($filesystem, 'public/media', $this->publicPath('media'));
@@ -106,10 +98,6 @@ class VormiaVormia
         if ($apiOnly) {
             $this->copyApiControllers($filesystem, 'controllers');
             $this->copyApiControllers($filesystem, 'views');
-            $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
-        } else {
-            $this->extractCompressedDirectory('admin.zip', $this->publicPath() . '/admin');
-            $this->extractCompressedDirectory('content.zip', $this->publicPath() . '/content');
         }
     }
 

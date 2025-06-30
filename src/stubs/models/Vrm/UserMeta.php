@@ -2,35 +2,39 @@
 
 namespace App\Models\Vrm;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UserMeta extends Model
 {
-    use HasFactory;
+    // Todo: Table name
+    public function getTable()
+    {
+        return config('vormia.table_prefix') . 'user_meta';
+    }
 
-    // Todo: Table Name
-    protected $table = 'user_meta';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'user',
+        'user_id',
         'key',
         'value',
-        'flag',
+        'is_active',
     ];
 
-    /**
-     * Todo: Users
-     * One or more meta values can be related to a single user
-     */
+    // Todo: User relation
     public function user()
     {
-        return $this->belongsTo(User::class, 'id', 'user');
+        return $this->belongsTo(\App\Models\User::class);
+    }
+
+    // Todo: Mutator: Store any type of value as JSON
+    public function setValueAttribute($value)
+    {
+        $this->attributes['value'] = json_encode($value);
+    }
+
+    // Todo: Accessor: Decode JSON, return original value if not JSON
+    public function getValueAttribute($value)
+    {
+        $decoded = json_decode($value, true);
+        return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $value;
     }
 }

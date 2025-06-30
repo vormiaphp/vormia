@@ -1,9 +1,9 @@
 {
     "name": "vormiaphp/vormia",
-    "version": "3.2.2", 
-    "description": "Vormia PHP Framework for Laravel",
+    "version": "4.0.0",
+    "description": "A comprehensive Laravel package for user management, roles, permissions, and utilities",
+    "keywords": ["laravel", "php", "roles", "permissions", "user-management", "vormia"],
     "type": "library",
-    "homepage": "https://github.com/vormiaphp/vormia",
     "license": "MIT",
     "authors": [
         {
@@ -16,24 +16,35 @@
     "autoload": {
         "psr-4": {
             "VormiaPHP\\Vormia\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "VormiaPHP\\Vormia\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
                 "VormiaPHP\\Vormia\\VormiaServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Vormia": "VormiaPHP\\Vormia\\Facades\\Vormia"
+            }
         }
     },
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
-        "intervention/image": "^3.6",
-        "illuminate/filesystem": "^12.0",
-        "livewire/livewire": "^3.5",
-        "laravel/sanctum": "^4.0",
-        "africastalking/africastalking": "^3.0"
+        "intervention/image": "^3.11"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    }
 }
