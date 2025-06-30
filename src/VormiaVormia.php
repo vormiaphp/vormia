@@ -107,7 +107,26 @@ class VormiaVormia
 
         // Copy all non-migration stubs
         foreach ($stubs as $source => $destination) {
-            $this->copyDirectory($source, $destination);
+            $sourcePath = __DIR__ . '/stubs/' . $source;
+            if ($this->filesystem->isDirectory($sourcePath)) {
+                foreach ($this->filesystem->allFiles($sourcePath) as $file) {
+                    $relativePath = ltrim(str_replace($sourcePath, '', $file->getPathname()), '/\\');
+                    $destFile = rtrim($destination, '/\\') . '/' . $relativePath;
+                    if ($this->filesystem->exists($destFile)) {
+                        if (app()->runningInConsole() && app()->bound('command')) {
+                            $command = app('command');
+                            if (method_exists($command, 'confirm')) {
+                                if (!$command->confirm("File {$destFile} already exists. Override?", false)) {
+                                    $command->line("  Skipped: {$destFile}");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                    $this->filesystem->copy($file->getPathname(), $destFile);
+                }
+            }
         }
 
         // Copy migration files directly into database/migrations
@@ -115,7 +134,19 @@ class VormiaVormia
         $migrationDest = $this->databasePath('migrations');
         if ($this->filesystem->isDirectory($migrationSource)) {
             foreach ($this->filesystem->files($migrationSource) as $file) {
-                $this->filesystem->copy($file->getPathname(), $migrationDest . '/' . $file->getFilename());
+                $destFile = $migrationDest . '/' . $file->getFilename();
+                if ($this->filesystem->exists($destFile)) {
+                    if (app()->runningInConsole() && app()->bound('command')) {
+                        $command = app('command');
+                        if (method_exists($command, 'confirm')) {
+                            if (!$command->confirm("Migration {$destFile} already exists. Override?", false)) {
+                                $command->line("  Skipped: {$destFile}");
+                                continue;
+                            }
+                        }
+                    }
+                }
+                $this->filesystem->copy($file->getPathname(), $destFile);
             }
         }
     }
