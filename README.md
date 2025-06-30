@@ -1,19 +1,22 @@
-# Vormia - Laravel Starter Package
+# Vormia - Laravel Package
 
 [![Packagist](https://img.shields.io/packagist/v/vormiaphp/vormia.svg)](https://packagist.org/packages/vormiaphp/vormia)
 [![GitHub](https://img.shields.io/github/stars/vormiaphp/vormia.svg)](https://github.com/vormiaphp/vormia)
 
 ## Introduction
 
-Vormia is a Laravel package designed to accelerate development by providing standardized tools for common backend tasks. It helps teams maintain coding standards while allowing flexibility for custom implementations. Unlike FilamentPHP, Vormia does not impose a rigid structure—developers retain full control over their applications.
+A comprehensive Laravel development package that streamlines media handling, notifications, and role management with a modular, maintainable approach.
+
+VormiaPHP offers robust tools for handling media, managing notifications, and implementing essential features like user roles and permissions. The package is designed with a modular structure, separating concerns through dedicated namespaces for models, services, middleware, and traits.
 
 ## Features
 
-- **Image Manipulation**
-- **Backend Utilities**
-- **Notification Handling**
-- **Data Hierarchy Management** (e.g., Continent > Country > City)
-- **Admin Role Management**
+- **File & Image Processing**
+- **Notification System**
+- **Role-Based Access Control**
+- **Modular Architecture**
+- **Livewire Integration**
+- **Database Organization**
 
 ## Installation
 
@@ -54,28 +57,6 @@ Due to need of making vormia easier to bootstrap your small to medium sized proj
 php artisan vormia:install --api
 ```
 
-## Frontend Setup
-
-Vormia utilizes Laravel Livewire for frontend components. To set up the frontend, install npm packages:
-
-```sh
-npm install
-npm run dev
-```
-
-## Accessing the Admin Backend
-
-To access the admin backend, navigate to:
-
-```
-http://127.0.0.1:8000/vrm/admin
-```
-
-**Default Login Credentials:**
-
-- **Username:** admin
-- **Password:** admin (as set in the `DatabaseSeeder.php` file)
-
 ## Uninstallation
 
 To remove Vormia from your project, run:
@@ -84,21 +65,12 @@ To remove Vormia from your project, run:
 php artisan vormia:uninstall
 ```
 
-### Important Steps After Uninstallation
-
-🟡 **Remove the Vormia routes in `api.php` and `web.php` files**
-
-🟡 **Remove the Vormia middleware import in `web.php` file**
-
-🟢 **Update your `DatabaseSeeder.php` to remove anything related to `SettingSeeder`, `RolesTableSeeder`, and `$admin->roles()->attach(1);`**
-
 🟢 **Run `composer update` to update your autoloader**
 
 🔴 **FAILURE TO DO SO WILL CAUSE AN ERROR IN THE NEXT COMMAND.**
 
 ## Supported Laravel Versions
 
-✅ Laravel 11  
 ✅ Laravel 12
 
 ## Usage
@@ -108,8 +80,7 @@ Vormia helps developers follow structured coding standards without restricting t
 ## Roadmap
 
 - [✅] Initial package release
-- [ ] Add support for Inertia.js
-- [ ] Expand documentation and tutorials
+- [✅] Expand documentation and tutorials
 - [ ] Implement additional helper utilities
 
 ## Links
@@ -121,9 +92,45 @@ Vormia helps developers follow structured coding standards without restricting t
 
 Vormia is open-source and available under the MIT License.
 
+## Testing
+
+This package includes basic PHPUnit tests for all main Vormia Artisan commands:
+
+- `vormia:install`
+- `vormia:help`
+- `vormia:update`
+- `vormia:uninstall`
+
+To run the tests:
+
+```sh
+composer install
+vendor/bin/phpunit --testdox
+```
+
+You can add more tests in the `tests/` directory to cover additional functionality.
+
+## .gitignore
+
+The `.gitignore` file is configured to exclude:
+
+- `vendor/`, `composer.lock`, and Composer artifacts
+- PHPUnit and code coverage output
+- IDE/editor and OS-specific files (e.g., `.idea/`, `.DS_Store`)
+- Environment files (e.g., `.env`)
+- User model backups created by Vormia installer
+
+## User Model Update Safety
+
+When running `php artisan vormia:install`, the installer will:
+
+- Ask if you have a backup of your `app/Models/User.php` file
+- If not, it will create a timestamped backup before replacing it
+- The replacement uses a stub at `src/stubs/models/User.php` for consistency and safety
+
 ## Contributing
 
-Contributions are welcome! Feel free to fork the repo, open an issue, or submit a pull request.
+Contributions are welcome! Please ensure new features include appropriate tests in the `tests/` directory. See the [Testing](#testing) section above for details.
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature-name`)
