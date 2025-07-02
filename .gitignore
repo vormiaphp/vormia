@@ -38,3 +38,9 @@ node_modules/
 npm-debug.log
 yarn-error.log
 workspace.xml
+
+# Keys
+*.pem
+*.key
+*.crt
+*.csr
