@@ -53,9 +53,14 @@ php artisan vormia:install
 ```
 Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:
 Add these to your middleware aliases array:
-    'role' => \App\Http\Middleware\Vrm\CheckRole::class
-    'module' => \App\Http\Middleware\Vrm\CheckModule::class
-    'permission' => \App\Http\Middleware\Vrm\CheckPermission::class
+    ->withMiddleware(function (Middleware $middleware): void {
+        //
+        $middleware->alias([
+            'role' => \App\Http\Middleware\Vrm\CheckRole::class,
+            'module' => \App\Http\Middleware\Vrm\CheckModule::class,
+            'permission' => \App\Http\Middleware\Vrm\CheckPermission::class,
+        ]);
+    })
 ```
 
 then open `bootstrap/app.php` and add the above lines to the appropriate arrays.
