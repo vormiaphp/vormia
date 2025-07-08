@@ -68,6 +68,7 @@ class InstallCommand extends Command
             $this->info('Please run: php artisan install:api');
             $this->info('This will install Laravel Sanctum and set up API authentication.');
             $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
+            $this->warn('Reminder: Add the HasApiTokens trait to your User model (app/Models/User.php) for API authentication.');
         }
 
         $this->displayCompletionMessage($isApi);

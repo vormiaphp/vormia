@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('name', 500);
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('position')->default(0)->comment('For manual ordering');
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
             $table->softDeletes();
 
             $table->index(['type', 'group', 'parent_id', 'reference', 'is_active']);
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('key')->index();
             $table->text('value')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
 
             // Composite index for quick lookups
             $table->unique(['taxonomy_id', 'key']);

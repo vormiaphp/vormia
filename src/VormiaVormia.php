@@ -129,6 +129,78 @@ class VormiaVormia
             }
         }
 
+        // Always copy notifications
+        $notificationsSource = __DIR__ . '/stubs/notifications';
+        $notificationsDest = $this->appPath('Notifications');
+        if ($this->filesystem->isDirectory($notificationsSource)) {
+            $this->filesystem->ensureDirectoryExists($notificationsDest);
+            foreach ($this->filesystem->allFiles($notificationsSource) as $file) {
+                $relativePath = ltrim(str_replace($notificationsSource, '', $file->getPathname()), '/\\');
+                $destFile = rtrim($notificationsDest, '/\\') . '/' . $relativePath;
+                if ($this->filesystem->exists($destFile)) {
+                    if (app()->runningInConsole() && app()->bound('command')) {
+                        $command = app('command');
+                        if (method_exists($command, 'confirm')) {
+                            if (!$command->confirm("Notification {$destFile} already exists. Override?", false)) {
+                                $command->line("  Skipped: {$destFile}");
+                                continue;
+                            }
+                        }
+                    }
+                }
+                $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                $this->filesystem->copy($file->getPathname(), $destFile);
+            }
+        }
+        // Always copy jobs/Vrm
+        $jobsVrmSource = __DIR__ . '/stubs/jobs/Vrm';
+        $jobsVrmDest = $this->appPath('Jobs/Vrm');
+        if ($this->filesystem->isDirectory($jobsVrmSource)) {
+            $this->filesystem->ensureDirectoryExists($jobsVrmDest);
+            foreach ($this->filesystem->allFiles($jobsVrmSource) as $file) {
+                $relativePath = ltrim(str_replace($jobsVrmSource, '', $file->getPathname()), '/\\');
+                $destFile = rtrim($jobsVrmDest, '/\\') . '/' . $relativePath;
+                if ($this->filesystem->exists($destFile)) {
+                    if (app()->runningInConsole() && app()->bound('command')) {
+                        $command = app('command');
+                        if (method_exists($command, 'confirm')) {
+                            if (!$command->confirm("Job {$destFile} already exists. Override?", false)) {
+                                $command->line("  Skipped: {$destFile}");
+                                continue;
+                            }
+                        }
+                    }
+                }
+                $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                $this->filesystem->copy($file->getPathname(), $destFile);
+            }
+        }
+        // API-only jobs/V1
+        if ($apiOnly) {
+            $jobsV1Source = __DIR__ . '/stubs/jobs/V1';
+            $jobsV1Dest = $this->appPath('Jobs/V1');
+            if ($this->filesystem->isDirectory($jobsV1Source)) {
+                $this->filesystem->ensureDirectoryExists($jobsV1Dest);
+                foreach ($this->filesystem->allFiles($jobsV1Source) as $file) {
+                    $relativePath = ltrim(str_replace($jobsV1Source, '', $file->getPathname()), '/\\');
+                    $destFile = rtrim($jobsV1Dest, '/\\') . '/' . $relativePath;
+                    if ($this->filesystem->exists($destFile)) {
+                        if (app()->runningInConsole() && app()->bound('command')) {
+                            $command = app('command');
+                            if (method_exists($command, 'confirm')) {
+                                if (!$command->confirm("Job {$destFile} already exists. Override?", false)) {
+                                    $command->line("  Skipped: {$destFile}");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                    $this->filesystem->copy($file->getPathname(), $destFile);
+                }
+            }
+        }
+
         // API-only stubs
         if ($apiOnly) {
             // Controllers

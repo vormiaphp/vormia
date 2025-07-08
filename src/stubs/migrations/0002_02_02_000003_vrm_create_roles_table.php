@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('authority', 20)->nullable()->default('main')->comment('main - backend, comp - commpany, part - partner');
             $table->string('description')->nullable()->default(null);
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
         });
     }
 

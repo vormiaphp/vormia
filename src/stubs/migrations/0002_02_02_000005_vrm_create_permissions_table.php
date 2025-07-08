@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->unique(); // e.g., 'create-post', 'delete-user'
             $table->string('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
         });
     }
 

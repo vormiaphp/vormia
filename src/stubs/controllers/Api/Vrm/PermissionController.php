@@ -41,7 +41,7 @@ class PermissionController extends Controller
             }
 
             $permission = Permission::create([
-                'name' => $request->name,
+                'name' => Str::slug($request->name),
                 'description' => $request->description,
             ]);
 
@@ -86,6 +86,11 @@ class PermissionController extends Controller
 
             if ($validator->fails()) {
                 return $this->validationError($validator->errors()->toArray(), 'Validation failed');
+            }
+
+            // if name is being updated then slug name
+            if (isset($request->name)) {
+                $request->merge(['name' => Str::slug($request->name)]);
             }
 
             $permission->update($request->only(['name', 'description', 'is_active']));

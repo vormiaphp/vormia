@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('key');
             $table->text('value')->nullable();
             $table->boolean('is_active')->default(false);
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
 
             $table->unique(['user_id', 'key']); // Prevent duplicate keys per user
         });

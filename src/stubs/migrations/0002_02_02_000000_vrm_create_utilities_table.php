@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('key', 200);
             $table->longText('value')->nullable();
             $table->tinyInteger('flag')->default(1);
-            $table->timestamps();
+            $table->timestamps()->useCurrent();
 
             // Indexes
             $table->index('type');

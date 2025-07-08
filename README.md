@@ -48,11 +48,22 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
+- All notification stubs will be copied to `app/Notifications`.
+- All jobs in `stubs/jobs/Vrm` will be copied to `app/Jobs/Vrm`.
+
 If you want API support, run:
 
 ```sh
 php artisan vormia:install --api
 ```
+
+- All notification stubs will be copied to `app/Notifications`.
+- All jobs in `stubs/jobs/Vrm` will be copied to `app/Jobs/Vrm`.
+- All jobs in `stubs/jobs/V1` will be copied to `app/Jobs/V1`.
+- All API controllers in `stubs/controllers/Api` will be copied to `app/Http/Controllers/Api`.
+- The API routes file in `stubs/routes/api.php` will be copied to `routes/api.php` (you may be prompted to overwrite).
+- The Postman collection in `stubs/public/Vormia.postman_collection.json` will be copied to `public/Vormia.postman_collection.json`.
+- **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
 
 Then, you must install Sanctum yourself:
 
