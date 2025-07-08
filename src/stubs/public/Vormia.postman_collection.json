@@ -12,130 +12,542 @@
 			"name": "vrm",
 			"item": [
 				{
-					"name": "role-list",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseurl}}/vrm/roles",
-							"host": [
-								"{{baseurl}}"
-							],
-							"path": [
-								"vrm",
-								"roles"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "role-add",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "member",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "General Member access",
-									"description": "permission to access dashboard",
-									"type": "text"
-								},
-								{
-									"key": "module",
-									"value": "dashboard,forum,investment,stock",
-									"description": "comman separated",
-									"type": "text"
-								},
-								{
-									"key": "authority",
-									"value": "",
-									"description": "main - backend, comp - commpany, part - partner | default main",
-									"type": "text",
-									"disabled": true
+					"name": "role",
+					"item": [
+						{
+							"name": "all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/roles",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"roles"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseurl}}/vrm/roles",
-							"host": [
-								"{{baseurl}}"
-							],
-							"path": [
-								"vrm",
-								"roles"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "role-get",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseurl}}/vrm/roles/admin?",
-							"host": [
-								"{{baseurl}}"
-							],
-							"path": [
-								"vrm",
-								"roles",
-								"admin"
-							],
-							"query": [
-								{
-									"key": null,
-									"value": null,
-									"description": "call using role slug or id like above we used slugname"
+						{
+							"name": "add",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "demotest",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "General Member access",
+											"description": "permission to access dashboard",
+											"type": "text"
+										},
+										{
+											"key": "module",
+											"value": "dashboard,forum,investment,stock",
+											"description": "comman separated",
+											"type": "text"
+										},
+										{
+											"key": "authority",
+											"value": "",
+											"description": "main - backend, comp - commpany, part - partner | default main",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/vrm/roles",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"roles"
+									]
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "role-update",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    // todo: send attributes you wish to update\n    //\"name\": \"\",\n    //\"description\": \"\",\n    //\"module\": \"\",\n    //\"authority\": \"\",\n    \"is_active\": 0\n}\n",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseurl}}/vrm/roles/member",
-							"host": [
-								"{{baseurl}}"
-							],
-							"path": [
-								"vrm",
-								"roles",
-								"member"
-							]
+						{
+							"name": "select",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/roles/admin?",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"roles",
+										"admin"
+									],
+									"query": [
+										{
+											"key": null,
+											"value": null,
+											"description": "call using role slug or id like above we used slugname"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    // todo: send attributes you wish to update\n    //\"name\": \"\",\n    //\"description\": \"\",\n    //\"module\": \"\",\n    //\"authority\": \"\",\n    \"is_active\": 1\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/vrm/roles/member",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"roles",
+										"member"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/roles/demotest",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"roles",
+										"demotest"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
+				},
+				{
+					"name": "permission",
+					"item": [
+						{
+							"name": "all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "view",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Allow user to view record",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "select",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions/4",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions",
+										"4"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    // todo: send attributes you wish to update\n    //\"name\": \"\",\n    // \"description\": \"Allow user to create new record\",\n    \"is_active\": 1\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions/1",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions/5",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "assign-role",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"permission_ids\": [1, 2, 3, 4]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/vrm/permissions/assign-to-role/2",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"vrm",
+										"permissions",
+										"assign-to-role",
+										"2"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			],
 			"description": "Vormia Main API"
 		},
 		{
 			"name": "v1",
-			"item": [],
+			"item": [
+				{
+					"name": "auth",
+					"item": [
+						{
+							"name": "register-member",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\" : \"Jonathan Joestar\",\n    \"email\" : \"jonathan@example.com\",\n    \"password\" : \"User1\",\n    \"password_confirmation\" : \"User1\",\n    \"terms\" : \"yes\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/register",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "verify-email",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseurl}}/v1/verify-email?t=IoJEZP4AE6uHExXTzuGbxkAuaGv9A9Xp0cyY549ltlVnppea4sZBzA3F0MuF",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "t",
+											"value": "IoJEZP4AE6uHExXTzuGbxkAuaGv9A9Xp0cyY549ltlVnppea4sZBzA3F0MuF"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "verify-email-resend",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jonathan@example.com",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/resend-verification",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"resend-verification"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "password-reset-request",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jonathan@example.com",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/password-reset",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"password-reset"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "password-reset",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "token",
+											"value": "60P3jKMfLUki61SFEiF2KNacyxO8Ydg3V3RDxOkdfvRtZFL4KUR0RDYJZPd4",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "NewSecurePassword123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "NewSecurePassword123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/password-reset/verify",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"password-reset",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "4|hIZUJilHPX7caAoK2ay7O3IeOX9NDyqTLCOGmdBJd70f01a6",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jonathan@example.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "NewSecurePassword123",
+											"type": "text"
+										},
+										{
+											"key": "remember_me",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/login",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "logout",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "5|NGTEt5sZQeaKJc2MONMVsgpPvqzawdZr4yImY2RS38e94595",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/v1/logout",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"v1",
+										"logout"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
 			"description": "Write your project APIs in this directory"
 		}
 	],

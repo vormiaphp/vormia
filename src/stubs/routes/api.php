@@ -48,3 +48,31 @@ Route::group(['prefix' => 'vrm'], function () {
         });
     });
 });
+
+// Todo: API VERSION 1
+Route::group(['prefix' => 'v1'], function () {
+    // Todo register
+    Route::controller(App\Http\Controllers\Api\V1\AuthRegisterController::class)->group(function () {
+        Route::post('/register', 'register');
+        Route::get('/verify-email', 'verifyEmail');
+        Route::post('/resend-verification', 'resendVerification');
+    });
+
+    // Todo password reset
+    Route::controller(App\Http\Controllers\Api\V1\AuthResetPasswordController::class)->group(function () {
+        Route::post('/password-reset', 'passwordReset');
+        Route::post('/password-reset/verify', 'passwordResetVerify');
+    });
+
+    // Todo login
+    Route::post('/login', [\App\Http\Controllers\Api\V1\AuthLoginController::class, 'login']);
+
+    // Protected routes (require authentication)
+    Route::middleware('auth:sanctum')->group(function () {
+        // User routes
+        Route::get('/user', function (Request $request) {
+            return $request->user();
+        });
+        Route::middleware('auth:sanctum')->post('/logout', [\App\Http\Controllers\Api\V1\AuthLoginController::class, 'logout']);
+    });
+});
