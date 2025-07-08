@@ -25,7 +25,7 @@ class Role extends Model
     // Todo: The users that belong to the role.
     public function users()
     {
-        return $this->belongsToMany(\App\Models\User::class, 'role_user');
+        return $this->belongsToMany(\App\Models\User::class, config('vormia.table_prefix') . 'role_user');
     }
 
     // Todo: The permissions that belong to the role.

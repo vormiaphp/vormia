@@ -128,8 +128,6 @@ class RoleController extends Controller
                 $updateData['slug'] = Str::slug($updateData['name']);
             }
 
-            dd($updateData, $role);
-
             $role->update($updateData);
 
             return $this->success($role, 'Role updated successfully');

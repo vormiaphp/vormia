@@ -32,17 +32,17 @@ class Taxonomy extends Model
     // Relationships
     public function parent()
     {
-        return $this->belongsTo(Taxonomy::class, 'parent_id');
+        return $this->belongsTo(Taxonomy::class, config('vormia.table_prefix') . 'parent_id');
     }
 
     public function children()
     {
-        return $this->hasMany(Taxonomy::class, 'parent_id');
+        return $this->hasMany(Taxonomy::class, config('vormia.table_prefix') . 'parent_id');
     }
 
     public function meta()
     {
-        return $this->hasMany(TaxonomyMeta::class, 'taxonomy_id');
+        return $this->hasMany(TaxonomyMeta::class, config('vormia.table_prefix') . 'taxonomy_id');
     }
 
     // Helper methods to work with meta
