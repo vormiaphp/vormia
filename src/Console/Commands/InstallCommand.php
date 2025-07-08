@@ -14,7 +14,7 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'vormia:install {--api : Install with API support including Sanctum}';
+    protected $signature = 'vormia:install {--api : Install with API support (requires Sanctum, see instructions)}';
 
     /**
      * The console command description.
@@ -64,8 +64,10 @@ class InstallCommand extends Command
 
         // Step 6: Install API if requested
         if ($isApi) {
-            $this->step('Installing API support with Sanctum...');
-            $this->installApiSupport();
+            $this->step('API support selected. Sanctum is required.');
+            $this->info('Please run: php artisan install:api');
+            $this->info('This will install Laravel Sanctum and set up API authentication.');
+            $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
         }
 
         $this->displayCompletionMessage($isApi);
@@ -219,9 +221,8 @@ class InstallCommand extends Command
      */
     private function installApiSupport()
     {
-        // Install Sanctum
-        Artisan::call('install:api', ['--without-migration-prompt' => true]);
-        $this->info('✅ Laravel API with Sanctum installed successfully.');
+        // Deprecated: User must now install Sanctum manually.
+        $this->warn('Automatic Sanctum installation is no longer supported. Please run: php artisan install:api');
     }
 
     /**
@@ -239,7 +240,8 @@ class InstallCommand extends Command
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
 
         if ($isApi) {
-            $this->line('   4. Configure Sanctum in your config/sanctum.php');
+            $this->line('   4. Install Sanctum by running: php artisan install:api');
+            $this->line('   5. Configure Sanctum in your config/sanctum.php');
         }
 
         $this->newLine();

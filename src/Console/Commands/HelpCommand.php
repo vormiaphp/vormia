@@ -60,7 +60,7 @@ class HelpCommand extends Command
             [
                 'command' => 'vormia:install',
                 'description' => 'Install Vormia package with all files and configurations',
-                'options' => '--api (Install with API support including Sanctum)'
+                'options' => '--api (Install with API support; you must install Sanctum yourself)'
             ],
             [
                 'command' => 'vormia:help',
@@ -106,7 +106,7 @@ class HelpCommand extends Command
             [
                 'title' => 'API Installation',
                 'command' => 'php artisan vormia:install --api',
-                'description' => 'Install Vormia with API support and Sanctum'
+                'description' => 'Install Vormia with API support. You must run php artisan install:api to install Sanctum.'
             ],
             [
                 'title' => 'Update Package',
@@ -148,7 +148,7 @@ class HelpCommand extends Command
             'Utilities' => 'Helper functions and services for common tasks',
             'Media Management' => 'Image processing with Intervention Image',
             'Notifications' => 'Advanced notification system',
-            'API Support' => 'Optional API installation with Sanctum',
+            'API Support' => 'Optional API installation (requires Sanctum, install manually)',
             'Migrations' => 'Database migrations for all features'
         ];
 

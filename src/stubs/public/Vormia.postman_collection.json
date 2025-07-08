@@ -1,0 +1,171 @@
+{
+	"info": {
+		"_postman_id": "a206de49-f3b0-477c-9134-0dd9fcf16ad4",
+		"name": "Vormia",
+		"description": "A comprehensive Laravel development package that streamlines common web application functionalities. Built with Laravel best practices and designed for maintainability and scalability.  \n  \n**This is a postman demo to help you get started**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7517087",
+		"_collection_link": "https://corecms.postman.co/workspace/3b53e69c-d74d-417f-8a61-ab9cd23e2e6c/collection/7517087-a206de49-f3b0-477c-9134-0dd9fcf16ad4?action=share&source=collection_link&creator=7517087"
+	},
+	"item": [
+		{
+			"name": "vrm",
+			"item": [
+				{
+					"name": "role-list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/vrm/roles",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"vrm",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "role-add",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "member",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "General Member access",
+									"description": "permission to access dashboard",
+									"type": "text"
+								},
+								{
+									"key": "module",
+									"value": "dashboard,forum,investment,stock",
+									"description": "comman separated",
+									"type": "text"
+								},
+								{
+									"key": "authority",
+									"value": "",
+									"description": "main - backend, comp - commpany, part - partner | default main",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseurl}}/vrm/roles",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"vrm",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "role-get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/vrm/roles/admin?",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"vrm",
+								"roles",
+								"admin"
+							],
+							"query": [
+								{
+									"key": null,
+									"value": null,
+									"description": "call using role slug or id like above we used slugname"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "role-update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // todo: send attributes you wish to update\n    //\"name\": \"\",\n    //\"description\": \"\",\n    //\"module\": \"\",\n    //\"authority\": \"\",\n    \"is_active\": 0\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/vrm/roles/member",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"vrm",
+								"roles",
+								"member"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Vormia Main API"
+		},
+		{
+			"name": "v1",
+			"item": [],
+			"description": "Write your project APIs in this directory"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseurl",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

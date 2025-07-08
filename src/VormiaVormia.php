@@ -129,6 +129,62 @@ class VormiaVormia
             }
         }
 
+        // API-only stubs
+        if ($apiOnly) {
+            // Controllers
+            $apiControllersSource = __DIR__ . '/stubs/controllers/Api';
+            $apiControllersDest = $this->appPath('Http/Controllers/Api');
+            if ($this->filesystem->isDirectory($apiControllersSource)) {
+                $this->filesystem->ensureDirectoryExists($apiControllersDest);
+                foreach ($this->filesystem->allFiles($apiControllersSource) as $file) {
+                    $relativePath = ltrim(str_replace($apiControllersSource, '', $file->getPathname()), '/\\');
+                    $destFile = rtrim($apiControllersDest, '/\\') . '/' . $relativePath;
+                    if ($this->filesystem->exists($destFile)) {
+                        if (app()->runningInConsole() && app()->bound('command')) {
+                            $command = app('command');
+                            if (method_exists($command, 'confirm')) {
+                                if (!$command->confirm("API Controller {$destFile} already exists. Override?", false)) {
+                                    $command->line("  Skipped: {$destFile}");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                    $this->filesystem->copy($file->getPathname(), $destFile);
+                }
+            }
+            // Routes
+            $apiRoutesSource = __DIR__ . '/stubs/routes/api.php';
+            $apiRoutesDest = base_path('routes/api.php');
+            if (file_exists($apiRoutesSource)) {
+                if ($this->filesystem->exists($apiRoutesDest)) {
+                    if (app()->runningInConsole() && app()->bound('command')) {
+                        $command = app('command');
+                        if (method_exists($command, 'confirm')) {
+                            if (!$command->confirm("routes/api.php already exists. Override?", false)) {
+                                $command->line("  Skipped: {$apiRoutesDest}");
+                            } else {
+                                $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
+                            }
+                        } else {
+                            $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
+                        }
+                    } else {
+                        $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
+                    }
+                } else {
+                    $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
+                }
+            }
+            // Postman collection
+            $postmanSource = __DIR__ . '/stubs/public/Vormia.postman_collection.json';
+            $postmanDest = $this->publicPath('Vormia.postman_collection.json');
+            if (file_exists($postmanSource)) {
+                $this->filesystem->copy($postmanSource, $postmanDest);
+            }
+        }
+
         // Copy migration files directly into database/migrations
         $migrationSource = __DIR__ . '/stubs/migrations';
         $migrationDest = $this->databasePath('migrations');
