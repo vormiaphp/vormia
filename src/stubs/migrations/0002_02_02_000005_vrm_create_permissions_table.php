@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create(config('vormia.table_prefix') . 'permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // e.g., 'create-post', 'delete-user'
-            $table->string('description')->nullable();
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->string('guard_name')->default('web');
             $table->boolean('is_active')->default(true);
-            $table->timestamps()->useCurrent();
+            $table->timestamps();
+
+            // Indexes
         });
     }
 

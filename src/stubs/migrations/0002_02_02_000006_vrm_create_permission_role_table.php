@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('permission_id')->references('id')->on(config('vormia.table_prefix') . 'permissions')->onDelete('cascade');
             $table->foreignId('role_id')->references('id')->on(config('vormia.table_prefix') . 'roles')->onDelete('cascade');
             $table->boolean('is_active')->default(true);
-            $table->timestamps()->useCurrent();
+            $table->timestamps();
 
             // Primary key
             $table->primary(['permission_id', 'role_id']);

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->boolean('is_primary')->default(true)->comment('If entity has multiple slugs, indicates primary one');
             $table->boolean('is_active')->default(true);
 
-            $table->timestamps()->useCurrent();
+            $table->timestamps();
             $table->softDeletes();
 
             // Composite index for quick lookups by entity

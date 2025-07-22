@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create(config('vormia.table_prefix') . 'utilities', function (Blueprint $table) {
             $table->id();
-            $table->string('type', 15)->default('private');
-            $table->string('key', 200);
-            $table->longText('value')->nullable();
-            $table->tinyInteger('flag')->default(1);
-            $table->timestamps()->useCurrent();
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('type')->default('string'); // string, integer, boolean, json
+            $table->boolean('is_public')->default(false);
+            $table->timestamps();
 
             // Indexes
             $table->index('type');

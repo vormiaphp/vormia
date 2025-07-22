@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name', 40)->nullable()->default(null); // optional: e.g., login_otp, email_code
             $table->text('token');
             $table->timestamp('expires_at')->nullable();
-            $table->timestamps()->useCurrent();
+            $table->timestamps();
 
             // Composite index for quick lookups by entity
             $table->index(['user_id', 'type', 'name']);
