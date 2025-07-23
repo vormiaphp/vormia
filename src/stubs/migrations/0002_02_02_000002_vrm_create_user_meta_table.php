@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create(config('vormia.table_prefix') . 'user_meta', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('meta_key');
-            $table->text('meta_value')->nullable();
+            $table->string('key');
+            $table->text('value')->nullable();
             $table->boolean('is_active')->default(false);
             $table->timestamps();
 
