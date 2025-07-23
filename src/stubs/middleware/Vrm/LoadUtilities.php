@@ -21,7 +21,7 @@ class LoadUtilities
     {
         // Load private utilities for global scope
         $globalUtilities = Cache::remember('vrm.global.utilities', 3600, function () {
-            $utilities = \App\Models\Vrm\Utility::where('flag', 1)
+            $utilities = \App\Models\Vrm\Utility::where('is_active', true)
                 ->where('type', 'global')
                 ->get();
 
@@ -43,7 +43,7 @@ class LoadUtilities
         // Load private settings only for authenticated users
         if (Auth::check()) {
             $privateUtilities = Cache::remember('vrm.private.utilities', 3600, function () {
-                $utilities = \App\Models\Vrm\Utility::where('flag', 1)
+                $utilities = \App\Models\Vrm\Utility::where('is_active', true)
                     ->where('type', 'private')
                     ->get();
 

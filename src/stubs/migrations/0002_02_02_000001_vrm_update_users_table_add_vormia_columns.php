@@ -50,7 +50,7 @@ return new class extends Migration
                 $table->string('avatar')->nullable()->after('provider_id'); // Profile image URL
             }
 
-            // Only add flag if it doesn't exist
+            // Only add is_active if it doesn't exist
             if (!Schema::hasColumn('users', 'is_active')) {
                 $table->boolean('is_active')->default(false)->after('remember_token');
             }
@@ -101,7 +101,7 @@ return new class extends Migration
                 $table->dropColumn('avatar');
             }
 
-            // Only remove flag if it exists
+            // Only remove is_active if it exists
             if (Schema::hasColumn('users', 'is_active')) {
                 $table->dropColumn('is_active');
             }

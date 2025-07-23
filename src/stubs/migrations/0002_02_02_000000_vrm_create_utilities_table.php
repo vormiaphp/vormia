@@ -17,11 +17,12 @@ return new class extends Migration
             $table->text('value')->nullable();
             $table->string('type')->default('string'); // string, integer, boolean, json
             $table->boolean('is_public')->default(false);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             // Indexes
             $table->index('type');
-            $table->index(['key', 'flag']);
+            $table->index(['key', 'is_active']);
         });
     }
 

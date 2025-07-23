@@ -67,11 +67,11 @@ class User extends Authenticatable
     }
 
     // Todo: Set or update meta
-    public function setMeta($key, $value, $flag = 1)
+    public function setMeta($key, $value, $is_active = true)
     {
         return $this->meta()->updateOrCreate(
             ['key' => $key],
-            ['value' => $value, 'flag' => $flag]
+            ['value' => $value, 'is_active' => $is_active]
         );
     }
 

@@ -32,7 +32,7 @@ class UtilityService
         // Get single setting directly from database
         $setting = Utility::where('type', $type)
             ->where('key', $key)
-            ->where('flag', 1)
+            ->where('is_active', true)
             ->first();
 
         $value = $setting ? $setting->value : $default;
@@ -50,7 +50,7 @@ class UtilityService
     {
         // Load directly from database
         $utilities = Utility::where('type', $type)
-            ->where('flag', 1)
+            ->where('is_active', true)
             ->pluck('value', 'key')
             ->toArray();
 
@@ -71,7 +71,7 @@ class UtilityService
     {
         // Load fresh data from database
         $utilities = Utility::where('type', $type)
-            ->where('flag', 1)
+            ->where('is_active', true)
             ->pluck('value', 'key')
             ->toArray();
 
@@ -91,7 +91,7 @@ class UtilityService
     public function refreshAllCache()
     {
         // Get all distinct types from database
-        $types = Utility::where('flag', 1)
+        $types = Utility::where('is_active', true)
             ->distinct()
             ->pluck('type')
             ->toArray();
@@ -111,7 +111,7 @@ class UtilityService
         // Get multiple utilities from database
         $utilities = Utility::where('type', $type)
             ->whereIn('key', $keys)
-            ->where('flag', 1)
+            ->where('is_active', true)
             ->pluck('value', 'key')
             ->toArray();
 
@@ -134,7 +134,7 @@ class UtilityService
     {
         return Utility::where('type', $type)
             ->where('key', $key)
-            ->where('flag', 1)
+            ->where('is_active', true)
             ->exists();
     }
 
@@ -165,7 +165,7 @@ class UtilityService
         if ($utilities === null) {
             // Not in cache, load from database
             $utilities = Utility::where('type', $type)
-                ->where('flag', 1)
+                ->where('is_active', true)
                 ->pluck('value', 'key')
                 ->toArray();
 
