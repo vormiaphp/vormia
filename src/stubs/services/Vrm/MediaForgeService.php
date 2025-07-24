@@ -59,9 +59,10 @@ class MediaForgeService
         return 'Please install the intervention/image package by running: composer require intervention/image';
     }
 
+
     /**
      * Upload files or images
-     * 
+     *
      * @param array|UploadedFile $files
      * @return self
      */
@@ -89,7 +90,7 @@ class MediaForgeService
 
     /**
      * Upload files from URLs
-     * 
+     *
      * @param array|string $urls
      * @return self
      */
@@ -113,7 +114,7 @@ class MediaForgeService
 
     /**
      * Set upload path
-     * 
+     *
      * @param string|null $path
      * @return self
      */
@@ -125,7 +126,7 @@ class MediaForgeService
 
     /**
      * Set whether to use year folders (Y/m/d structure)
-     * 
+     *
      * @param bool $use
      * @return self
      */
@@ -137,7 +138,7 @@ class MediaForgeService
 
     /**
      * Set whether to randomize file name
-     * 
+     *
      * @param bool $randomize
      * @return self
      */
@@ -149,7 +150,7 @@ class MediaForgeService
 
     /**
      * Set whether to upload to private directory
-     * 
+     *
      * @param bool $private
      * @return self
      */
@@ -161,7 +162,7 @@ class MediaForgeService
 
     /**
      * Add resize operation to the queue
-     * 
+     *
      * @param int $width
      * @param int $height
      * @param bool $keepAspectRatio
@@ -182,7 +183,7 @@ class MediaForgeService
 
     /**
      * Add compress operation to the queue
-     * 
+     *
      * @param int $quality (1-100)
      * @return self
      */
@@ -201,7 +202,7 @@ class MediaForgeService
 
     /**
      * Add convert format operation to the queue
-     * 
+     *
      * @param string $format (jpg, png, webp, gif)
      * @param integer $quality (default 90)
      * @param bool $progressive (default false)
@@ -227,7 +228,7 @@ class MediaForgeService
 
     /**
      * Add thumbnail generation operation to the queue
-     * 
+     *
      * @param array $sizes Array of [width, height, name] arrays
      * @return self
      */
@@ -248,7 +249,7 @@ class MediaForgeService
 
     /**
      * Add watermark operation to the queue
-     * 
+     *
      * @param string $watermark Path to watermark image or text string
      * @param string $type 'image' or 'text'
      * @param string $position 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
@@ -280,7 +281,7 @@ class MediaForgeService
 
     /**
      * Add avatar creation operation to the queue
-     * 
+     *
      * @param int $size
      * @param bool $rounded
      * @return self
@@ -297,7 +298,7 @@ class MediaForgeService
 
     /**
      * Set file to delete after successful upload
-     * 
+     *
      * @param string|array $filePaths
      * @return self
      */
@@ -316,7 +317,7 @@ class MediaForgeService
 
     /**
      * Set disk
-     * 
+     *
      * @param string $disk
      * @return self
      */
@@ -328,7 +329,7 @@ class MediaForgeService
 
     /**
      * Set visibility
-     * 
+     *
      * @param string $visibility
      * @return self
      */
@@ -340,7 +341,7 @@ class MediaForgeService
 
     /**
      * Set folder
-     * 
+     *
      * @param string $folder
      * @return self
      */
@@ -352,7 +353,7 @@ class MediaForgeService
 
     /**
      * Set operations
-     * 
+     *
      * @param array $operations
      * @return self
      */
@@ -364,7 +365,7 @@ class MediaForgeService
 
     /**
      * Execute all queued operations
-     * 
+     *
      * @return string|array
      * @throws \Exception
      */
@@ -397,7 +398,7 @@ class MediaForgeService
 
     /**
      * Handle file upload
-     * 
+     *
      * @param array $files
      * @return array
      */
@@ -416,7 +417,7 @@ class MediaForgeService
 
     /**
      * Process a single uploaded file
-     * 
+     *
      * @param UploadedFile $file
      * @return string
      */
@@ -449,7 +450,7 @@ class MediaForgeService
 
     /**
      * Check if a file is an image
-     * 
+     *
      * @param string $fileName
      * @return bool
      */
@@ -461,7 +462,7 @@ class MediaForgeService
 
     /**
      * Process a single URL download
-     * 
+     *
      * @param string $url
      * @return string
      */
@@ -534,7 +535,7 @@ class MediaForgeService
 
     /**
      * Prepare folder path with year structure if enabled
-     * 
+     *
      * @return string
      */
     protected function prepareFolderPath(): string
@@ -555,7 +556,7 @@ class MediaForgeService
 
     /**
      * Ensure a unique filename by appending a counter if necessary
-     * 
+     *
      * @param string $directory
      * @param string $fileName
      * @return string
@@ -579,7 +580,7 @@ class MediaForgeService
 
     /**
      * Generate unique filename
-     * 
+     *
      * @param string $originalName
      * @param string $uploadDir
      * @return string
@@ -604,7 +605,7 @@ class MediaForgeService
 
     /**
      * Apply image operations to the image
-     * 
+     *
      * @param string $filePath
      * @return void
      */
@@ -617,13 +618,7 @@ class MediaForgeService
                 switch ($operation['type']) {
                     case 'resize':
                         if ($operation['keepAspectRatio']) {
-                            $image->resize($operation['width'], $operation['height'], function ($constraint) {
-                                $constraint->aspectRatio();
-                                $constraint->upsize();
-                            });
-                            if ($operation['fillColor']) {
-                                $image->resizeCanvas($operation['width'], $operation['height'], 'center', false, $operation['fillColor']);
-                            }
+                            $image->scale($operation['width'], $operation['height']);
                         } else {
                             $image->resize($operation['width'], $operation['height']);
                         }
@@ -680,7 +675,7 @@ class MediaForgeService
 
     /**
      * Convert image format
-     * 
+     *
      * @param \Intervention\Image\Image $image
      * @param string $filePath
      * @param string $format
@@ -691,7 +686,7 @@ class MediaForgeService
         $newPath = preg_replace('/\.\w+$/', '.' . $format, $filePath);
 
         try {
-            $image->encodeByPath($newPath, progressive: $progressive, quality: $quality);
+            $image->save($newPath, quality: $quality);
         } catch (\Exception $e) {
             throw new \RuntimeException("Failed to convert image format: " . $e->getMessage());
         }
@@ -701,7 +696,7 @@ class MediaForgeService
 
     /**
      * Compress image
-     * 
+     *
      * @param string $filePath
      * @param string $format
      * @param int $quality
@@ -719,18 +714,14 @@ class MediaForgeService
             : preg_replace('/\.\w+$/', '_compressed.' . $format, $filePath);
 
         // Save with desired format, quality
-        $image->encodeByPath(
-            $outputPath,
-            quality: $quality,
-            progressive: true // optional: for JPGs
-        );
+        $image->save($outputPath, quality: $quality);
 
         return $outputPath;
     }
 
     /**
      * Generate thumbnails for an image
-     * 
+     *
      * @param \Intervention\Image\Image $image
      * @param string $filePath
      * @param array $sizes Array of [width, height, name] arrays
@@ -741,7 +732,7 @@ class MediaForgeService
         foreach ($sizes as $size) {
             [$width, $height, $nameSuffix] = array_pad($size, 3, null);
 
-            $thumbnail = clone $image;
+            $thumbnail = $this->imageManager->read($filePath);
 
             // Use scaleDown() to prevent upscaling, or scale() to allow
             $thumbnail->scale($width, $height); // or ->scaleDown($width, $height)
@@ -756,7 +747,7 @@ class MediaForgeService
 
     /**
      * Apply watermark to an image
-     * 
+     *
      * @param ImageInterface $image
      * @param array $operation
      * @return void
@@ -804,7 +795,7 @@ class MediaForgeService
 
     /**
      * Make an avatar image
-     * 
+     *
      * @param ImageInterface $image
      * @param string $filePath
      * @param array $options
@@ -840,7 +831,7 @@ class MediaForgeService
 
     /**
      * Delete files
-     * 
+     *
      * @param array $files
      * @return void
      */
