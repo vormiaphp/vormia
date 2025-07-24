@@ -96,7 +96,7 @@ class VormiaVormia
             // Migrations handled separately below
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            'helpers' => $this->appPath('Helpers'),
+            // 'helpers' => $this->appPath('Helpers'),
             'facades' => $this->appPath('Facades'),
             'config' => $this->configPath(),
             'providers' => $this->appPath('Providers'),
@@ -304,7 +304,7 @@ class VormiaVormia
             // Migrations handled separately below
             'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            'helpers' => $this->appPath('Helpers'),
+            // 'helpers' => $this->appPath('Helpers'),
             'facades' => $this->appPath('Facades'),
             'config' => $this->configPath(),
             'providers' => $this->appPath('Providers'),
@@ -413,7 +413,7 @@ class VormiaVormia
     {
         $directoriesToRemove = [
             // Helpers
-            $this->appPath('Helpers/Vrm'),
+            // $this->appPath('Helpers/Vrm'),
             // Facades
             $this->appPath('Facades/Vrm'),
             // Jobs

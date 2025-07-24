@@ -109,12 +109,14 @@ class InstallCommand extends Command
             return;
         }
 
+        /*
         $this->newLine();
         if ($this->confirm('Would you like to create a backup of your current User.php model?', true)) {
             $backupPath = $userModelPath . '.backup.' . date('Y-m-d-H-i-s');
             File::copy($userModelPath, $backupPath);
             $this->info('✅ Backup created: ' . $backupPath);
         }
+        */
 
         File::copy($stubPath, $userModelPath);
         $this->info('✅ User model replaced with Vormia stub.');

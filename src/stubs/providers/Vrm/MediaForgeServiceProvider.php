@@ -3,7 +3,6 @@
 namespace App\Providers\Vrm;
 
 use Illuminate\Support\ServiceProvider;
-use App\Helpers\Vrm\MediaForgeUpload;
 use App\Services\Vrm\MediaForgeService;
 
 class MediaForgeServiceProvider extends ServiceProvider
@@ -14,7 +13,7 @@ class MediaForgeServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('mediaforge', function () {
-            return new MediaForgeUpload(new MediaForgeService());
+            return new MediaForgeService();
         });
     }
 
@@ -23,6 +22,7 @@ class MediaForgeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // No alias needed here
+        // Register facade alias
+        $this->app->alias('mediaforge', \App\Facades\Vrm\MediaForge::class);
     }
 }

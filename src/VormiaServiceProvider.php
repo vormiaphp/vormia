@@ -54,7 +54,7 @@ class VormiaServiceProvider extends ServiceProvider
         // Publish all files
         $this->publishes([
             __DIR__ . '/app/Facades/Vrm' => app_path('Facades/Vrm'),
-            __DIR__ . '/app/Helpers/Vrm' => app_path('Helpers/Vrm'),
+            // __DIR__ . '/app/Helpers/Vrm' => app_path('Helpers/Vrm'),
             __DIR__ . '/app/Jobs/Vrm' => app_path('Jobs/Vrm'),
             __DIR__ . '/app/Http/Middleware/Vrm' => app_path('Http/Middleware/Vrm'),
             __DIR__ . '/app/Models/Vrm' => app_path('Models/Vrm'),

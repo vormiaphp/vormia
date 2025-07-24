@@ -153,7 +153,7 @@ class UninstallCommand extends Command
 
         $filesToBackup = [
             app_path('Facades/Vrm') => $backupDir . '/Facades/Vrm',
-            app_path('Helpers/Vrm') => $backupDir . '/Helpers/Vrm',
+            // app_path('Helpers/Vrm') => $backupDir . '/Helpers/Vrm',
             app_path('Jobs/Vrm') => $backupDir . '/Jobs/Vrm',
             app_path('Http/Middleware/Vrm') => $backupDir . '/Http/Middleware/Vrm',
             app_path('Models/Vrm') => $backupDir . '/Models/Vrm',
@@ -186,7 +186,7 @@ class UninstallCommand extends Command
     private function removeFiles()
     {
         $directoriesToRemove = [
-            app_path('Helpers/Vrm'),
+            // app_path('Helpers/Vrm'),
             app_path('Facades/Vrm'),
             app_path('Jobs/Vrm'),
             app_path('Http/Middleware/Vrm'),
