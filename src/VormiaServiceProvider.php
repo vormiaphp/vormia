@@ -8,6 +8,7 @@ use Vormia\Console\Commands\InstallCommand;
 use Vormia\Console\Commands\HelpCommand;
 use Vormia\Console\Commands\UpdateCommand;
 use Vormia\Console\Commands\UninstallCommand;
+use Vormia\Console\Commands\CheckDependenciesCommand;
 
 class VormiaServiceProvider extends ServiceProvider
 {
@@ -20,7 +21,7 @@ class VormiaServiceProvider extends ServiceProvider
 
         // Register facades
         $this->app->bind('vormia', function () {
-            return new \VormiaPHP\Vormia();
+            return new \VormiaPHP\Vormia\VormiaVormia();
         });
     }
 
@@ -38,6 +39,7 @@ class VormiaServiceProvider extends ServiceProvider
                 HelpCommand::class,
                 UpdateCommand::class,
                 UninstallCommand::class,
+                CheckDependenciesCommand::class,
             ]);
         }
 

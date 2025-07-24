@@ -9,6 +9,16 @@ A comprehensive Laravel development package that streamlines media handling, not
 
 VormiaPHP offers robust tools for handling media, managing notifications, and implementing essential features like user roles and permissions. The package is designed with a modular structure, separating concerns through dedicated namespaces for models, services, middleware, and traits.
 
+## Dependencies
+
+### Required Dependencies
+
+- **intervention/image**: Required for MediaForge image processing functionality
+  - Used for image resizing, compression, format conversion, watermarking, and avatar generation
+  - Install with: `composer require intervention/image`
+
+The package will automatically check for required dependencies during installation and usage, and provide helpful error messages if they're missing.
+
 ## Features
 
 - **File & Image Processing**
@@ -41,6 +51,14 @@ cd myproject
 ```sh
 composer require vormiaphp/vormia
 ```
+
+**Note:** The MediaForge image processing functionality requires the `intervention/image` package. If you plan to use image processing features, install it with:
+
+```sh
+composer require intervention/image
+```
+
+The installation process will check for this dependency and provide helpful warnings if it's missing.
 
 ### Step 3: Run Vormia Installation
 

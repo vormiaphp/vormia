@@ -12,6 +12,14 @@ class MediaForgeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Check if intervention/image is installed
+        if (!class_exists('Intervention\Image\ImageManager')) {
+            throw new \RuntimeException(
+                'The intervention/image package is required for MediaForgeService. ' .
+                    'Please install it by running: composer require intervention/image'
+            );
+        }
+
         $this->app->singleton('mediaforge', function () {
             return new MediaForgeService();
         });

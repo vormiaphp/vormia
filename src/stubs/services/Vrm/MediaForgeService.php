@@ -28,7 +28,35 @@ class MediaForgeService
 
     public function __construct()
     {
+        // Check if intervention/image is installed
+        if (!class_exists('Intervention\Image\ImageManager')) {
+            throw new \RuntimeException(
+                'The intervention/image package is required for MediaForgeService. ' .
+                    'Please install it by running: composer require intervention/image'
+            );
+        }
+
         $this->imageManager = new Image(new Driver());
+    }
+
+    /**
+     * Check if intervention/image dependency is available
+     * 
+     * @return bool
+     */
+    public static function isImageProcessingAvailable(): bool
+    {
+        return class_exists('Intervention\Image\ImageManager');
+    }
+
+    /**
+     * Get installation instructions for intervention/image
+     * 
+     * @return string
+     */
+    public static function getInstallationInstructions(): string
+    {
+        return 'Please install the intervention/image package by running: composer require intervention/image';
     }
 
     /**

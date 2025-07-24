@@ -42,6 +42,9 @@ class UpdateCommand extends Command
             return;
         }
 
+        // Check for required dependencies
+        $this->checkRequiredDependencies();
+
         // Step 1: Create backup
         $this->step('Creating backup of existing files...');
         $this->createBackup();
@@ -63,6 +66,24 @@ class UpdateCommand extends Command
         $this->clearCaches();
 
         $this->displayCompletionMessage();
+    }
+
+    /**
+     * Check for required dependencies
+     */
+    private function checkRequiredDependencies(): void
+    {
+        $this->step('Checking required dependencies...');
+
+        // Check for intervention/image
+        if (!class_exists('Intervention\Image\ImageManager')) {
+            $this->warn('⚠️  The intervention/image package is required for MediaForge functionality.');
+            $this->line('   Please install it by running: composer require intervention/image');
+            $this->line('   This package is needed for image processing features like resizing, compression, and watermarking.');
+            $this->newLine();
+        } else {
+            $this->info('✅ intervention/image package is installed.');
+        }
     }
 
     /**

@@ -30,6 +30,9 @@ class InstallCommand extends Command
     {
         $this->info('🚀 Installing Vormia Package...');
 
+        // Check for required dependencies
+        $this->checkRequiredDependencies();
+
         $isApi = $this->option('api');
         $vormia = new VormiaVormia();
 
@@ -78,6 +81,24 @@ class InstallCommand extends Command
         $this->info('Run `php artisan serve` to start your application.');
 
         return 0;
+    }
+
+    /**
+     * Check for required dependencies
+     */
+    private function checkRequiredDependencies(): void
+    {
+        $this->step('Checking required dependencies...');
+
+        // Check for intervention/image
+        if (!class_exists('Intervention\Image\ImageManager')) {
+            $this->warn('⚠️  The intervention/image package is required for MediaForge functionality.');
+            $this->line('   Please install it by running: composer require intervention/image');
+            $this->line('   This package is needed for image processing features like resizing, compression, and watermarking.');
+            $this->newLine();
+        } else {
+            $this->info('✅ intervention/image package is installed.');
+        }
     }
 
     /**
