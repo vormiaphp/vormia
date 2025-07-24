@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Intervention\Image\ImageManager as Image;
-use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Typography\FontFactory;
 use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Geometry\Factories\CircleFactory;
@@ -25,8 +26,9 @@ class MediaForgeService
     protected string $visibility = 'public';
     protected string $folder = '';
     protected array $operations = [];
+    protected string $driver = 'auto'; // 'auto', 'gd', 'imagick'
 
-    public function __construct()
+    public function __construct(string $driver = 'auto')
     {
         // Check if intervention/image is installed
         if (!class_exists('Intervention\Image\ImageManager')) {
@@ -36,12 +38,207 @@ class MediaForgeService
             );
         }
 
-        $this->imageManager = new Image(new Driver());
+        $this->driver = $driver;
+        $this->imageManager = $this->createImageManager();
+    }
+
+    /**
+     * Create ImageManager with appropriate driver
+     *
+     * @return Image
+     */
+    protected function createImageManager(): Image
+    {
+        $driver = $this->getBestAvailableDriver();
+
+        if ($driver === 'imagick') {
+            return new Image(new ImagickDriver());
+        } else {
+            return new Image(new GdDriver());
+        }
+    }
+
+    /**
+     * Get the best available driver
+     *
+     * @return string
+     */
+    protected function getBestAvailableDriver(): string
+    {
+        if ($this->driver === 'auto') {
+            // Prefer Imagick if available, fallback to GD
+            if ($this->isImagickAvailable()) {
+                return 'imagick';
+            } elseif ($this->isGdAvailable()) {
+                return 'gd';
+            } else {
+                throw new \RuntimeException('Neither Imagick nor GD are available. Please install one of them.');
+            }
+        }
+
+        if ($this->driver === 'imagick' && !$this->isImagickAvailable()) {
+            throw new \RuntimeException('Imagick is not available. Please install the Imagick extension.');
+        }
+
+        if ($this->driver === 'gd' && !$this->isGdAvailable()) {
+            throw new \RuntimeException('GD is not available. Please install the GD extension.');
+        }
+
+        return $this->driver;
+    }
+
+    /**
+     * Check if Imagick is available
+     *
+     * @return bool
+     */
+    public static function isImagickAvailable(): bool
+    {
+        return extension_loaded('imagick') && class_exists('Imagick');
+    }
+
+    /**
+     * Check if GD is available
+     *
+     * @return bool
+     */
+    public static function isGdAvailable(): bool
+    {
+        return extension_loaded('gd');
+    }
+
+    /**
+     * Get current driver
+     *
+     * @return string
+     */
+    public function getCurrentDriver(): string
+    {
+        return $this->getBestAvailableDriver();
+    }
+
+    /**
+     * Get available drivers
+     *
+     * @return array
+     */
+    public static function getAvailableDrivers(): array
+    {
+        $drivers = [];
+
+        if (self::isImagickAvailable()) {
+            $drivers[] = 'imagick';
+        }
+
+        if (self::isGdAvailable()) {
+            $drivers[] = 'gd';
+        }
+
+        return $drivers;
+    }
+
+    /**
+     * Check if a specific operation is supported by current driver
+     *
+     * @param string $operation
+     * @param array $options
+     * @return bool
+     */
+    public function isOperationSupported(string $operation, array $options = []): bool
+    {
+        $driver = $this->getCurrentDriver();
+
+        switch ($operation) {
+            case 'watermark':
+                if (isset($options['type']) && $options['type'] === 'text') {
+                    // Text watermarks work better with Imagick
+                    return $driver === 'imagick';
+                }
+                return true;
+
+            case 'convert':
+                $format = $options['format'] ?? 'jpg';
+                if ($format === 'webp') {
+                    // WebP support is better in Imagick
+                    return $driver === 'imagick' || (self::isGdAvailable() && function_exists('imagewebp'));
+                }
+                return true;
+
+            case 'avatar':
+                if (isset($options['rounded']) && $options['rounded']) {
+                    // Rounded avatars work better with Imagick
+                    return $driver === 'imagick';
+                }
+                return true;
+
+            case 'progressive':
+                // Progressive JPEG is better supported in Imagick
+                return $driver === 'imagick';
+
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Get operation compatibility warnings
+     *
+     * @param string $operation
+     * @param array $options
+     * @return array
+     */
+    public function getOperationWarnings(string $operation, array $options = []): array
+    {
+        $warnings = [];
+        $driver = $this->getCurrentDriver();
+
+        switch ($operation) {
+            case 'watermark':
+                if (isset($options['type']) && $options['type'] === 'text' && $driver === 'gd') {
+                    $warnings[] = 'Text watermarks may have limited font support in GD. Consider using Imagick for better text rendering.';
+                }
+                break;
+
+            case 'convert':
+                $format = $options['format'] ?? 'jpg';
+                if ($format === 'webp' && $driver === 'gd') {
+                    $warnings[] = 'WebP support in GD may be limited. Consider using Imagick for better WebP support.';
+                }
+                break;
+
+            case 'avatar':
+                if (isset($options['rounded']) && $options['rounded'] && $driver === 'gd') {
+                    $warnings[] = 'Rounded avatars may not render perfectly in GD. Consider using Imagick for better circle clipping.';
+                }
+                break;
+        }
+
+        return $warnings;
+    }
+
+    /**
+     * Set driver preference
+     *
+     * @param string $driver 'auto', 'gd', or 'imagick'
+     * @return self
+     */
+    public function setDriver(string $driver): self
+    {
+        $allowedDrivers = ['auto', 'gd', 'imagick'];
+
+        if (!in_array($driver, $allowedDrivers)) {
+            throw new \InvalidArgumentException('Driver must be one of: ' . implode(', ', $allowedDrivers));
+        }
+
+        $this->driver = $driver;
+        $this->imageManager = $this->createImageManager();
+
+        return $this;
     }
 
     /**
      * Check if intervention/image dependency is available
-     * 
+     *
      * @return bool
      */
     public static function isImageProcessingAvailable(): bool
@@ -51,7 +248,7 @@ class MediaForgeService
 
     /**
      * Get installation instructions for intervention/image
-     * 
+     *
      * @return string
      */
     public static function getInstallationInstructions(): string
@@ -217,6 +414,19 @@ class MediaForgeService
             throw new \InvalidArgumentException('Format must be one of: ' . implode(', ', $allowedFormats));
         }
 
+        // Check if operation is supported by current driver
+        if (!$this->isOperationSupported('convert', ['format' => $format])) {
+            $warnings = $this->getOperationWarnings('convert', ['format' => $format]);
+            if (!empty($warnings)) {
+                Log::warning('MediaForge: ' . implode(' ', $warnings));
+            }
+        }
+
+        // Check progressive JPEG support
+        if ($progressive && !$this->isOperationSupported('progressive')) {
+            Log::warning('MediaForge: Progressive JPEG is not well supported in GD. Consider using Imagick for better progressive JPEG support.');
+        }
+
         $this->operations[] = [
             'type' => 'convert',
             'format' => $format,
@@ -269,6 +479,14 @@ class MediaForgeService
             throw new \InvalidArgumentException('Position must be one of: ' . implode(', ', $allowedPositions));
         }
 
+        // Check if operation is supported by current driver
+        if (!$this->isOperationSupported('watermark', ['type' => $type])) {
+            $warnings = $this->getOperationWarnings('watermark', ['type' => $type]);
+            if (!empty($warnings)) {
+                Log::warning('MediaForge: ' . implode(' ', $warnings));
+            }
+        }
+
         $this->operations[] = [
             'type' => 'watermark',
             'watermark' => $watermark,
@@ -288,6 +506,14 @@ class MediaForgeService
      */
     public function makeAvatar(int $size = 200, bool $rounded = true): self
     {
+        // Check if operation is supported by current driver
+        if (!$this->isOperationSupported('avatar', ['rounded' => $rounded])) {
+            $warnings = $this->getOperationWarnings('avatar', ['rounded' => $rounded]);
+            if (!empty($warnings)) {
+                Log::warning('MediaForge: ' . implode(' ', $warnings));
+            }
+        }
+
         $this->operations[] = [
             'type' => 'avatar',
             'size' => $size,
@@ -435,8 +661,8 @@ class MediaForgeService
             File::makeDirectory($fullPath, 0755, true);
         }
 
-        // Move uploaded file
-        $file->move($fullPath, $fileName);
+        // Copy uploaded file (don't move since it's already in temp location)
+        File::copy($file->getRealPath(), $fullPath . '/' . $fileName);
 
         // Apply image operations if it's an image
         if ($this->isImage($fileName)) {
@@ -613,6 +839,7 @@ class MediaForgeService
     {
         try {
             $image = $this->imageManager->read($filePath);
+            $currentDriver = $this->getCurrentDriver();
 
             foreach ($this->operations as $operation) {
                 switch ($operation['type']) {
@@ -659,8 +886,15 @@ class MediaForgeService
                 }
             }
 
-            // Save final image
-            $image->save($filePath);
+            // Save final image with driver-specific options
+            $saveOptions = [];
+
+            // Handle progressive JPEG for Imagick
+            if ($currentDriver === 'imagick' && pathinfo($filePath, PATHINFO_EXTENSION) === 'jpg') {
+                $saveOptions['progressive'] = true;
+            }
+
+            $image->save($filePath, ...$saveOptions);
         } catch (\Exception $e) {
             // Log error and optionally delete corrupted file
             Log::error("Image processing failed for file $filePath: " . $e->getMessage());
@@ -805,24 +1039,33 @@ class MediaForgeService
     {
         $size = $options['size'] ?? 200;
         $rounded = $options['rounded'] ?? true;
+        $currentDriver = $this->getCurrentDriver();
 
         // Resize the original image to fit in a square
         $avatar = $image->resize($size, $size);
 
         if ($rounded) {
-            // Create a transparent canvas
-            $canvas = $this->imageManager->create($size, $size)->fill('rgba(0,0,0,0)');
+            if ($currentDriver === 'imagick') {
+                // Imagick has better circle clipping support
+                $canvas = $this->imageManager->create($size, $size)->fill('rgba(0,0,0,0)');
 
-            // Draw circular area as a background
-            $canvas->drawCircle($size / 2, $size / 2, function (CircleFactory $circle) use ($size) {
-                $circle->radius($size / 2);
-                $circle->background('white'); // or transparent depending on image format
-            });
+                // Draw circular area as a background
+                $canvas->drawCircle($size / 2, $size / 2, function (CircleFactory $circle) use ($size) {
+                    $circle->radius($size / 2);
+                    $circle->background('white');
+                });
 
-            // Paste avatar on top using the drawn circle as a clipping guide (approximation)
-            $canvas->place($avatar, 'center');
+                // Paste avatar on top using the drawn circle as a clipping guide
+                $canvas->place($avatar, 'center');
+                $avatar = $canvas;
+            } else {
+                // GD has limited circle clipping - create a square avatar with rounded corners approximation
+                Log::info('MediaForge: Using GD driver for rounded avatar. Circle clipping may not be perfect.');
 
-            $avatar = $canvas;
+                // For GD, we'll create a square avatar without perfect circle clipping
+                // The user can implement custom circle clipping if needed
+                $avatar = $image->resize($size, $size);
+            }
         }
 
         $avatarPath = str_replace('.', '_avatar.', $filePath);
