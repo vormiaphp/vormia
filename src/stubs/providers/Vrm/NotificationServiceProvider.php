@@ -38,7 +38,7 @@ class NotificationServiceProvider extends ServiceProvider
     protected function registerBladeDirectives(): void
     {
         Blade::directive('notifications', function () {
-            return "<?php echo \App\Facades\Notification::render(session('notification')); ?>";
+            return "<?php echo \App\Facades\Vrm\Notification::render(session('notification')); ?>";
         });
     }
 }
