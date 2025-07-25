@@ -220,9 +220,16 @@ class InstallCommand extends Command
         $envExamplePath = base_path('.env.example');
 
         $envContent_table = "\n# VORMIA CONFIG\nVORMIA_TABLE_PREFIX=vrm_\n";
-        $envContent_slug = "\n# VORMIA CONFIG\AUTO_UPDATE_SLUGS=false\n";
-        $envContent_approval = "\n# VORMIA CONFIG\SLUG_APPROVAL_REQUIRED=true\n";
-        $envContent_history = "\n# VORMIA CONFIG\SLUG_HISTORY_ENABLED=true\n";
+        $envContent_slug = "\n# VORMIA CONFIG\nVORMIA_AUTO_UPDATE_SLUGS=false\n";
+        $envContent_approval = "\n# VORMIA CONFIG\nVORMIA_SLUG_APPROVAL_REQUIRED=true\n";
+        $envContent_history = "\n# VORMIA CONFIG\nVORMIA_SLUG_HISTORY_ENABLED=true\n";
+
+        // MediaForge config
+        $envContent_mediaforge = "\n# VORMIA MEDIAFORGE CONFIG\nVORMIA_MEDIAFORGE_DRIVER=auto\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true\n";
 
         // Update .env
         if (File::exists($envPath)) {
@@ -230,14 +237,17 @@ class InstallCommand extends Command
             if (strpos($content, 'VORMIA_TABLE_PREFIX') === false) {
                 File::append($envPath, $envContent_table);
             }
-            if (strpos($content, 'AUTO_UPDATE_SLUGS') === false) {
+            if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envPath, $envContent_slug);
             }
-            if (strpos($content, 'SLUG_APPROVAL_REQUIRED') === false) {
+            if (strpos($content, 'VORMIA_SLUG_APPROVAL_REQUIRED') === false) {
                 File::append($envPath, $envContent_approval);
             }
-            if (strpos($content, 'SLUG_HISTORY_ENABLED') === false) {
+            if (strpos($content, 'VORMIA_SLUG_HISTORY_ENABLED') === false) {
                 File::append($envPath, $envContent_history);
+            }
+            if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
+                File::append($envPath, $envContent_mediaforge);
             }
         }
 
@@ -247,14 +257,17 @@ class InstallCommand extends Command
             if (strpos($content, 'VORMIA_TABLE_PREFIX') === false) {
                 File::append($envExamplePath, $envContent_table);
             }
-            if (strpos($content, 'AUTO_UPDATE_SLUGS') === false) {
+            if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envExamplePath, $envContent_slug);
             }
-            if (strpos($content, 'SLUG_APPROVAL_REQUIRED') === false) {
+            if (strpos($content, 'VORMIA_SLUG_APPROVAL_REQUIRED') === false) {
                 File::append($envExamplePath, $envContent_approval);
             }
-            if (strpos($content, 'SLUG_HISTORY_ENABLED') === false) {
+            if (strpos($content, 'VORMIA_SLUG_HISTORY_ENABLED') === false) {
                 File::append($envExamplePath, $envContent_history);
+            }
+            if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
+                File::append($envExamplePath, $envContent_mediaforge);
             }
         }
 
@@ -281,7 +294,7 @@ class InstallCommand extends Command
 
         $this->comment('📋 Next steps:');
         $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
-        $this->line('   2. Configure your .env file with VORMIA_TABLE_PREFIX, AUTO_UPDATE_SLUGS, SLUG_APPROVAL_REQUIRED, SLUG_HISTORY_ENABLED');
+        $this->line('   2. Configure your .env file with VORMIA');
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
 
         if ($isApi) {

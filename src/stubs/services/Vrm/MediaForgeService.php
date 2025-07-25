@@ -27,8 +27,9 @@ class MediaForgeService
     protected string $folder = '';
     protected array $operations = [];
     protected string $driver = 'auto'; // 'auto', 'gd', 'imagick'
+    protected $originalFiles = [];
 
-    public function __construct(string $driver = 'auto')
+    public function __construct(string $driver = null)
     {
         // Check if intervention/image is installed
         if (!class_exists('Intervention\Image\ImageManager')) {
@@ -38,8 +39,10 @@ class MediaForgeService
             );
         }
 
-        $this->driver = $driver;
+        // Use provided driver or fall back to config
+        $this->driver = $driver ?? config('vormia.mediaforge.driver', 'auto');
         $this->imageManager = $this->createImageManager();
+        $this->originalFiles = [];
     }
 
     /**
@@ -230,8 +233,17 @@ class MediaForgeService
             throw new \InvalidArgumentException('Driver must be one of: ' . implode(', ', $allowedDrivers));
         }
 
+        $previousDriver = $this->driver;
         $this->driver = $driver;
         $this->imageManager = $this->createImageManager();
+
+        // Log if driver is being overridden from config
+        if ($previousDriver !== $driver) {
+            $configuredDriver = self::getConfiguredDriver();
+            if ($driver !== $configuredDriver) {
+                Log::info("MediaForge: Driver overridden from config '{$configuredDriver}' to '{$driver}'");
+            }
+        }
 
         return $this;
     }
@@ -254,6 +266,92 @@ class MediaForgeService
     public static function getInstallationInstructions(): string
     {
         return 'Please install the intervention/image package by running: composer require intervention/image';
+    }
+
+    /**
+     * Get current operations array (for testing/debugging)
+     *
+     * @return array
+     */
+    public function getOperations(): array
+    {
+        return $this->operations;
+    }
+
+    /**
+     * Get the configured driver from environment/config
+     *
+     * @return string
+     */
+    public static function getConfiguredDriver(): string
+    {
+        return config('vormia.mediaforge.driver', 'auto');
+    }
+
+    /**
+     * Check if current driver is overridden from config
+     *
+     * @return bool
+     */
+    public function isDriverOverridden(): bool
+    {
+        $configuredDriver = self::getConfiguredDriver();
+        return $this->driver !== $configuredDriver;
+    }
+
+    /**
+     * Get driver information including configuration status
+     *
+     * @return array
+     */
+    public function getDriverInfo(): array
+    {
+        return [
+            'current' => $this->getCurrentDriver(),
+            'configured' => self::getConfiguredDriver(),
+            'overridden' => $this->isDriverOverridden(),
+            'available' => self::getAvailableDrivers(),
+        ];
+    }
+
+    /**
+     * Get default quality from config
+     *
+     * @return int
+     */
+    public static function getDefaultQuality(): int
+    {
+        return config('vormia.mediaforge.default_quality', 85);
+    }
+
+    /**
+     * Get default format from config
+     *
+     * @return string
+     */
+    public static function getDefaultFormat(): string
+    {
+        return config('vormia.mediaforge.default_format', 'webp');
+    }
+
+    /**
+     * Get auto override setting from config
+     *
+     * @return bool
+     */
+    public static function getAutoOverride(): bool
+    {
+        return config('vormia.mediaforge.auto_override', false);
+    }
+
+    /**
+     * Get preserve originals setting from config
+     *
+     * @return bool
+     */
+    public static function getPreserveOriginals(): bool
+    {
+        return config('vormia.mediaforge.preserve_originals', true);
     }
 
 
@@ -364,16 +462,20 @@ class MediaForgeService
      * @param int $height
      * @param bool $keepAspectRatio
      * @param string|null $fillColor
+     * @param bool|null $override Whether to override the original file - null to use config default
      * @return self
      */
-    public function resize(int $width, int $height, bool $keepAspectRatio = true, ?string $fillColor = null): self
+    public function resize(int $width, int $height, bool $keepAspectRatio = true, ?string $fillColor = null, ?bool $override = null): self
     {
+        $override = $override ?? self::getAutoOverride();
+
         $this->operations[] = [
             'type' => 'resize',
             'width' => $width,
             'height' => $height,
             'keepAspectRatio' => $keepAspectRatio,
-            'fillColor' => $fillColor
+            'fillColor' => $fillColor,
+            'override' => $override
         ];
         return $this;
     }
@@ -381,18 +483,23 @@ class MediaForgeService
     /**
      * Add compress operation to the queue
      *
-     * @param int $quality (1-100)
+     * @param int|null $quality (1-100) - null to use config default
+     * @param bool|null $override Whether to override the original file - null to use config default
      * @return self
      */
-    public function compress(int $quality = 80): self
+    public function compress(?int $quality = null, ?bool $override = null): self
     {
+        $quality = $quality ?? self::getDefaultQuality();
+        $override = $override ?? self::getAutoOverride();
+
         if ($quality < 1 || $quality > 100) {
             throw new \InvalidArgumentException('Quality must be between 1 and 100');
         }
 
         $this->operations[] = [
             'type' => 'compress',
-            'quality' => $quality
+            'quality' => $quality,
+            'override' => $override
         ];
         return $this;
     }
@@ -400,13 +507,18 @@ class MediaForgeService
     /**
      * Add convert format operation to the queue
      *
-     * @param string $format (jpg, png, webp, gif)
-     * @param integer $quality (default 90)
-     * @param bool $progressive (default false)
+     * @param string|null $format (jpg, png, webp, gif) - null to use config default
+     * @param integer|null $quality (default from config) - null to use config default
+     * @param bool|null $progressive (default false) - null to use false
+     * @param bool|null $override Whether to override the original file - null to use config default
      * @return self
      */
-    public function convert(string $format, $quality = 90, $progressive = false): self
+    public function convert(?string $format = null, ?int $quality = null, ?bool $progressive = false, ?bool $override = null): self
     {
+        $format = $format ?? self::getDefaultFormat();
+        $quality = $quality ?? self::getDefaultQuality();
+        $override = $override ?? self::getAutoOverride();
+
         $allowedFormats = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
         $format = strtolower($format);
 
@@ -432,6 +544,7 @@ class MediaForgeService
             'format' => $format,
             'quality' => $quality,
             'progressive' => $progressive,
+            'override' => $override
         ];
         return $this;
     }
@@ -464,10 +577,13 @@ class MediaForgeService
      * @param string $type 'image' or 'text'
      * @param string $position 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
      * @param array $options Additional options (opacity, size, color, etc.)
+     * @param bool|null $override Whether to override the original file - null to use config default
      * @return self
      */
-    public function watermark(string $watermark, string $type = 'image', string $position = 'bottom-right', array $options = []): self
+    public function watermark(string $watermark, string $type = 'image', string $position = 'bottom-right', array $options = [], ?bool $override = null): self
     {
+        $override = $override ?? self::getAutoOverride();
+
         $allowedTypes = ['image', 'text'];
         $allowedPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'];
 
@@ -492,7 +608,8 @@ class MediaForgeService
             'watermark' => $watermark,
             'watermarkType' => $type,
             'position' => $position,
-            'options' => array_merge(['opacity' => 50, 'size' => 20], $options)
+            'options' => array_merge(['opacity' => 50, 'size' => 20], $options),
+            'override' => $override
         ];
         return $this;
     }
@@ -661,8 +778,8 @@ class MediaForgeService
             File::makeDirectory($fullPath, 0755, true);
         }
 
-        // Copy uploaded file (don't move since it's already in temp location)
-        File::copy($file->getRealPath(), $fullPath . '/' . $fileName);
+        // Move uploaded file
+        $file->move($fullPath, $fileName);
 
         // Apply image operations if it's an image
         if ($this->isImage($fileName)) {
@@ -757,6 +874,7 @@ class MediaForgeService
         $this->yearFolder = true;
         $this->randomizeFileName = true;
         $this->privateUpload = false;
+        $this->originalFiles = [];
     }
 
     /**
@@ -840,14 +958,48 @@ class MediaForgeService
         try {
             $image = $this->imageManager->read($filePath);
             $currentDriver = $this->getCurrentDriver();
+            $originalFilePath = $filePath; // Track original file for potential deletion
 
             foreach ($this->operations as $operation) {
                 switch ($operation['type']) {
                     case 'resize':
-                        if ($operation['keepAspectRatio']) {
-                            $image->scale($operation['width'], $operation['height']);
+                        $newWidth = $operation['width'];
+                        $newHeight = $operation['height'];
+                        $keepAspectRatio = $operation['keepAspectRatio'];
+                        $fillColor = $operation['fillColor'];
+                        $override = $operation['override'];
+
+                        if ($keepAspectRatio) {
+                            $image->scale($newWidth, $newHeight);
                         } else {
-                            $image->resize($operation['width'], $operation['height']);
+                            $image->resize($newWidth, $newHeight);
+                        }
+
+                        if ($fillColor) {
+                            $image->fill($fillColor);
+                        }
+
+                        if ($override) {
+                            // Generate new filename with width-height format
+                            $pathInfo = pathinfo($filePath);
+                            $baseName = $pathInfo['filename'];
+                            $extension = $pathInfo['extension'];
+                            $directory = $pathInfo['dirname'];
+
+                            $newFileName = $baseName . '-' . $newWidth . '-' . $newHeight . '.' . $extension;
+                            $newFilePath = $directory . '/' . $newFileName;
+
+                            // Ensure unique filename
+                            $newFilePath = $this->ensureUniqueFileName($directory, $newFileName);
+
+                            $image->save($newFilePath);
+                            $filePath = $newFilePath; // Update filePath for subsequent operations
+
+                            // Track original file for deletion
+                            if ($originalFilePath !== $filePath) {
+                                $this->originalFiles[] = $originalFilePath;
+                                $originalFilePath = $filePath;
+                            }
                         }
                         break;
 
@@ -859,11 +1011,23 @@ class MediaForgeService
                             $operation['override'] ?? false
                         );
                         $image = $this->imageManager->read($filePath); // Reload updated version
+
+                        // Track original file for deletion if override is true
+                        if ($operation['override'] ?? false) {
+                            $this->originalFiles[] = $originalFilePath;
+                            $originalFilePath = $filePath;
+                        }
                         break;
 
                     case 'convert':
-                        $filePath = $this->convertFormat($image, $filePath, $operation['format'], $operation['quality'], $operation['progressive']);
+                        $filePath = $this->convertFormat($image, $filePath, $operation['format'], $operation['quality'], $operation['progressive'], $operation['override']);
                         $image = $this->imageManager->read($filePath); // reload the image with new format
+
+                        // Track original file for deletion if override is true
+                        if ($operation['override'] ?? false) {
+                            $this->originalFiles[] = $originalFilePath;
+                            $originalFilePath = $filePath;
+                        }
                         break;
 
                     case 'thumbnail':
@@ -871,7 +1035,14 @@ class MediaForgeService
                         break;
 
                     case 'watermark':
-                        $this->applyWatermark($image, $operation);
+                        $filePath = $this->applyWatermark($image, $operation, $filePath);
+                        $image = $this->imageManager->read($filePath); // Reload updated version
+
+                        // Track original file for deletion if override is true
+                        if ($operation['override'] ?? false) {
+                            $this->originalFiles[] = $originalFilePath;
+                            $originalFilePath = $filePath;
+                        }
                         break;
 
                     case 'avatar':
@@ -895,6 +1066,9 @@ class MediaForgeService
             }
 
             $image->save($filePath, ...$saveOptions);
+
+            // Delete original files after successful processing
+            $this->deleteOriginalFiles();
         } catch (\Exception $e) {
             // Log error and optionally delete corrupted file
             Log::error("Image processing failed for file $filePath: " . $e->getMessage());
@@ -913,11 +1087,28 @@ class MediaForgeService
      * @param \Intervention\Image\Image $image
      * @param string $filePath
      * @param string $format
+     * @param int $quality
+     * @param bool $progressive
+     * @param bool $override
      * @return string
      */
-    protected function convertFormat(\Intervention\Image\Image $image, string $filePath, string $format, int $quality = 90, bool $progressive = true): string
+    protected function convertFormat(\Intervention\Image\Image $image, string $filePath, string $format, int $quality = 90, bool $progressive = true, bool $override = false): string
     {
-        $newPath = preg_replace('/\.\w+$/', '.' . $format, $filePath);
+        $pathInfo = pathinfo($filePath);
+        $baseName = $pathInfo['filename'];
+        $extension = $pathInfo['extension'];
+        $directory = $pathInfo['dirname'];
+
+        if ($override) {
+            // Override original file with new format
+            $newPath = $directory . '/' . $baseName . '.' . $format;
+        } else {
+            // Create new file with format suffix
+            $newPath = $directory . '/' . $baseName . '-' . $format . '.' . $format;
+        }
+
+        // Ensure unique filename
+        $newPath = $this->ensureUniqueFileName($directory, basename($newPath));
 
         try {
             $image->save($newPath, quality: $quality);
@@ -942,10 +1133,21 @@ class MediaForgeService
         // Load image using ImageManager
         $image = $this->imageManager->read($filePath);
 
-        // Determine output path
-        $outputPath = $override
-            ? preg_replace('/\.\w+$/', '.' . $format, $filePath)
-            : preg_replace('/\.\w+$/', '_compressed.' . $format, $filePath);
+        $pathInfo = pathinfo($filePath);
+        $baseName = $pathInfo['filename'];
+        $extension = $pathInfo['extension'];
+        $directory = $pathInfo['dirname'];
+
+        if ($override) {
+            // Override original file
+            $outputPath = $directory . '/' . $baseName . '.' . $format;
+        } else {
+            // Create new file with compressed suffix
+            $outputPath = $directory . '/' . $baseName . '-compressed.' . $format;
+        }
+
+        // Ensure unique filename
+        $outputPath = $this->ensureUniqueFileName($directory, basename($outputPath));
 
         // Save with desired format, quality
         $image->save($outputPath, quality: $quality);
@@ -984,13 +1186,15 @@ class MediaForgeService
      *
      * @param ImageInterface $image
      * @param array $operation
-     * @return void
+     * @param string $filePath
+     * @return string Updated file path
      */
-    protected function applyWatermark(ImageInterface $image, array $operation): void
+    protected function applyWatermark(ImageInterface $image, array $operation, string $filePath): string
     {
         $type = $operation['watermarkType'] ?? 'image';
         $position = $operation['position'] ?? 'bottom-right';
         $options = $operation['options'] ?? [];
+        $override = $operation['override'] ?? false;
 
         $offsetX = $options['offset_x'] ?? 10;
         $offsetY = $options['offset_y'] ?? 10;
@@ -1025,6 +1229,25 @@ class MediaForgeService
                 $offsetY
             );
         }
+
+        if ($override) {
+            // Generate new filename with watermark suffix
+            $pathInfo = pathinfo($filePath);
+            $baseName = $pathInfo['filename'];
+            $extension = $pathInfo['extension'];
+            $directory = $pathInfo['dirname'];
+
+            $newFileName = $baseName . '-watermark.' . $extension;
+            $newFilePath = $directory . '/' . $newFileName;
+
+            // Ensure unique filename
+            $newFilePath = $this->ensureUniqueFileName($directory, $newFileName);
+
+            $image->save($newFilePath);
+            return $newFilePath; // Return updated file path
+        }
+
+        return $filePath; // Return original file path if not overriding
     }
 
     /**
@@ -1089,5 +1312,18 @@ class MediaForgeService
                 @unlink($fullPath);
             }
         }
+    }
+
+    /**
+     * Delete original files that were overridden by operations
+     */
+    protected function deleteOriginalFiles(): void
+    {
+        foreach ($this->originalFiles as $filePath) {
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+        }
+        $this->originalFiles = []; // Clear the list after deletion
     }
 }
