@@ -6,9 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-// use Laravel\Sanctum\HasApiTokens;
 use App\Traits\Vrm\Model\HasUserMeta;
 use App\Traits\Vrm\Model\HasSlugs;
+// use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
