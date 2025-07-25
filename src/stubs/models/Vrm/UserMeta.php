@@ -19,6 +19,10 @@ class UserMeta extends Model
         'is_active',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     // Todo: User relation
     public function user()
     {
@@ -28,12 +32,20 @@ class UserMeta extends Model
     // Todo: Mutator: Store any type of value as JSON
     public function setValueAttribute($value)
     {
-        $this->attributes['value'] = json_encode($value);
+        if ($value === null) {
+            $this->attributes['value'] = null;
+        } else {
+            $this->attributes['value'] = json_encode($value);
+        }
     }
 
     // Todo: Accessor: Decode JSON, return original value if not JSON
     public function getValueAttribute($value)
     {
+        if ($value === null) {
+            return null;
+        }
+
         $decoded = json_decode($value, true);
         return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $value;
     }

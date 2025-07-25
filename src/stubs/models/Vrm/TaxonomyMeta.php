@@ -31,6 +31,10 @@ class TaxonomyMeta extends Model
     // Helper method for handling JSON values
     public function getValueAttribute($value)
     {
+        if ($value === null) {
+            return null;
+        }
+
         // Automatically decode JSON values if they look like JSON
         if (
             is_string($value) &&
@@ -51,8 +55,9 @@ class TaxonomyMeta extends Model
 
     public function setValueAttribute($value)
     {
-        // Automatically encode arrays and objects as JSON
-        if (is_array($value) || is_object($value)) {
+        if ($value === null) {
+            $this->attributes['value'] = null;
+        } elseif (is_array($value) || is_object($value)) {
             $this->attributes['value'] = json_encode($value);
         } else {
             $this->attributes['value'] = $value;

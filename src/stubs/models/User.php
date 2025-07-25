@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 // use Laravel\Sanctum\HasApiTokens;
+use App\Traits\Vrm\Model\HasUserMeta;
+use App\Traits\Vrm\Model\HasSlugs;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable; // , HasApiTokens;
+    use HasFactory, Notifiable, HasSlugs, HasUserMeta; //, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -80,11 +82,11 @@ class User extends Authenticatable
     }
 
     // Todo: Set or update meta
-    public function setMeta($key, $value, $is_active = true)
+    public function setMeta($key, $value, $flag = 1)
     {
         return $this->meta()->updateOrCreate(
             ['key' => $key],
-            ['value' => $value, 'is_active' => $is_active]
+            ['value' => $value, 'flag' => $flag]
         );
     }
 
@@ -113,7 +115,13 @@ class User extends Authenticatable
      */
     public function shouldAutoUpdateSlug()
     {
-        return true; // Enable auto-updates for the User model
+        // Development: Allow automatic updates
+        if (app()->environment('local', 'development')) {
+            return true;
+        }
+
+        // Production: Require manual approval
+        return config('vormia.auto_update_slugs', false);
     }
 
     /**
@@ -147,7 +155,7 @@ class User extends Authenticatable
     // Todo: User roles
     public function roles()
     {
-        return $this->belongsToMany(\App\Models\Vrm\Role::class, config('vormia.table_prefix') . 'role_user', 'user_id', 'role_id');
+        return $this->belongsToMany(\App\Models\Vrm\Role::class);
     }
 
     // Todo: Check if the user has the required role

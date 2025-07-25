@@ -4,10 +4,12 @@ namespace App\Models\Vrm;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Vrm\Model\HasSlugs;
+use App\Traits\Vrm\Model\HasTaxonomyMeta;
 
 class Taxonomy extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasSlugs, HasTaxonomyMeta;
 
     // Todo: Table name
     public function getTable()
@@ -32,17 +34,17 @@ class Taxonomy extends Model
     // Relationships
     public function parent()
     {
-        return $this->belongsTo(Taxonomy::class, config('vormia.table_prefix') . 'parent_id');
+        return $this->belongsTo(Taxonomy::class, 'parent_id');
     }
 
     public function children()
     {
-        return $this->hasMany(Taxonomy::class, config('vormia.table_prefix') . 'parent_id');
+        return $this->hasMany(Taxonomy::class, 'parent_id');
     }
 
     public function meta()
     {
-        return $this->hasMany(TaxonomyMeta::class, config('vormia.table_prefix') . 'taxonomy_id');
+        return $this->hasMany(TaxonomyMeta::class, 'taxonomy_id');
     }
 
     // Helper methods to work with meta
@@ -108,5 +110,61 @@ class Taxonomy extends Model
         }
 
         return $path;
+    }
+
+    /* -------------------------------------------------------------------------------- */
+    // Slug Methods
+    /* -------------------------------------------------------------------------------- */
+
+    /**
+     * Define which field should be used for generating slugs.
+     *
+     * @return string
+     */
+    public function getSluggableField()
+    {
+        return 'name';
+    }
+
+    /**
+     * Enable automatic slug updates for this model.
+     *
+     * @return bool
+     */
+    public function shouldAutoUpdateSlug()
+    {
+        // Development: Allow automatic updates
+        if (app()->environment('local', 'development')) {
+            return true;
+        }
+
+        // Production: Require manual approval
+        return config('vormia.auto_update_slugs', false);
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field === 'slug' || $field === null) {
+            return static::findBySlug($value);
+        }
+
+        return parent::resolveRouteBinding($value, $field);
     }
 }

@@ -219,13 +219,25 @@ class InstallCommand extends Command
         $envPath = base_path('.env');
         $envExamplePath = base_path('.env.example');
 
-        $envContent = "\n# VORMIA CONFIG\nVORMIA_TABLE_PREFIX=vrm_\n";
+        $envContent_table = "\n# VORMIA CONFIG\nVORMIA_TABLE_PREFIX=vrm_\n";
+        $envContent_slug = "\n# VORMIA CONFIG\AUTO_UPDATE_SLUGS=false\n";
+        $envContent_approval = "\n# VORMIA CONFIG\SLUG_APPROVAL_REQUIRED=true\n";
+        $envContent_history = "\n# VORMIA CONFIG\SLUG_HISTORY_ENABLED=true\n";
 
         // Update .env
         if (File::exists($envPath)) {
             $content = File::get($envPath);
             if (strpos($content, 'VORMIA_TABLE_PREFIX') === false) {
-                File::append($envPath, $envContent);
+                File::append($envPath, $envContent_table);
+            }
+            if (strpos($content, 'AUTO_UPDATE_SLUGS') === false) {
+                File::append($envPath, $envContent_slug);
+            }
+            if (strpos($content, 'SLUG_APPROVAL_REQUIRED') === false) {
+                File::append($envPath, $envContent_approval);
+            }
+            if (strpos($content, 'SLUG_HISTORY_ENABLED') === false) {
+                File::append($envPath, $envContent_history);
             }
         }
 
@@ -233,7 +245,16 @@ class InstallCommand extends Command
         if (File::exists($envExamplePath)) {
             $content = File::get($envExamplePath);
             if (strpos($content, 'VORMIA_TABLE_PREFIX') === false) {
-                File::append($envExamplePath, $envContent);
+                File::append($envExamplePath, $envContent_table);
+            }
+            if (strpos($content, 'AUTO_UPDATE_SLUGS') === false) {
+                File::append($envExamplePath, $envContent_slug);
+            }
+            if (strpos($content, 'SLUG_APPROVAL_REQUIRED') === false) {
+                File::append($envExamplePath, $envContent_approval);
+            }
+            if (strpos($content, 'SLUG_HISTORY_ENABLED') === false) {
+                File::append($envExamplePath, $envContent_history);
             }
         }
 
@@ -260,7 +281,7 @@ class InstallCommand extends Command
 
         $this->comment('📋 Next steps:');
         $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
-        $this->line('   2. Configure your .env file with VORMIA_TABLE_PREFIX');
+        $this->line('   2. Configure your .env file with VORMIA_TABLE_PREFIX, AUTO_UPDATE_SLUGS, SLUG_APPROVAL_REQUIRED, SLUG_HISTORY_ENABLED');
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
 
         if ($isApi) {
