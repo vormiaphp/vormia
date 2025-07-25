@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Todo: USER AUTH ROUTES
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+
 // Todo: API VRM DEFAULT
 Route::group(['prefix' => 'vrm'], function () {
     // Role routes
