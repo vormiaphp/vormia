@@ -178,21 +178,21 @@ class UpdateCommand extends Command
     {
         // Publish config
         Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
+            '--provider' => 'VormiaPHP\Vormia\VormiaServiceProvider',
             '--tag' => 'vormia-config',
             '--force' => true
         ]);
 
         // Publish all package files
         Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
+            '--provider' => 'VormiaPHP\Vormia\VormiaServiceProvider',
             '--tag' => 'vormia-files',
             '--force' => true
         ]);
 
         // Publish migrations if any new ones exist
         Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
+            '--provider' => 'VormiaPHP\Vormia\VormiaServiceProvider',
             '--tag' => 'vormia-migrations',
             '--force' => true
         ]);

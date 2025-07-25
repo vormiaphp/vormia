@@ -39,7 +39,7 @@ class InstallCommand extends Command
         // Step 1: Publish config
         $this->step('Publishing configuration files...');
         Artisan::call('vendor:publish', [
-            '--provider' => 'Vormia\VormiaServiceProvider',
+            '--provider' => 'VormiaPHP\Vormia\VormiaServiceProvider',
             '--tag' => 'vormia-config',
             '--force' => true
         ]);
@@ -220,9 +220,10 @@ class InstallCommand extends Command
         $envExamplePath = base_path('.env.example');
 
         $envContent_table = "\n# VORMIA CONFIG\nVORMIA_TABLE_PREFIX=vrm_\n";
-        $envContent_slug = "\n# VORMIA CONFIG\nVORMIA_AUTO_UPDATE_SLUGS=false\n";
-        $envContent_approval = "\n# VORMIA CONFIG\nVORMIA_SLUG_APPROVAL_REQUIRED=true\n";
-        $envContent_history = "\n# VORMIA CONFIG\nVORMIA_SLUG_HISTORY_ENABLED=true\n";
+
+        $envContent_slug = "\n# VORMIA SLUG CONFIG\nVORMIA_AUTO_UPDATE_SLUGS=false\n";
+        $envContent_slug .= "VORMIA_SLUG_APPROVAL_REQUIRED=true\n";
+        $envContent_slug .= "VORMIA_SLUG_HISTORY_ENABLED=true\n";
 
         // MediaForge config
         $envContent_mediaforge = "\n# VORMIA MEDIAFORGE CONFIG\nVORMIA_MEDIAFORGE_DRIVER=auto\n";
@@ -240,12 +241,6 @@ class InstallCommand extends Command
             if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envPath, $envContent_slug);
             }
-            if (strpos($content, 'VORMIA_SLUG_APPROVAL_REQUIRED') === false) {
-                File::append($envPath, $envContent_approval);
-            }
-            if (strpos($content, 'VORMIA_SLUG_HISTORY_ENABLED') === false) {
-                File::append($envPath, $envContent_history);
-            }
             if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
                 File::append($envPath, $envContent_mediaforge);
             }
@@ -259,12 +254,6 @@ class InstallCommand extends Command
             }
             if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envExamplePath, $envContent_slug);
-            }
-            if (strpos($content, 'VORMIA_SLUG_APPROVAL_REQUIRED') === false) {
-                File::append($envExamplePath, $envContent_approval);
-            }
-            if (strpos($content, 'VORMIA_SLUG_HISTORY_ENABLED') === false) {
-                File::append($envExamplePath, $envContent_history);
             }
             if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
                 File::append($envExamplePath, $envContent_mediaforge);
