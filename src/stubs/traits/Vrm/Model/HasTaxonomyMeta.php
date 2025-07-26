@@ -24,28 +24,14 @@ trait HasTaxonomyMeta
     public function createDefaultTaxonomyMeta()
     {
         $defaultMeta = [
-            'description' => null,
             'icon' => null,
-            'color' => '#6B7280', // Default gray color
-            'image' => null,
-            'seo_title' => $this->name,
-            'seo_description' => null,
-            'seo_keywords' => null,
-            'display_order' => $this->position ?? 0,
             'is_featured' => false,
-            'parent_path' => $this->getParentPath(),
             'children_count' => 0,
             'items_count' => 0,
-            'template' => 'default',
-            'redirect_url' => null,
-            'external_link' => null,
-            'meta_robots' => 'index,follow',
-            'created_at_formatted' => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at_formatted' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
 
         foreach ($defaultMeta as $key => $value) {
-            if ($value !== null || in_array($key, ['description', 'icon', 'image', 'seo_description', 'seo_keywords', 'redirect_url', 'external_link'])) {
+            if ($value !== null || in_array($key, ['description', 'icon', 'image'])) {
                 $this->setMetaValue($key, $value);
             }
         }
