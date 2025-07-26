@@ -55,6 +55,8 @@ class User extends Authenticatable
         ];
     }
 
+    protected $with = ['term'];
+
     /**
      * Get the user's initials
      */
@@ -97,6 +99,12 @@ class User extends Authenticatable
     }
 
     /* -------------------------------------------------------------------------------- */
+
+    // Todo: Slug
+    public function term()
+    {
+        return $this->hasOne(\App\Models\Vrm\SlugRegistry::class, 'entity_id', 'id');
+    }
 
     /**
      * Define which field should be used for generating slugs.

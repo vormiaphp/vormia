@@ -31,6 +31,8 @@ class Taxonomy extends Model
         'parent_id' => 'integer'
     ];
 
+    protected $with = ['term'];
+
     // Relationships
     public function parent()
     {
@@ -45,6 +47,11 @@ class Taxonomy extends Model
     public function meta()
     {
         return $this->hasMany(TaxonomyMeta::class, 'taxonomy_id');
+    }
+
+    public function term()
+    {
+        return $this->hasOne(SlugRegistry::class, 'entity_id', 'id');
     }
 
     // Helper methods to work with meta
