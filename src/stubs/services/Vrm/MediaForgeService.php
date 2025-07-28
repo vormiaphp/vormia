@@ -756,6 +756,511 @@ class MediaForgeService
         return $results;
     }
 
+    /**
+     * Delete files based on type(s)
+     *
+     * @param string $filePath Relative path to the file (e.g., 'media/food-categories/2025/07/28/donut_1.png')
+     * @param string|array $type Type(s) of files to delete: 'only', 'all', 'thumb', 'resized', 'compressed', 'converted', 'watermark', 'avatar', 'processed'
+     * @return array Array containing deletion results and information
+     */
+    public function delete(string $filePath, string|array $type = 'all'): array
+    {
+        $result = [
+            'success' => false,
+            'deleted_files' => [],
+            'errors' => [],
+            'total_deleted' => 0,
+            'message' => ''
+        ];
+
+        try {
+            // Normalize type parameter to array
+            $types = is_array($type) ? $type : [$type];
+
+            // Validate type parameters
+            $validTypes = ['only', 'all', 'thumb', 'resized', 'compressed', 'converted', 'watermark', 'avatar', 'processed'];
+            foreach ($types as $singleType) {
+                if (!in_array($singleType, $validTypes)) {
+                    $result['errors'][] = "Invalid type '$singleType'. Must be one of: " . implode(', ', $validTypes);
+                    $result['message'] = 'Invalid type parameter provided';
+                    return $result;
+                }
+            }
+
+            // Validate and normalize the file path
+            $filePath = $this->normalizeFilePath($filePath);
+
+            if (!$this->isValidFilePath($filePath)) {
+                $result['errors'][] = "Invalid file path: $filePath";
+                $result['message'] = 'Invalid file path provided';
+                return $result;
+            }
+
+            // Find files to delete based on types
+            $filesToDelete = [];
+            foreach ($types as $singleType) {
+                $filesForType = $this->findFilesByType($filePath, $singleType);
+                $filesToDelete = array_merge($filesToDelete, $filesForType);
+            }
+
+            // Remove duplicates
+            $filesToDelete = array_unique($filesToDelete);
+
+            if (empty($filesToDelete)) {
+                $typeString = is_array($type) ? implode(', ', $type) : $type;
+                $result['message'] = "No files found to delete for type(s): $typeString";
+                return $result;
+            }
+
+            // Delete the files
+            foreach ($filesToDelete as $fileToDelete) {
+                $fullDeletePath = $this->getFullPath($fileToDelete);
+                if ($this->deleteFile($fullDeletePath)) {
+                    $result['deleted_files'][] = $fileToDelete;
+                    $result['total_deleted']++;
+                } else {
+                    $result['errors'][] = "Failed to delete file: $fileToDelete";
+                }
+            }
+
+            $result['success'] = $result['total_deleted'] > 0;
+            $typeString = is_array($type) ? implode(', ', $type) : $type;
+            $result['message'] = $result['success']
+                ? "Successfully deleted {$result['total_deleted']} files (type(s): $typeString)"
+                : 'No files were deleted';
+
+            // Log the deletion operation
+            Log::info("MediaForge: Delete operation completed", [
+                'file_path' => $filePath,
+                'types' => $types,
+                'deleted_count' => $result['total_deleted'],
+                'errors' => $result['errors']
+            ]);
+        } catch (\Exception $e) {
+            $result['errors'][] = "Exception during deletion: " . $e->getMessage();
+            $result['message'] = 'An error occurred during deletion';
+            Log::error("MediaForge: Delete operation failed", [
+                'file_path' => $filePath,
+                'types' => $types,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Find files to delete based on type
+     *
+     * @param string $filePath
+     * @param string $type
+     * @return array
+     */
+    protected function findFilesByType(string $filePath, string $type): array
+    {
+        $pathInfo = pathinfo($filePath);
+        $directory = $pathInfo['dirname'];
+        $baseName = $pathInfo['filename'];
+        $extension = $pathInfo['extension'];
+
+        $fullDirectoryPath = $this->getFullPath($directory);
+
+        if (!is_dir($fullDirectoryPath)) {
+            return [];
+        }
+
+        // Get all files in the directory
+        $files = File::files($fullDirectoryPath);
+        $filesToDelete = [];
+
+        foreach ($files as $file) {
+            $fileName = basename($file);
+            $relativePath = $directory . '/' . $fileName;
+
+            switch ($type) {
+                case 'only':
+                    // Delete only the original file
+                    if ($fileName === basename($filePath)) {
+                        $filesToDelete[] = $filePath;
+                    }
+                    break;
+
+                case 'all':
+                    // Delete original and all related files
+                    if ($fileName === basename($filePath)) {
+                        $filesToDelete[] = $filePath;
+                    } elseif ($this->isRelatedFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'thumb':
+                    // Delete only thumbnail files
+                    if ($this->isThumbnailFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'resized':
+                    // Delete only resized files
+                    if ($this->isResizedFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'compressed':
+                    // Delete only compressed files
+                    if ($this->isCompressedFile($fileName, $baseName)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'converted':
+                    // Delete only converted files
+                    if ($this->isConvertedFile($fileName, $baseName)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'watermark':
+                    // Delete only watermarked files
+                    if ($this->isWatermarkedFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'avatar':
+                    // Delete only avatar files
+                    if ($this->isAvatarFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+
+                case 'processed':
+                    // Delete all processed files (everything except original)
+                    if ($fileName !== basename($filePath) && $this->isRelatedFile($fileName, $baseName, $extension)) {
+                        $filesToDelete[] = $relativePath;
+                    }
+                    break;
+            }
+        }
+
+        return $filesToDelete;
+    }
+
+    /**
+     * Check if a file is a related file
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @param string $extension
+     * @return bool
+     */
+    protected function isRelatedFile(string $fileName, string $baseName, string $extension): bool
+    {
+        $patterns = $this->getFilePatterns($baseName, $extension);
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $fileName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a file is a thumbnail
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @param string $extension
+     * @return bool
+     */
+    protected function isThumbnailFile(string $fileName, string $baseName, string $extension): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $escapedExtension = preg_quote($extension, '/');
+
+        $thumbnailPatterns = [
+            "/^{$escapedBaseName}_[a-zA-Z0-9_]+\.{$escapedExtension}$/",
+            "/^{$escapedBaseName}_\d+x\d+\.{$escapedExtension}$/"
+        ];
+
+        foreach ($thumbnailPatterns as $pattern) {
+            if (preg_match($pattern, $fileName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a file is a resized version
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @param string $extension
+     * @return bool
+     */
+    protected function isResizedFile(string $fileName, string $baseName, string $extension): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $escapedExtension = preg_quote($extension, '/');
+        $pattern = "/^{$escapedBaseName}-\d+-\d+\.{$escapedExtension}$/";
+
+        return preg_match($pattern, $fileName);
+    }
+
+    /**
+     * Check if a file is a compressed version
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @return bool
+     */
+    protected function isCompressedFile(string $fileName, string $baseName): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $pattern = "/^{$escapedBaseName}-compressed\.(webp|jpg|jpeg|png|gif)$/";
+
+        return preg_match($pattern, $fileName);
+    }
+
+    /**
+     * Check if a file is a converted version
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @return bool
+     */
+    protected function isConvertedFile(string $fileName, string $baseName): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $pattern = "/^{$escapedBaseName}-(webp|jpg|jpeg|png|gif)\.(webp|jpg|jpeg|png|gif)$/";
+
+        return preg_match($pattern, $fileName);
+    }
+
+    /**
+     * Check if a file is a watermarked version
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @param string $extension
+     * @return bool
+     */
+    protected function isWatermarkedFile(string $fileName, string $baseName, string $extension): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $escapedExtension = preg_quote($extension, '/');
+        $pattern = "/^{$escapedBaseName}-watermark\.{$escapedExtension}$/";
+
+        return preg_match($pattern, $fileName);
+    }
+
+    /**
+     * Check if a file is an avatar version
+     *
+     * @param string $fileName
+     * @param string $baseName
+     * @param string $extension
+     * @return bool
+     */
+    protected function isAvatarFile(string $fileName, string $baseName, string $extension): bool
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $escapedExtension = preg_quote($extension, '/');
+        $pattern = "/^{$escapedBaseName}_avatar\.{$escapedExtension}$/";
+
+        return preg_match($pattern, $fileName);
+    }
+
+    /**
+     * Get regex patterns for finding related files
+     *
+     * @param string $baseName
+     * @param string $extension
+     * @return array
+     */
+    public function getFilePatterns(string $baseName, string $extension): array
+    {
+        $escapedBaseName = preg_quote($baseName, '/');
+        $escapedExtension = preg_quote($extension, '/');
+
+        return [
+            // Resized files: {baseName}-{width}-{height}.{extension}
+            "/^{$escapedBaseName}-\d+-\d+\.{$escapedExtension}$/",
+
+            // Compressed files: {baseName}-compressed.{format}
+            "/^{$escapedBaseName}-compressed\.(webp|jpg|jpeg|png|gif)$/",
+
+            // Converted files: {baseName}-{format}.{format}
+            "/^{$escapedBaseName}-(webp|jpg|jpeg|png|gif)\.(webp|jpg|jpeg|png|gif)$/",
+
+            // Watermarked files: {baseName}-watermark.{extension}
+            "/^{$escapedBaseName}-watermark\.{$escapedExtension}$/",
+
+            // Avatar files: {baseName}_avatar.{extension}
+            "/^{$escapedBaseName}_avatar\.{$escapedExtension}$/",
+
+            // Thumbnail files: {baseName}_{suffix}.{extension}
+            "/^{$escapedBaseName}_[a-zA-Z0-9_]+\.{$escapedExtension}$/",
+
+            // Thumbnail files with dimensions: {baseName}_{width}x{height}.{extension}
+            "/^{$escapedBaseName}_\d+x\d+\.{$escapedExtension}$/"
+        ];
+    }
+
+    /**
+     * Safely delete a single file
+     *
+     * @param string $fullPath
+     * @return bool
+     */
+    protected function deleteFile(string $fullPath): bool
+    {
+        if (!file_exists($fullPath)) {
+            return false;
+        }
+
+        try {
+            return File::delete($fullPath);
+        } catch (\Exception $e) {
+            Log::warning("MediaForge: Failed to delete file", [
+                'file_path' => $fullPath,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Get full system path from relative path
+     *
+     * @param string $relativePath
+     * @return string
+     */
+    protected function getFullPath(string $relativePath): string
+    {
+        if ($this->privateUpload) {
+            return storage_path("app/public/$relativePath");
+        } else {
+            return public_path($relativePath);
+        }
+    }
+
+    /**
+     * Normalize file path (remove leading/trailing slashes, ensure proper format)
+     *
+     * @param string $filePath
+     * @return string
+     */
+    public function normalizeFilePath(string $filePath): string
+    {
+        // Remove leading and trailing slashes
+        $filePath = trim($filePath, '/');
+
+        // Ensure it starts with 'media' or 'media-private'
+        if (!str_starts_with($filePath, 'media') && !str_starts_with($filePath, 'media-private')) {
+            $filePath = 'media/' . $filePath;
+        }
+
+        return $filePath;
+    }
+
+    /**
+     * Validate if the file path is safe and within allowed directories
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    public function isValidFilePath(string $filePath): bool
+    {
+        // Check for directory traversal attempts
+        if (str_contains($filePath, '..') || str_contains($filePath, '//')) {
+            return false;
+        }
+
+        // Ensure path starts with allowed prefixes
+        $allowedPrefixes = ['media/', 'media-private/'];
+        $isValidPrefix = false;
+
+        foreach ($allowedPrefixes as $prefix) {
+            if (str_starts_with($filePath, $prefix)) {
+                $isValidPrefix = true;
+                break;
+            }
+        }
+
+        if (!$isValidPrefix) {
+            return false;
+        }
+
+        // Check if file has a valid extension
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        return in_array($extension, $allowedExtensions);
+    }
+
+    /**
+     * Get information about what files would be deleted without actually deleting them
+     *
+     * @param string $filePath
+     * @param string|array $type
+     * @return array
+     */
+    public function getDeletePreview(string $filePath, string|array $type = 'all'): array
+    {
+        $result = [
+            'files_to_delete' => [],
+            'total_files' => 0,
+            'is_safe' => true,
+            'errors' => []
+        ];
+
+        try {
+            // Normalize type parameter to array
+            $types = is_array($type) ? $type : [$type];
+
+            // Validate type parameters
+            $validTypes = ['only', 'all', 'thumb', 'resized', 'compressed', 'converted', 'watermark', 'avatar', 'processed'];
+            foreach ($types as $singleType) {
+                if (!in_array($singleType, $validTypes)) {
+                    $result['errors'][] = "Invalid type '$singleType'. Must be one of: " . implode(', ', $validTypes);
+                    $result['is_safe'] = false;
+                    return $result;
+                }
+            }
+
+            $filePath = $this->normalizeFilePath($filePath);
+
+            if (!$this->isValidFilePath($filePath)) {
+                $result['errors'][] = "Invalid file path: $filePath";
+                $result['is_safe'] = false;
+                return $result;
+            }
+
+            // Find files to delete based on types
+            $filesToDelete = [];
+            foreach ($types as $singleType) {
+                $filesForType = $this->findFilesByType($filePath, $singleType);
+                $filesToDelete = array_merge($filesToDelete, $filesForType);
+            }
+
+            // Remove duplicates
+            $result['files_to_delete'] = array_unique($filesToDelete);
+            $result['total_files'] = count($result['files_to_delete']);
+        } catch (\Exception $e) {
+            $result['errors'][] = "Exception during preview: " . $e->getMessage();
+            $result['is_safe'] = false;
+        }
+
+        return $result;
+    }
+
     /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
     /**
@@ -778,8 +1283,8 @@ class MediaForgeService
             File::makeDirectory($fullPath, 0755, true);
         }
 
-        // Copy uploaded file (don't move since it's already in temp location)
-        File::copy($file->getRealPath(), $fullPath . '/' . $fileName);
+        // Move uploaded file
+        $file->move($fullPath, $fileName);
 
         // Apply image operations if it's an image
         if ($this->isImage($fileName)) {
