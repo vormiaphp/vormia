@@ -29,7 +29,7 @@ class MediaForgeService
     protected string $driver = 'auto'; // 'auto', 'gd', 'imagick'
     protected $originalFiles = [];
 
-    public function __construct(string $driver = null)
+    public function __construct(?string $driver = null)
     {
         // Check if intervention/image is installed
         if (!class_exists('Intervention\Image\ImageManager')) {
@@ -1283,8 +1283,8 @@ class MediaForgeService
             File::makeDirectory($fullPath, 0755, true);
         }
 
-        // Move uploaded file
-        $file->move($fullPath, $fileName);
+        // Copy uploaded file (don't move since it's already in temp location)
+        File::copy($file->getRealPath(), $fullPath . '/' . $fileName);
 
         // Apply image operations if it's an image
         if ($this->isImage($fileName)) {
