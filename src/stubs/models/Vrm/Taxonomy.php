@@ -49,10 +49,8 @@ class Taxonomy extends Model
         return $this->hasMany(TaxonomyMeta::class, 'taxonomy_id');
     }
 
-    public function term()
-    {
-        return $this->hasOne(SlugRegistry::class, 'entity_id', 'id');
-    }
+    // Slug relationship is handled by HasSlugs trait
+    // Use $this->slugs() to access slugs with proper entity_type filtering
 
     // Helper methods to work with meta
     public function getMetaValue($key, $default = null)
@@ -142,7 +140,7 @@ class Taxonomy extends Model
     {
         // Development: Allow automatic updates
         if (app()->environment('local', 'development')) {
-            return true;
+            return false;
         }
 
         // Production: Require manual approval

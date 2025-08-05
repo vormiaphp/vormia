@@ -55,7 +55,8 @@ class User extends Authenticatable
         ];
     }
 
-    protected $with = ['term'];
+    // Eager load slugs when needed
+    // protected $with = ['slugs'];
 
     /**
      * Get the user's initials
@@ -100,11 +101,8 @@ class User extends Authenticatable
 
     /* -------------------------------------------------------------------------------- */
 
-    // Todo: Slug
-    public function term()
-    {
-        return $this->hasOne(\App\Models\Vrm\SlugRegistry::class, 'entity_id', 'id');
-    }
+    // Slug relationship is handled by HasSlugs trait
+    // Use $this->slugs() to access slugs with proper entity_type filtering
 
     /**
      * Define which field should be used for generating slugs.
@@ -163,7 +161,10 @@ class User extends Authenticatable
     // Todo: User roles
     public function roles()
     {
-        return $this->belongsToMany(\App\Models\Vrm\Role::class);
+        return $this->belongsToMany(
+            \App\Models\Vrm\Role::class,
+            config("vormia.table_prefix") . "role_user",
+        );
     }
 
     // Todo: Check if the user has the required role
