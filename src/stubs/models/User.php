@@ -100,6 +100,8 @@ class User extends Authenticatable
     }
 
     /* -------------------------------------------------------------------------------- */
+    // Slug Methods
+    /* -------------------------------------------------------------------------------- */
 
     // Slug relationship is handled by HasSlugs trait
     // Use $this->slugs() to access slugs with proper entity_type filtering
@@ -123,7 +125,7 @@ class User extends Authenticatable
     {
         // Development: Allow automatic updates
         if (app()->environment('local', 'development')) {
-            return true;
+            return false;
         }
 
         // Production: Require manual approval

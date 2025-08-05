@@ -81,12 +81,33 @@ trait HasSlugs
      */
     public function getSlug()
     {
+        // If slugs are already loaded, use the collection
+        if ($this->relationLoaded('slugs')) {
+            $slug = $this->slugs
+                ->where('is_active', true)
+                ->where('is_primary', true)
+                ->first();
+
+            if (!$slug) {
+                // No primary slug found in loaded collection, try to ensure one exists
+                return $this->ensurePrimarySlug();
+            }
+
+            return $slug->slug;
+        }
+
+        // Otherwise, query the database and ensure primary slug exists
         $slug = $this->slugs()
             ->where('is_active', true)
             ->where('is_primary', true)
             ->first();
 
-        return $slug ? $slug->slug : null;
+        if (!$slug) {
+            // No primary slug found, try to ensure one exists
+            return $this->ensurePrimarySlug();
+        }
+
+        return $slug->slug;
     }
 
     /**
@@ -119,6 +140,34 @@ trait HasSlugs
         ]);
 
         return $slug;
+    }
+
+    /**
+     * Ensure there's exactly one primary slug for this model.
+     * If no primary slug exists, make the first active slug primary.
+     *
+     * @return string|null
+     */
+    public function ensurePrimarySlug()
+    {
+        $primarySlug = $this->slugs()
+            ->where('is_active', true)
+            ->where('is_primary', true)
+            ->first();
+
+        if (!$primarySlug) {
+            // No primary slug found, make the first active slug primary
+            $firstActiveSlug = $this->slugs()
+                ->where('is_active', true)
+                ->first();
+
+            if ($firstActiveSlug) {
+                $firstActiveSlug->update(['is_primary' => true]);
+                return $firstActiveSlug->slug;
+            }
+        }
+
+        return $primarySlug ? $primarySlug->slug : null;
     }
 
     /**
