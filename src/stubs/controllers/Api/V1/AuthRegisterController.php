@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Validation\Rules\Password;
-use App\Http\Traits\ApiResponseTrait;
+use App\Traits\Vrm\Model\ApiResponseTrait;
 use App\Notifications\VerifyEmail;
 use App\Notifications\WelcomeUser;
 use App\Services\Vrm\TokenService;
@@ -28,55 +28,76 @@ class AuthRegisterController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password' => [
-                    'required',
-                    'confirmed',
-                    Password::min(4)
-                        ->letters()
-                        ->mixedCase()
-                        ->numbers()
+                "name" => ["required", "string", "max:255"],
+                "email" => [
+                    "required",
+                    "string",
+                    "email",
+                    "max:255",
+                    "unique:users",
+                ],
+                "password" => [
+                    "required",
+                    "confirmed",
+                    Password::min(4)->letters()->mixedCase()->numbers(),
                     // ->symbols()
                 ],
-                'terms' => 'required|accepted',
+                "terms" => "required|accepted",
             ]);
 
             if ($validator->fails()) {
-                return $this->validationError($validator->errors()->toArray(), 'Validation errors');
+                return $this->validationError(
+                    $validator->errors()->toArray(),
+                    "Validation errors",
+                );
             }
 
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                "name" => $request->name,
+                "email" => $request->email,
+                "password" => Hash::make($request->password),
             ]);
 
             // attach to role
             $user->roles()->attach(2); // 2 for members
 
             // attach to meta
-            $user->setMeta('terms', $request->terms);
+            $user->setMeta("terms", $request->terms);
 
             // You can generate a token here if you're using Laravel Sanctum/Passport
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken("auth_token")->plainTextToken;
 
             // Generate verification token and send email
             $tokenService = app(TokenService::class);
-            $verificationToken = $tokenService->generateToken($user->id, 'email_verification', 'register', null, 60 * 24); // 24 hours expiry
-            $verificationUrl = url('/api/v1/verify-email?t=' . $verificationToken);
+            $verificationToken = $tokenService->generateToken(
+                $user->id,
+                "email_verification",
+                "register",
+                null,
+                60 * 24,
+            ); // 24 hours expiry
+            $verificationUrl = url(
+                "/api/v1/verify-email?t=" . $verificationToken,
+            );
             dispatch(new SendVerifyEmailJob($user, $verificationUrl));
 
             // Return response
-            return $this->success([
-                'user' => $user,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'verification_url' => $verificationUrl,
-                'verification_token' => $verificationToken,
-            ], 'User registered successfully', 201);
+            return $this->success(
+                [
+                    "user" => $user,
+                    "access_token" => $token,
+                    "token_type" => "Bearer",
+                    "verification_url" => $verificationUrl,
+                    "verification_token" => $verificationToken,
+                ],
+                "User registered successfully",
+                201,
+            );
         } catch (\Exception $e) {
-            return $this->error('Failed to register user: ' . $e->getMessage(), 500);
+            return $this->error(
+                "Failed to register user: " . $e->getMessage(),
+                500,
+            );
         }
     }
 
@@ -89,23 +110,29 @@ class AuthRegisterController extends Controller
     public function verifyEmail(Request $request)
     {
         $request->validate([
-            't' => 'required|string',
+            "t" => "required|string",
         ]);
 
         $tokenService = app(TokenService::class);
-        $authToken = $tokenService->verifyToken($request->t, 'email_verification', 'register', null, true);
+        $authToken = $tokenService->verifyToken(
+            $request->t,
+            "email_verification",
+            "register",
+            null,
+            true,
+        );
 
         if (!$authToken) {
-            return $this->error('Invalid or expired verification token.', 400);
+            return $this->error("Invalid or expired verification token.", 400);
         }
 
         $user = \App\Models\User::find($authToken->user_id);
         if (!$user) {
-            return $this->error('User not found.', 404);
+            return $this->error("User not found.", 404);
         }
 
         if ($user->email_verified_at) {
-            return $this->success([], 'Email already verified.');
+            return $this->success([], "Email already verified.");
         }
 
         $user->email_verified_at = now();
@@ -116,7 +143,7 @@ class AuthRegisterController extends Controller
         dispatch(new SendWelcomeUserJob($user));
 
         // return success response
-        return $this->success([], 'Email verified successfully.');
+        return $this->success([], "Email verified successfully.");
     }
 
     /**
@@ -128,27 +155,39 @@ class AuthRegisterController extends Controller
     public function resendVerification(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            "email" => "required|email",
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where("email", $request->email)->first();
         if (!$user) {
-            return $this->error('User not found.', 404);
+            return $this->error("User not found.", 404);
         }
 
         if ($user->email_verified_at) {
-            return $this->success([], 'Email already verified.');
+            return $this->success([], "Email already verified.");
         }
 
         $tokenService = app(TokenService::class);
-        $verificationToken = $tokenService->generateToken($user->id, 'email_verification', 'register', null, 60 * 24); // 24 hours expiry
-        $verificationUrl = url('/api/v1/verify-email?token=' . $verificationToken);
+        $verificationToken = $tokenService->generateToken(
+            $user->id,
+            "email_verification",
+            "register",
+            null,
+            60 * 24,
+        ); // 24 hours expiry
+        $verificationUrl = url(
+            "/api/v1/verify-email?token=" . $verificationToken,
+        );
         dispatch(new SendVerifyEmailJob($user, $verificationUrl));
 
         // return success response
-        return $this->success([
-            'verification_url' => $verificationUrl,
-            'verification_token' => $verificationToken,
-        ], 'Verification email resent.', 201);
+        return $this->success(
+            [
+                "verification_url" => $verificationUrl,
+                "verification_token" => $verificationToken,
+            ],
+            "Verification email resent.",
+            201,
+        );
     }
 }
