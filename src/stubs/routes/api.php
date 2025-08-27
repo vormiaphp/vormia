@@ -75,7 +75,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('/login', [\App\Http\Controllers\Api\V1\AuthLoginController::class, 'login']);
 
     // Protected routes (require authentication)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('api-auth')->group(function () {
         // User routes
         Route::get('/user', function (Request $request) {
             return $request->user();

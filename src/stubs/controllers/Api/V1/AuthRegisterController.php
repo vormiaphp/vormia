@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use Illuminate\Validation\Rules\Password;
-use App\Traits\Vrm\Model\ApiResponseTrait;
+use Illuminate\Http\Request;
 use App\Notifications\VerifyEmail;
 use App\Notifications\WelcomeUser;
 use App\Services\Vrm\TokenService;
 use App\Jobs\V1\SendVerifyEmailJob;
 use App\Jobs\V1\SendWelcomeUserJob;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use App\Traits\Vrm\Model\ApiResponseTrait;
 
 class AuthRegisterController extends Controller
 {
@@ -26,6 +27,10 @@ class AuthRegisterController extends Controller
      */
     public function register(Request $request)
     {
+
+        // Log the request received
+        Log::info("Register request received: " . json_encode($request->all()));
+
         try {
             $validator = Validator::make($request->all(), [
                 "name" => ["required", "string", "max:255"],
@@ -59,7 +64,7 @@ class AuthRegisterController extends Controller
             ]);
 
             // attach to role
-            $user->roles()->attach(2); // 2 for members
+            $user->roles()->attach(3); // 3 for members
 
             // attach to meta
             $user->setMeta("terms", $request->terms);
@@ -90,7 +95,7 @@ class AuthRegisterController extends Controller
                     "verification_url" => $verificationUrl,
                     "verification_token" => $verificationToken,
                 ],
-                "User registered successfully",
+                "Account registration was success. Please check your email for verification.",
                 201,
             );
         } catch (\Exception $e) {

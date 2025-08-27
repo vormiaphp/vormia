@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Traits\Vrm\Model\ApiResponseTrait;
 use App\Models\User;
 use App\Models\Vrm\Utility;
 use Illuminate\Support\Str;
 
 class AuthLoginController extends Controller
 {
+    use ApiResponseTrait;
     /**
      * Handle user login with Sanctum, brute force protection, and domain check.
      */
@@ -25,24 +27,36 @@ class AuthLoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 422);
+            return $this->validationError(
+                $validator->errors()->toArray(),
+                "Invalid input",
+            );
         }
 
         // Brute force protection (5 attempts per 1 minute per email+ip)
         $key = Str::lower($request->input('email')) . '|' . $request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return response()->json(['message' => 'Too many login attempts. Please try again later.'], 429);
+            return $this->error(
+                "Too many login attempts. Please try again later.",
+                429,
+            );
         }
 
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             RateLimiter::hit($key, 60); // 1 minute lockout
-            return response()->json(['message' => 'Invalid email or password.'], 401);
+            return $this->error(
+                "Invalid email or password.",
+                401,
+            );
         }
 
         // Check if user is active and verified
         if (!$user->is_active || !$user->email_verified_at) {
-            return response()->json(['message' => 'Account is not active or email not verified.'], 403);
+            return $this->error(
+                "Account is not active or email not verified.",
+                403,
+            );
         }
 
         // Check sender domain
@@ -58,7 +72,10 @@ class AuthLoginController extends Controller
                 }
             }
             if (!$domainAllowed) {
-                return response()->json(['message' => 'Requests from this domain are not allowed.'], 403);
+                return $this->error(
+                    "Requests from this domain are not allowed.",
+                    403,
+                );
             }
         }
 
@@ -74,11 +91,25 @@ class AuthLoginController extends Controller
 
         $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
-        return response()->json([
-            'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ], 200);
+        // Get User Roles
+        $userRoles = $user->roles()->get()->pluck('slug')->toArray();
+
+        // Return
+        return $this->success(
+            [
+                "user" => $user->only([
+                    "id",
+                    "name",
+                    "email",
+                    "slug" => $user->slug,
+                ]),
+                "access_token" => $token,
+                "user_roles" => $userRoles,
+                "token_type" => "Bearer",
+            ],
+            "Login successful.",
+            200,
+        );
     }
 
     /**
@@ -94,6 +125,10 @@ class AuthLoginController extends Controller
                 $user->tokens()->delete();
             }
         }
-        return response()->json(['message' => 'Logged out successfully.'], 200);
+        return $this->success(
+            [],
+            "Logged out successfully.",
+            200,
+        );
     }
 }
