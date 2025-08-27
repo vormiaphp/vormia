@@ -1,5 +1,6 @@
 {
     "name": "vormiaphp/vormia",
+    "version": "4.2.8",
     "description": "A comprehensive Laravel package for user management, roles, permissions, and utilities",
     "keywords": ["laravel", "php", "roles", "permissions", "user-management", "vormia"],
     "type": "library",

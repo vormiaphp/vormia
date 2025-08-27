@@ -39,7 +39,7 @@ class HelpCommand extends Command
         $this->newLine();
         $this->info('╔══════════════════════════════════════════════════════════════╗');
         $this->info('║                         VORMIA HELP                         ║');
-        $this->info('║                      Version 4.0.0                         ║');
+        $this->info('║                      Version 4.2.8                         ║');
         $this->info('╚══════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
