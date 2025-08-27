@@ -31,6 +31,30 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
+## What's New in v4.2.8 🎉
+
+### ✨ New Features
+- **API Authentication Middleware**: New `ApiAuthenticate` middleware for protected API routes
+- **AI Documentation Guides**: Comprehensive guides for developers and AI assistants
+- **Cache Management**: Enhanced utility service with cache clearing and fresh data methods
+
+### 🔧 Improvements
+- **Database Protection**: Service providers now handle database connection issues gracefully
+- **Meta Methods**: Unified `setMeta`/`getMeta` across all models for consistency
+- **Error Handling**: Better error handling and troubleshooting documentation
+
+### 🐛 Bug Fixes
+- **Type System Confusion**: Clarified utilities table structure and usage patterns
+- **Service Provider Errors**: Fixed crashes that occurred before migrations run
+- **Test Failures**: Resolved PHPUnit test issues
+
+### 📚 Documentation
+- **Enhanced README**: Added troubleshooting section and usage examples
+- **AI Assistant Guides**: Created `LLMFLOW.md` and `LLMRULES.md` for AI integration
+- **Usage Patterns**: Clear examples and best practices for all features
+
+[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.2.7)
+
 ## Key Improvements
 
 ### 🔄 Uniform Meta Methods
