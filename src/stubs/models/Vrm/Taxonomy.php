@@ -51,17 +51,17 @@ class Taxonomy extends Model
     // Use $this->slugs() to access slugs with proper entity_type filtering
 
     // Helper methods to work with meta
-    public function getMetaValue($key, $default = null)
+    public function getMeta($key, $default = null)
     {
         $meta = $this->meta()->where('key', $key)->first();
         return $meta ? $meta->value : $default;
     }
 
-    public function setMetaValue($key, $value)
+    public function setMeta($key, $value, $flag = 1)
     {
         $meta = $this->meta()->updateOrCreate(
             ['key' => $key],
-            ['value' => $value]
+            ['value' => $value, 'flag' => $flag]
         );
 
         return $meta;
@@ -71,7 +71,7 @@ class Taxonomy extends Model
     public function syncMeta(array $metadata)
     {
         foreach ($metadata as $key => $value) {
-            $this->setMetaValue($key, $value);
+            $this->setMeta($key, $value);
         }
 
         return $this;

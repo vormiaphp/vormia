@@ -27,6 +27,39 @@ The package will automatically check for required dependencies during installati
 - **Modular Architecture**
 - **Livewire Integration**
 - **Database Organization**
+- **Uniform Meta Management**
+- **Robust Database Handling**
+- **API Authentication Middleware**
+
+## Key Improvements
+
+### 🔄 Uniform Meta Methods
+
+All models now use consistent method names for managing meta data:
+
+- **`setMeta($key, $value, $flag = 1)`** - Set or update meta values
+- **`getMeta($key, $default = null)`** - Retrieve meta values
+- **`deleteMeta($key)`** - Remove meta values
+
+This eliminates confusion between different method names like `setMetaValue` vs `setMeta` across models.
+
+### 🛡️ Database Dependency Protection
+
+Service providers now gracefully handle scenarios where:
+
+- Database doesn't exist yet
+- Migrations haven't been run
+- Running in console during migrations
+
+This prevents errors when cloning a project before running `php artisan migrate`.
+
+### 🔐 API Authentication Middleware
+
+New `api-auth` middleware for Sanctum-based API authentication:
+
+- Automatically checks user authentication via Sanctum
+- Returns proper 401 responses for unauthenticated requests
+- Seamlessly integrates with existing Vormia installation
 
 ## Installation
 
@@ -102,6 +135,7 @@ Add these to your middleware aliases array:
             'role' => \App\Http\Middleware\Vrm\CheckRole::class,
             'module' => \App\Http\Middleware\Vrm\CheckModule::class,
             'permission' => \App\Http\Middleware\Vrm\CheckPermission::class,
+            'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class,
         ]);
     })
 ```
@@ -139,6 +173,44 @@ Then, install Sanctum manually:
 
 ```sh
 php artisan install:api
+```
+
+## Usage
+
+### Meta Data Management
+
+All models with meta support now use uniform methods:
+
+```php
+// Set meta values
+$user->setMeta('preferences', ['theme' => 'dark']);
+$taxonomy->setMeta('description', 'Category description');
+
+// Get meta values
+$preferences = $user->getMeta('preferences', []);
+$description = $taxonomy->getMeta('description', 'Default description');
+
+// Delete meta values
+$user->deleteMeta('preferences');
+```
+
+### API Authentication
+
+Use the new `api-auth` middleware for protected API routes:
+
+```php
+// In routes/api.php
+Route::middleware(['api-auth'])->group(function () {
+    Route::get('/user/profile', [UserController::class, 'profile']);
+    Route::post('/user/update', [UserController::class, 'update']);
+});
+```
+
+Or apply to individual routes:
+
+```php
+Route::get('/protected-endpoint', [Controller::class, 'method'])
+    ->middleware('api-auth');
 ```
 
 ## Uninstallation

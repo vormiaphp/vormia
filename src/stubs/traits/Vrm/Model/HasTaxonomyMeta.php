@@ -32,7 +32,7 @@ trait HasTaxonomyMeta
 
         foreach ($defaultMeta as $key => $value) {
             if ($value !== null || in_array($key, ['description', 'icon', 'image'])) {
-                $this->setMetaValue($key, $value);
+                $this->setMeta($key, $value);
             }
         }
     }
@@ -50,7 +50,7 @@ trait HasTaxonomyMeta
         ];
 
         foreach ($syncFields as $key => $value) {
-            $this->setMetaValue($key, $value);
+            $this->setMeta($key, $value);
         }
 
         // Update children count
@@ -87,7 +87,7 @@ trait HasTaxonomyMeta
     public function updateChildrenCount()
     {
         $count = $this->children()->count();
-        $this->setMetaValue('children_count', $count);
+        $this->setMeta('children_count', $count);
     }
 
     /**
@@ -97,7 +97,7 @@ trait HasTaxonomyMeta
      */
     public function getDescriptionAttribute()
     {
-        return $this->getMetaValue('description');
+        return $this->getMeta('description');
     }
 
     /**
@@ -108,7 +108,7 @@ trait HasTaxonomyMeta
      */
     public function setDescriptionAttribute($description)
     {
-        $this->setMetaValue('description', $description);
+        $this->setMeta('description', $description);
     }
 
     /**
@@ -118,7 +118,7 @@ trait HasTaxonomyMeta
      */
     public function getIconAttribute()
     {
-        return $this->getMetaValue('icon');
+        return $this->getMeta('icon');
     }
 
     /**
@@ -129,7 +129,7 @@ trait HasTaxonomyMeta
      */
     public function setIconAttribute($icon)
     {
-        $this->setMetaValue('icon', $icon);
+        $this->setMeta('icon', $icon);
     }
 
     /**
@@ -139,7 +139,7 @@ trait HasTaxonomyMeta
      */
     public function getColorAttribute()
     {
-        return $this->getMetaValue('color', '#6B7280');
+        return $this->getMeta('color', '#6B7280');
     }
 
     /**
@@ -150,7 +150,7 @@ trait HasTaxonomyMeta
      */
     public function setColorAttribute($color)
     {
-        $this->setMetaValue('color', $color);
+        $this->setMeta('color', $color);
     }
 
     /**
@@ -160,7 +160,7 @@ trait HasTaxonomyMeta
      */
     public function getImageAttribute()
     {
-        return $this->getMetaValue('image');
+        return $this->getMeta('image');
     }
 
     /**
@@ -171,7 +171,7 @@ trait HasTaxonomyMeta
      */
     public function setImageAttribute($image)
     {
-        $this->setMetaValue('image', $image);
+        $this->setMeta('image', $image);
     }
 
     /**
@@ -181,7 +181,7 @@ trait HasTaxonomyMeta
      */
     public function getSeoTitleAttribute()
     {
-        return $this->getMetaValue('seo_title', $this->name);
+        return $this->getMeta('seo_title', $this->name);
     }
 
     /**
@@ -192,7 +192,7 @@ trait HasTaxonomyMeta
      */
     public function setSeoTitleAttribute($title)
     {
-        $this->setMetaValue('seo_title', $title);
+        $this->setMeta('seo_title', $title);
     }
 
     /**
@@ -202,7 +202,7 @@ trait HasTaxonomyMeta
      */
     public function getSeoDescriptionAttribute()
     {
-        return $this->getMetaValue('seo_description');
+        return $this->getMeta('seo_description');
     }
 
     /**
@@ -213,7 +213,7 @@ trait HasTaxonomyMeta
      */
     public function setSeoDescriptionAttribute($description)
     {
-        $this->setMetaValue('seo_description', $description);
+        $this->setMeta('seo_description', $description);
     }
 
     /**
@@ -223,7 +223,7 @@ trait HasTaxonomyMeta
      */
     public function getSeoKeywordsAttribute()
     {
-        return $this->getMetaValue('seo_keywords');
+        return $this->getMeta('seo_keywords');
     }
 
     /**
@@ -234,7 +234,7 @@ trait HasTaxonomyMeta
      */
     public function setSeoKeywordsAttribute($keywords)
     {
-        $this->setMetaValue('seo_keywords', $keywords);
+        $this->setMeta('seo_keywords', $keywords);
     }
 
     /**
@@ -244,7 +244,7 @@ trait HasTaxonomyMeta
      */
     public function getDisplayOrderAttribute()
     {
-        return (int) $this->getMetaValue('display_order', $this->position ?? 0);
+        return (int) $this->getMeta('display_order', $this->position ?? 0);
     }
 
     /**
@@ -255,7 +255,7 @@ trait HasTaxonomyMeta
      */
     public function setDisplayOrderAttribute($order)
     {
-        $this->setMetaValue('display_order', $order);
+        $this->setMeta('display_order', $order);
     }
 
     /**
@@ -265,7 +265,7 @@ trait HasTaxonomyMeta
      */
     public function getIsFeaturedAttribute()
     {
-        return (bool) $this->getMetaValue('is_featured', false);
+        return (bool) $this->getMeta('is_featured', false);
     }
 
     /**
@@ -276,7 +276,7 @@ trait HasTaxonomyMeta
      */
     public function setIsFeaturedAttribute($featured)
     {
-        $this->setMetaValue('is_featured', $featured);
+        $this->setMeta('is_featured', $featured);
     }
 
     /**
@@ -286,7 +286,7 @@ trait HasTaxonomyMeta
      */
     public function getParentPathAttribute()
     {
-        return $this->getMetaValue('parent_path', $this->getParentPath());
+        return $this->getMeta('parent_path', $this->getParentPath());
     }
 
     /**
@@ -296,7 +296,7 @@ trait HasTaxonomyMeta
      */
     public function getChildrenCountAttribute()
     {
-        return (int) $this->getMetaValue('children_count', 0);
+        return (int) $this->getMeta('children_count', 0);
     }
 
     /**
@@ -306,7 +306,7 @@ trait HasTaxonomyMeta
      */
     public function getItemsCountAttribute()
     {
-        return (int) $this->getMetaValue('items_count', 0);
+        return (int) $this->getMeta('items_count', 0);
     }
 
     /**
@@ -317,7 +317,7 @@ trait HasTaxonomyMeta
      */
     public function setItemsCountAttribute($count)
     {
-        $this->setMetaValue('items_count', $count);
+        $this->setMeta('items_count', $count);
     }
 
     /**
@@ -327,7 +327,7 @@ trait HasTaxonomyMeta
      */
     public function getTemplateAttribute()
     {
-        return $this->getMetaValue('template', 'default');
+        return $this->getMeta('template', 'default');
     }
 
     /**
@@ -338,7 +338,7 @@ trait HasTaxonomyMeta
      */
     public function setTemplateAttribute($template)
     {
-        $this->setMetaValue('template', $template);
+        $this->setMeta('template', $template);
     }
 
     /**
@@ -348,7 +348,7 @@ trait HasTaxonomyMeta
      */
     public function getRedirectUrlAttribute()
     {
-        return $this->getMetaValue('redirect_url');
+        return $this->getMeta('redirect_url');
     }
 
     /**
@@ -359,7 +359,7 @@ trait HasTaxonomyMeta
      */
     public function setRedirectUrlAttribute($url)
     {
-        $this->setMetaValue('redirect_url', $url);
+        $this->setMeta('redirect_url', $url);
     }
 
     /**
@@ -369,7 +369,7 @@ trait HasTaxonomyMeta
      */
     public function getExternalLinkAttribute()
     {
-        return $this->getMetaValue('external_link');
+        return $this->getMeta('external_link');
     }
 
     /**
@@ -380,7 +380,7 @@ trait HasTaxonomyMeta
      */
     public function setExternalLinkAttribute($link)
     {
-        $this->setMetaValue('external_link', $link);
+        $this->setMeta('external_link', $link);
     }
 
     /**
@@ -390,7 +390,7 @@ trait HasTaxonomyMeta
      */
     public function getMetaRobotsAttribute()
     {
-        return $this->getMetaValue('meta_robots', 'index,follow');
+        return $this->getMeta('meta_robots', 'index,follow');
     }
 
     /**
@@ -401,6 +401,6 @@ trait HasTaxonomyMeta
      */
     public function setMetaRobotsAttribute($robots)
     {
-        $this->setMetaValue('meta_robots', $robots);
+        $this->setMeta('meta_robots', $robots);
     }
 }
