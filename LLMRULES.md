@@ -115,6 +115,7 @@ $utilities = new UtilityService(); // Don't instantiate directly
 ```
 
 **Correct Usage Patterns**:
+
 ```php
 // ✅ RECOMMENDED: Direct access with explicit type
 $theme = $utilities->get('theme', 'default-theme', 'general');
@@ -132,6 +133,7 @@ $utilities->fresh('theme', 'default', 'general'); // Force fresh data
 ```
 
 **Never Use**:
+
 ```php
 // ❌ WRONG: This suggests filtering by category that doesn't exist
 $utilities->type('public')->get('theme');
