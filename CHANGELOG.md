@@ -10,20 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.3.0] - 2024-12-19
 
 ### Added
+
 - **Version Management**: Proper version field in composer.json and consistent versioning
 - **Tag Cleanup**: Resolved git tag organization issues and standardized versioning
 - **Release Process**: Streamlined release process with proper version management
 
 ### Changed
+
 - **Version Bump**: Major version bump from 4.2.x to 4.3.0 for better semantic versioning
 - **Documentation**: Updated all version references across the package
-
-## [4.2.9] - 2024-12-19
-
-### Added
-- **Comprehensive Changelog**: Added CHANGELOG.md following Keep a Changelog format
-- **Enhanced README**: Added 'What's New' section with feature highlights
-- **Release Notes**: Professional release notes structure for future versions
 
 ## [4.2.8] - 2024-12-19
 
