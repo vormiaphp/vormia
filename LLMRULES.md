@@ -7,6 +7,7 @@ This document provides **IDE-based AI assistants** (Cursor, GitHub Copilot, Tabn
 ## 🚨 **Critical Rules for Code Generation**
 
 ### **1. Namespace Enforcement**
+
 ```php
 // ✅ ALWAYS use correct Vormia namespaces
 use App\Models\Vrm\Taxonomy;
@@ -20,12 +21,13 @@ use App\Services\UtilityService;   // Wrong - missing Vrm
 ```
 
 ### **2. Trait Usage Patterns**
+
 ```php
 // ✅ ALWAYS include required traits for Vormia functionality
 class User extends Authenticatable
 {
     use HasUserMeta, HasSlugs;  // Required for meta and slug functionality
-    
+
     // Vormia methods now available:
     // - setMeta(), getMeta(), deleteMeta()
     // - slug generation and management
@@ -39,6 +41,7 @@ class User extends Authenticatable
 ```
 
 ### **3. Method Naming Consistency**
+
 ```php
 // ✅ ALWAYS use uniform meta method names
 $user->setMeta('preference', 'value');      // Correct
@@ -53,6 +56,7 @@ $user->getMetaValue('preference');          // Wrong - deprecated
 ## 🔧 **Code Generation Patterns**
 
 ### **1. Model Creation with Vormia**
+
 ```php
 // ✅ CORRECT pattern for Vormia models
 use App\Models\Vrm\Taxonomy;
@@ -61,7 +65,7 @@ use App\Traits\Vrm\Model\HasTaxonomyMeta;
 class Category extends Taxonomy
 {
     use HasTaxonomyMeta;
-    
+
     protected $fillable = [
         'name',
         'type',
@@ -69,12 +73,12 @@ class Category extends Taxonomy
         'position',
         'is_active'
     ];
-    
+
     protected $casts = [
         'is_active' => 'boolean',
         'position' => 'integer'
     ];
-    
+
     // Vormia methods automatically available:
     // - setMeta(), getMeta(), deleteMeta()
     // - slug management
@@ -83,6 +87,7 @@ class Category extends Taxonomy
 ```
 
 ### **2. Service Usage Patterns**
+
 ```php
 // ✅ CORRECT service instantiation
 $utilities = app('vrm.utilities');
@@ -97,7 +102,46 @@ public function __construct(
 $utilities = new UtilityService(); // Don't instantiate directly
 ```
 
+#### **⚠️ CRITICAL: Utilities Type System Confusion**
+
+**IMPORTANT**: There's a **conceptual mismatch** between the table design and service implementation:
+
+```sql
+-- utilities table structure:
+- key (e.g., 'theme')                    ← Setting identifier
+- value (e.g., 'dark')                   ← Setting value
+- type (e.g., 'string', 'integer')      ← Data type, NOT category
+- is_public (true/false)                 ← Public visibility flag
+```
+
+**Correct Usage Patterns**:
+```php
+// ✅ RECOMMENDED: Direct access with explicit type
+$theme = $utilities->get('theme', 'default-theme', 'general');
+
+// ⚠️ CAUTION: Type method may not work as expected
+$theme = $utilities->type('general')->get('theme');
+
+// ✅ ALTERNATIVE: Get all utilities of a data type
+$allUtilities = $utilities->getByType('string');
+
+// ✅ CACHE CLEARING: When utilities aren't working
+$utilities->clearCache('general');  // Clear specific type
+$utilities->clearCache();           // Clear all cache
+$utilities->fresh('theme', 'default', 'general'); // Force fresh data
+```
+
+**Never Use**:
+```php
+// ❌ WRONG: This suggests filtering by category that doesn't exist
+$utilities->type('public')->get('theme');
+
+// ❌ WRONG: Type column stores data types, not categories
+$utilities->type('is_public')->get('theme');
+```
+
 ### **3. Middleware Implementation**
+
 ```php
 // ✅ CORRECT middleware usage in routes
 Route::middleware(['api-auth'])->group(function () {
@@ -117,6 +161,7 @@ Route::middleware('auth')->group(function () { // Use Vormia middleware
 ## 📁 **File Structure Rules**
 
 ### **1. Model Organization**
+
 ```
 app/Models/
 ├── User.php                    # Enhanced with Vormia traits
@@ -128,6 +173,7 @@ app/Models/
 ```
 
 ### **2. Service Organization**
+
 ```
 app/Services/
 └── Vrm/                       # Vormia services
@@ -138,6 +184,7 @@ app/Services/
 ```
 
 ### **3. Trait Organization**
+
 ```
 app/Traits/
 └── Vrm/
@@ -150,6 +197,7 @@ app/Traits/
 ## 🔒 **Security & Access Control Rules**
 
 ### **1. Role-Based Access Control**
+
 ```php
 // ✅ CORRECT role checking
 if ($user->hasRole('admin')) {
@@ -173,6 +221,7 @@ if ($user->role === 'admin') { // Don't check raw attributes
 ```
 
 ### **2. API Authentication**
+
 ```php
 // ✅ CORRECT API route protection
 Route::middleware(['api-auth'])->group(function () {
@@ -183,11 +232,11 @@ Route::middleware(['api-auth'])->group(function () {
 public function profile(Request $request)
 {
     $user = auth()->guard('sanctum')->user();
-    
+
     if (!$user) {
         return response()->json(['error' => 'Unauthenticated'], 401);
     }
-    
+
     return response()->json($user->load('meta'));
 }
 
@@ -202,6 +251,7 @@ public function profile(Request $request)
 ## 📊 **Database & Migration Rules**
 
 ### **1. Table Naming Convention**
+
 ```php
 // ✅ ALWAYS use Vormia table prefix
 Schema::create(config('vormia.table_prefix') . 'utilities', function (Blueprint $table) {
@@ -222,6 +272,7 @@ Schema::create('utilities', function (Blueprint $table) { // Wrong - no prefix
 ```
 
 ### **2. Relationship Definitions**
+
 ```php
 // ✅ CORRECT relationship definitions
 public function meta()
@@ -247,6 +298,7 @@ public function meta()
 ## 🎨 **Code Style & Quality Rules**
 
 ### **1. Error Handling**
+
 ```php
 // ✅ ALWAYS include proper error handling
 try {
@@ -263,6 +315,7 @@ $setting = $utilities->get('key', 'default'); // No error handling
 ```
 
 ### **2. Validation Rules**
+
 ```php
 // ✅ ALWAYS validate input data
 public function store(Request $request)
@@ -273,16 +326,16 @@ public function store(Request $request)
         'parent_id' => 'nullable|exists:taxonomies,id',
         'position' => 'nullable|integer|min:0'
     ]);
-    
+
     $taxonomy = Taxonomy::create($validated);
-    
+
     // Handle metadata separately
     if ($request->has('meta')) {
         foreach ($request->meta as $key => $value) {
             $taxonomy->setMeta($key, $value);
         }
     }
-    
+
     return response()->json($taxonomy, 201);
 }
 
@@ -297,6 +350,7 @@ public function store(Request $request)
 ## 🔄 **Common Code Patterns**
 
 ### **1. Meta Data Management**
+
 ```php
 // ✅ CORRECT meta data handling
 class UserController extends Controller
@@ -308,11 +362,11 @@ class UserController extends Controller
             'meta.*.key' => 'required|string',
             'meta.*.value' => 'required'
         ]);
-        
+
         foreach ($validated['meta'] as $meta) {
             $user->setMeta($meta['key'], $meta['value']);
         }
-        
+
         return response()->json([
             'message' => 'Meta data updated successfully',
             'user' => $user->load('meta')
@@ -322,6 +376,7 @@ class UserController extends Controller
 ```
 
 ### **2. Taxonomy Management**
+
 ```php
 // ✅ CORRECT taxonomy creation with hierarchy
 class TaxonomyController extends Controller
@@ -334,21 +389,21 @@ class TaxonomyController extends Controller
             'parent_id' => 'nullable|exists:taxonomies,id',
             'meta' => 'array'
         ]);
-        
+
         $taxonomy = Taxonomy::create($validated);
-        
+
         // Handle metadata
         if (isset($validated['meta'])) {
             foreach ($validated['meta'] as $key => $value) {
                 $taxonomy->setMeta($key, $value);
             }
         }
-        
+
         // Handle slug generation
         if ($taxonomy->shouldAutoUpdateSlug()) {
             $taxonomy->generateSlug();
         }
-        
+
         return response()->json($taxonomy, 201);
     }
 }
@@ -357,6 +412,7 @@ class TaxonomyController extends Controller
 ## 🚫 **Anti-Patterns to Avoid**
 
 ### **1. Direct Database Access**
+
 ```php
 // ❌ WRONG - bypassing Vormia services
 DB::table('user_meta')->insert([
@@ -370,6 +426,7 @@ $user->setMeta('preference', 'dark');
 ```
 
 ### **2. Hardcoded Configuration**
+
 ```php
 // ❌ WRONG - hardcoded values
 $tablePrefix = 'vrm_';
@@ -381,6 +438,7 @@ $maxSlugLength = config('vormia.max_slug_length', 50);
 ```
 
 ### **3. Missing Trait Usage**
+
 ```php
 // ❌ WRONG - missing required traits
 class User extends Authenticatable

@@ -220,3 +220,69 @@ Route::get('/protected-endpoint', [Controller::class, 'method'])
 ```
 php artisan vormia:uninstall
 ```
+
+### **7. Troubleshooting Section**
+
+#### **Common Issues**
+
+##### **Database Connection Issues**
+**Problem**: Service providers throw database errors before migrations
+**Solution**: The package automatically handles this. Ensure migrations are run:
+```bash
+php artisan migrate
+```
+
+##### **Meta Methods Not Working**
+**Problem**: `setMeta()` or `getMeta()` methods not found
+**Solution**: Ensure your models use the correct traits:
+```php
+use App\Traits\Vrm\Model\HasUserMeta;
+
+class User extends Authenticatable
+{
+    use HasUserMeta;
+}
+```
+
+##### **API Authentication Failing**
+**Problem**: 401 errors on protected routes
+**Solution**: 
+1. Ensure Sanctum is installed: `php artisan install:api`
+2. Add `HasApiTokens` trait to User model
+3. Check middleware alias: `'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class`
+
+##### **Utilities Service Not Working**
+**Problem**: `app('vrm.utilities')->type('public')->get('theme')` returns unexpected results
+
+**Root Cause**: There's a **conceptual mismatch** between table design and service implementation:
+- **Table `type` column**: Stores data types (string, integer, boolean, json)
+- **Service `->type('public')` method**: Suggests filtering by category that doesn't exist
+
+**Solutions**:
+```php
+// ✅ RECOMMENDED: Direct access with explicit type
+$utilities = app('vrm.utilities');
+$theme = $utilities->get('theme', 'default-theme', 'general');
+
+// ✅ ALTERNATIVE: Get all utilities of a data type
+$allUtilities = $utilities->getByType('string');
+
+// ✅ CACHE CLEARING: When utilities aren't working
+$utilities->clearCache('general');  // Clear specific type
+$utilities->clearCache();           // Clear all cache
+$utilities->fresh('theme', 'default', 'general'); // Force fresh data
+```
+
+**Debug Utilities**:
+```php
+// Check what's actually in your utilities table
+$tableName = config('vormia.table_prefix', 'vrm_') . 'utilities';
+
+// See all utilities
+$allUtilities = DB::table($tableName)->get();
+dd('All utilities:', $allUtilities);
+
+// Check specific key
+$themeUtility = DB::table($tableName)->where('key', 'theme')->first();
+dd('Theme utility:', $themeUtility);
+```

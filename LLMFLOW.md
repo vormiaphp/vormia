@@ -7,9 +7,11 @@ This document is designed for **Large Language Models (LLMs)** and **AI assistan
 ## 🏗️ **Package Architecture Overview**
 
 ### **Core Concept**
+
 Vormia is a **modular Laravel package** that extends Laravel's functionality with enterprise-grade features for user management, content organization, media processing, and API development.
 
 ### **Design Philosophy**
+
 - **Modular Architecture**: Each feature is self-contained with clear interfaces
 - **Trait-Based Extensions**: Models gain functionality through composable traits
 - **Service-Oriented**: Business logic is separated into dedicated service classes
@@ -65,6 +67,7 @@ src/stubs/                           # Package source files
 ### **1. Models & Traits System**
 
 #### **User Model Enhancement**
+
 ```php
 // The User model is enhanced with multiple Vormia traits
 use App\Traits\Vrm\Model\HasUserMeta;
@@ -73,7 +76,7 @@ use App\Traits\Vrm\Model\HasSlugs;
 class User extends Authenticatable
 {
     use HasUserMeta, HasSlugs;
-    
+
     // Vormia adds these methods:
     // - setMeta($key, $value, $flag = 1)
     // - getMeta($key, $default = null)
@@ -85,6 +88,7 @@ class User extends Authenticatable
 ```
 
 #### **Trait Functionality**
+
 - **HasUserMeta**: Provides `setMeta()`, `getMeta()`, `deleteMeta()` methods
 - **HasSlugs**: Provides automatic URL slug generation and management
 - **HasTaxonomyMeta**: Provides taxonomy-specific metadata management
@@ -92,6 +96,7 @@ class User extends Authenticatable
 ### **2. Service Layer Architecture**
 
 #### **UtilityService - Application Settings**
+
 ```php
 // Manages application-wide settings and configuration
 $utilities = app('vrm.utilities');
@@ -104,7 +109,45 @@ $utilities->set('maintenance_mode', false, 'system');
 $siteName = $utilities->get('site_name', 'Default Site', 'general');
 ```
 
+##### **⚠️ CRITICAL: Utilities Table Structure Confusion**
+
+**IMPORTANT DISCLAIMER**: There's a **conceptual mismatch** between the table design and service implementation:
+
+```sql
+-- The utilities table structure:
+utilities table:
+- id
+- key (e.g., 'theme', 'site_name')           ← Setting identifier
+- value (e.g., 'dark', 'My Site')             ← Actual setting value  
+- type (e.g., 'string', 'integer', 'boolean') ← Data type, NOT category
+- is_public (true/false)                      ← Public visibility flag
+- is_active (true/false)                      ← Active status flag
+```
+
+**The Problem**: The `->type('public')` method suggests it's filtering by a category, but the table's `type` column stores **data types**, not **categories**.
+
+**Working Usage Patterns**:
+```php
+// ✅ RECOMMENDED: Direct access with explicit type
+$theme = $utilities->get('theme', 'default-theme', 'general');
+
+// ⚠️ CAUTION: Type method may not work as expected
+$theme = $utilities->type('general')->get('theme');
+
+// ✅ ALTERNATIVE: Get all utilities of a data type
+$allUtilities = $utilities->getByType('string');
+```
+
+**Cache Management**:
+```php
+// Clear cache when utilities aren't working
+$utilities->clearCache('general');  // Clear specific type
+$utilities->clearCache();           // Clear all cache
+$utilities->fresh('theme', 'default', 'general'); // Force fresh data
+```
+
 #### **GlobalDataService - View Data Sharing**
+
 ```php
 // Shares common data across all views
 // Automatically handles database connection states
@@ -112,6 +155,7 @@ $siteName = $utilities->get('site_name', 'Default Site', 'general');
 ```
 
 #### **TokenService - Authentication Tokens**
+
 ```php
 // Generates and validates authentication tokens
 // Supports OTP generation for two-factor authentication
@@ -121,6 +165,7 @@ $siteName = $utilities->get('site_name', 'Default Site', 'general');
 ### **3. Middleware System**
 
 #### **Access Control Middleware**
+
 ```php
 // Role-based access control
 Route::middleware(['role:admin'])->group(function () {
@@ -139,6 +184,7 @@ Route::middleware(['module:content'])->group(function () {
 ```
 
 #### **API Authentication Middleware**
+
 ```php
 // Protects API routes with Sanctum authentication
 Route::middleware(['api-auth'])->group(function () {
@@ -149,6 +195,7 @@ Route::middleware(['api-auth'])->group(function () {
 ### **4. Taxonomy System**
 
 #### **Hierarchical Content Organization**
+
 ```php
 // Taxonomies can represent categories, tags, or any content classification
 $category = Taxonomy::create([
@@ -174,6 +221,7 @@ $category->setMeta('color', '#3B82F6');
 ## 🔄 **Data Flow Patterns**
 
 ### **1. User Authentication Flow**
+
 ```
 1. User submits credentials → AuthController
 2. Validation and authentication → Laravel Sanctum
@@ -183,6 +231,7 @@ $category->setMeta('color', '#3B82F6');
 ```
 
 ### **2. Content Management Flow**
+
 ```
 1. Content creation → Taxonomy model
 2. Metadata assignment → setMeta() methods
@@ -192,6 +241,7 @@ $category->setMeta('color', '#3B82F6');
 ```
 
 ### **3. Access Control Flow**
+
 ```
 1. Route request → Middleware stack
 2. Authentication check → Sanctum guard
@@ -202,13 +252,14 @@ $category->setMeta('color', '#3B82F6');
 ## 🛡️ **Error Handling & Resilience**
 
 ### **Database Connection Protection**
+
 ```php
 // Service providers gracefully handle missing database
 try {
     if (app()->runningInConsole()) return;
-    
+
     DB::connection()->getPdo();
-    
+
     if (Schema::hasTable(config('vormia.table_prefix') . 'utilities')) {
         // Proceed with database operations
     }
@@ -218,6 +269,7 @@ try {
 ```
 
 ### **Graceful Degradation**
+
 - **Missing dependencies**: Clear error messages and installation instructions
 - **Database unavailable**: Service providers skip database operations
 - **Configuration missing**: Sensible defaults are applied
@@ -225,17 +277,20 @@ try {
 ## 🔌 **Integration Points**
 
 ### **1. Laravel Integration**
+
 - **Service Providers**: Automatically registered during installation
 - **Middleware**: Added to application middleware stack
 - **Models**: Enhanced with Vormia functionality through traits
 - **Routes**: API routes automatically included
 
 ### **2. Sanctum Integration**
+
 - **Authentication**: Built-in support for Laravel Sanctum
 - **Token Management**: Automatic token generation and validation
 - **API Protection**: Middleware for protecting API endpoints
 
 ### **3. Database Integration**
+
 - **Migrations**: Automatic table creation and structure management
 - **Relationships**: Proper foreign key constraints and relationships
 - **Meta Storage**: Flexible metadata storage system
@@ -243,6 +298,7 @@ try {
 ## 📊 **Configuration Management**
 
 ### **Environment Variables**
+
 ```env
 # Core Configuration
 VORMIA_TABLE_PREFIX=vrm_
@@ -256,6 +312,7 @@ VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
 ```
 
 ### **Configuration File**
+
 ```php
 // config/vormia.php
 return [
@@ -273,6 +330,7 @@ return [
 ## 🚀 **Common Use Cases & Patterns**
 
 ### **1. User Management**
+
 ```php
 // Create user with metadata
 $user = User::create([
@@ -297,6 +355,7 @@ if ($user->hasPermission('edit_users')) {
 ```
 
 ### **2. Content Organization**
+
 ```php
 // Create content categories
 $techCategory = Taxonomy::create([
@@ -317,6 +376,7 @@ $techCategory->setMeta('color', '#3B82F6');
 ```
 
 ### **3. API Development**
+
 ```php
 // Protected API routes
 Route::middleware(['api-auth'])->group(function () {
@@ -335,12 +395,14 @@ Route::middleware(['role:admin'])->group(function () {
 ## 🔍 **Troubleshooting Patterns**
 
 ### **1. Common Issues**
+
 - **Meta methods not found**: Ensure models use correct traits
 - **Database errors**: Check migrations and database connection
 - **Authentication failures**: Verify Sanctum configuration and middleware
 - **Permission denied**: Check user roles and permissions
 
 ### **2. Debugging Steps**
+
 ```php
 // Check user capabilities
 dd($user->roles->pluck('name'));
@@ -357,11 +419,13 @@ dd(app('vrm.utilities')->get('site_name'));
 ## 📈 **Performance Considerations**
 
 ### **1. Database Optimization**
+
 - **Eager Loading**: Use `with()` for related data
 - **Indexing**: Proper indexes on frequently queried fields
 - **Caching**: Utility service includes caching mechanisms
 
 ### **2. Memory Management**
+
 - **Lazy Loading**: Traits load functionality only when needed
 - **Service Caching**: Services cache frequently accessed data
 - **Efficient Queries**: Optimized database queries with proper relationships
@@ -369,18 +433,21 @@ dd(app('vrm.utilities')->get('site_name'));
 ## 🎯 **Best Practices for AI Assistance**
 
 ### **1. When Helping Developers**
+
 - **Always check namespace**: Ensure `App\Vrm\` prefix is used
 - **Verify traits**: Confirm models use correct Vormia traits
 - **Check middleware**: Ensure proper middleware registration
 - **Validate configuration**: Verify environment variables and config files
 
 ### **2. Code Generation Patterns**
+
 - **Use proper imports**: Include all necessary use statements
 - **Follow naming conventions**: Use Vormia's established patterns
 - **Include error handling**: Add try-catch blocks where appropriate
 - **Document assumptions**: Explain any configuration requirements
 
 ### **3. Problem-Solving Approach**
+
 1. **Identify the component**: Which Vormia feature is involved?
 2. **Check dependencies**: Are all required services available?
 3. **Verify configuration**: Is the package properly configured?
