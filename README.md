@@ -31,7 +31,7 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v4.2.8 🎉
+## What's New in v4.3.0 🎉
 
 ### ✨ New Features
 - **API Authentication Middleware**: New `ApiAuthenticate` middleware for protected API routes
