@@ -57,11 +57,11 @@ class Taxonomy extends Model
         return $meta ? $meta->value : $default;
     }
 
-    public function setMeta($key, $value, $flag = 1)
+    public function setMeta($key, $value, $is_active = 1)
     {
         $meta = $this->meta()->updateOrCreate(
             ['key' => $key],
-            ['value' => $value, 'flag' => $flag]
+            ['value' => $value, 'is_active' => $is_active]
         );
 
         return $meta;

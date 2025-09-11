@@ -34,21 +34,25 @@ The package will automatically check for required dependencies during installati
 ## What's New in v4.3.0 🎉
 
 ### ✨ New Features
+
 - **API Authentication Middleware**: New `ApiAuthenticate` middleware for protected API routes
 - **AI Documentation Guides**: Comprehensive guides for developers and AI assistants
 - **Cache Management**: Enhanced utility service with cache clearing and fresh data methods
 
 ### 🔧 Improvements
+
 - **Database Protection**: Service providers now handle database connection issues gracefully
 - **Meta Methods**: Unified `setMeta`/`getMeta` across all models for consistency
 - **Error Handling**: Better error handling and troubleshooting documentation
 
 ### 🐛 Bug Fixes
+
 - **Type System Confusion**: Clarified utilities table structure and usage patterns
 - **Service Provider Errors**: Fixed crashes that occurred before migrations run
 - **Test Failures**: Resolved PHPUnit test issues
 
 ### 📚 Documentation
+
 - **Enhanced README**: Added troubleshooting section and usage examples
 - **AI Assistant Guides**: Created `LLMFLOW.md` and `LLMRULES.md` for AI integration
 - **Usage Patterns**: Clear examples and best practices for all features
@@ -61,7 +65,7 @@ The package will automatically check for required dependencies during installati
 
 All models now use consistent method names for managing meta data:
 
-- **`setMeta($key, $value, $flag = 1)`** - Set or update meta values
+- **`setMeta($key, $value, $is_active = 1)`** - Set or update meta values
 - **`getMeta($key, $default = null)`** - Retrieve meta values
 - **`deleteMeta($key)`** - Remove meta values
 
@@ -250,15 +254,19 @@ php artisan vormia:uninstall
 #### **Common Issues**
 
 ##### **Database Connection Issues**
+
 **Problem**: Service providers throw database errors before migrations
 **Solution**: The package automatically handles this. Ensure migrations are run:
+
 ```bash
 php artisan migrate
 ```
 
 ##### **Meta Methods Not Working**
+
 **Problem**: `setMeta()` or `getMeta()` methods not found
 **Solution**: Ensure your models use the correct traits:
+
 ```php
 use App\Traits\Vrm\Model\HasUserMeta;
 
@@ -269,20 +277,25 @@ class User extends Authenticatable
 ```
 
 ##### **API Authentication Failing**
+
 **Problem**: 401 errors on protected routes
-**Solution**: 
+**Solution**:
+
 1. Ensure Sanctum is installed: `php artisan install:api`
 2. Add `HasApiTokens` trait to User model
 3. Check middleware alias: `'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class`
 
 ##### **Utilities Service Not Working**
+
 **Problem**: `app('vrm.utilities')->type('public')->get('theme')` returns unexpected results
 
 **Root Cause**: There's a **conceptual mismatch** between table design and service implementation:
+
 - **Table `type` column**: Stores data types (string, integer, boolean, json)
 - **Service `->type('public')` method**: Suggests filtering by category that doesn't exist
 
 **Solutions**:
+
 ```php
 // ✅ RECOMMENDED: Direct access with explicit type
 $utilities = app('vrm.utilities');
@@ -298,6 +311,7 @@ $utilities->fresh('theme', 'default', 'general'); // Force fresh data
 ```
 
 **Debug Utilities**:
+
 ```php
 // Check what's actually in your utilities table
 $tableName = config('vormia.table_prefix', 'vrm_') . 'utilities';
