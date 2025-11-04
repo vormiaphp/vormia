@@ -5,6 +5,7 @@ namespace Vormia\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Process;
 use VormiaPHP\Vormia\VormiaVormia;
 
 class InstallCommand extends Command
@@ -65,7 +66,11 @@ class InstallCommand extends Command
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
-        // Step 6: API support information
+        // Step 6: Install npm packages
+        $this->step('Installing npm packages...');
+        $this->installNpmPackages();
+
+        // Step 7: API support information
         $this->step('API support included. Sanctum is required.');
         $this->info('Please run: php artisan install:api');
         $this->info('This will install Laravel Sanctum and set up API authentication.');
@@ -261,6 +266,71 @@ class InstallCommand extends Command
         }
 
         $this->info('✅ Environment files updated successfully.');
+    }
+
+    /**
+     * Install npm packages required by Vormia
+     */
+    private function installNpmPackages(): void
+    {
+        $packageJsonPath = base_path('package.json');
+
+        // Check if package.json exists
+        if (!File::exists($packageJsonPath)) {
+            $this->warn('⚠️  package.json not found. Skipping npm package installation.');
+            $this->line('   Please ensure you have a package.json file in your project root.');
+            $this->line('   You can manually install the required packages:');
+            $this->line('     npm i jquery flatpickr --save select2 sweetalert2');
+            return;
+        }
+
+        // Check if npm is available
+        $npmCheck = Process::run('npm --version');
+        if (!$npmCheck->successful()) {
+            $this->warn('⚠️  npm is not available. Skipping npm package installation.');
+            $this->line('   Please install npm and node.js, then run:');
+            $this->line('     npm i jquery flatpickr --save select2 sweetalert2');
+            return;
+        }
+
+        $this->info('✅ npm is available.');
+
+        // Packages to install with their specific flags
+        $packages = [
+            ['name' => 'jquery', 'flags' => ''],
+            ['name' => 'flatpickr', 'flags' => '--save'],
+            ['name' => 'select2', 'flags' => ''],
+            ['name' => 'sweetalert2', 'flags' => ''],
+        ];
+
+        $failed = [];
+
+        foreach ($packages as $package) {
+            $packageName = $package['name'];
+            $flags = $package['flags'];
+            $command = trim("npm install {$packageName} {$flags}");
+            
+            $this->line("   Installing {$packageName}...");
+            $result = Process::path(base_path())->run($command);
+
+            if ($result->successful()) {
+                $this->info("   ✅ {$packageName} installed successfully.");
+            } else {
+                $this->warn("   ⚠️  Failed to install {$packageName}.");
+                $failed[] = $packageName;
+                if ($result->errorOutput()) {
+                    $this->line("   Error: " . $result->errorOutput());
+                }
+            }
+        }
+
+        if (empty($failed)) {
+            $this->info('✅ All npm packages installed successfully.');
+        } else {
+            $this->warn('⚠️  Some npm packages failed to install: ' . implode(', ', $failed));
+            $this->line('   You can manually install them later with:');
+            $this->line('     npm i jquery flatpickr --save select2 sweetalert2');
+        }
     }
 
     /**
