@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Process;
 
 class UninstallCommand extends Command
 {
@@ -40,6 +41,9 @@ class UninstallCommand extends Command
         $this->warn('   • Remove all Vormia files and directories');
         $this->warn('   • Clean up bootstrap/app.php configurations');
         $this->warn('   • Remove environment variables');
+        $this->warn('   • Remove npm packages (jquery, flatpickr, select2, sweetalert2)');
+        $this->warn('   • Remove intervention/image package');
+        $this->warn('   • Remove CSS and JS plugin files');
         $this->warn('   • Optionally drop database tables and data');
         $this->newLine();
 
@@ -90,7 +94,15 @@ class UninstallCommand extends Command
             $this->removeDatabaseTables();
         }
 
-        // Step 6: Clear caches
+        // Step 6: Remove npm packages
+        $this->step('Removing npm packages...');
+        $this->removeNpmPackages();
+
+        // Step 7: Remove intervention/image
+        $this->step('Removing intervention/image package...');
+        $this->removeInterventionImage();
+
+        // Step 8: Clear caches
         $this->step('Clearing application caches...');
         $this->clearCaches();
 
@@ -195,6 +207,9 @@ class UninstallCommand extends Command
             app_path('Services/Vrm'),
             app_path('Traits/Vrm'),
             public_path('vendor/vormia'),
+            resource_path('css/plugins'),
+            resource_path('js/plugins'),
+            resource_path('js/helpers'),
         ];
 
         $filesToRemove = [
@@ -401,6 +416,75 @@ class UninstallCommand extends Command
     }
 
     /**
+     * Remove npm packages installed by Vormia
+     */
+    private function removeNpmPackages(): void
+    {
+        $packageJsonPath = base_path('package.json');
+
+        if (!File::exists($packageJsonPath)) {
+            $this->warn('⚠️  package.json not found. Skipping npm package removal.');
+            return;
+        }
+
+        // Check if npm is available
+        $npmCheck = Process::run('npm --version');
+        if (!$npmCheck->successful()) {
+            $this->warn('⚠️  npm is not available. Skipping npm package removal.');
+            $this->line('   You can manually remove the packages: npm uninstall jquery flatpickr select2 sweetalert2');
+            return;
+        }
+
+        // Packages to remove
+        $packages = ['jquery', 'flatpickr', 'select2', 'sweetalert2'];
+        $failed = [];
+
+        foreach ($packages as $package) {
+            $this->line("   Removing {$package}...");
+            $result = Process::path(base_path())->run("npm uninstall {$package}");
+
+            if ($result->successful()) {
+                $this->info("   ✅ {$package} removed successfully.");
+            } else {
+                $this->warn("   ⚠️  Failed to remove {$package}.");
+                $failed[] = $package;
+            }
+        }
+
+        if (empty($failed)) {
+            $this->info('✅ All npm packages removed successfully.');
+        } else {
+            $this->warn('⚠️  Some npm packages failed to remove: ' . implode(', ', $failed));
+            $this->line('   You can manually remove them: npm uninstall ' . implode(' ', $failed));
+        }
+    }
+
+    /**
+     * Remove intervention/image package
+     */
+    private function removeInterventionImage(): void
+    {
+        // Check if installed
+        if (!class_exists('Intervention\Image\ImageManager')) {
+            $this->info('✅ intervention/image is not installed.');
+            return;
+        }
+
+        $this->line('   Removing intervention/image...');
+        $result = Process::path(base_path())->run('composer remove intervention/image');
+
+        if ($result->successful()) {
+            $this->info('✅ intervention/image removed successfully.');
+        } else {
+            $this->warn('⚠️  Failed to remove intervention/image automatically.');
+            $this->line('   Please remove it manually: composer remove intervention/image');
+            if ($result->errorOutput()) {
+                $this->line('   Error: ' . $result->errorOutput());
+            }
+        }
+    }
+
+    /**
      * Display completion message
      */
     private function displayCompletionMessage($keepData)
@@ -414,6 +498,9 @@ class UninstallCommand extends Command
         $this->line('   ✅ Configuration files');
         $this->line('   ✅ bootstrap/app.php middleware and providers');
         $this->line('   ✅ Environment variables');
+        $this->line('   ✅ CSS and JS plugin files');
+        $this->line('   ✅ npm packages (jquery, flatpickr, select2, sweetalert2)');
+        $this->line('   ✅ intervention/image package');
 
         if ($keepData) {
             $this->line('   ⚠️  Database tables preserved (--keep-data)');
@@ -427,16 +514,18 @@ class UninstallCommand extends Command
 
         $this->comment('📖 Final steps:');
         $this->line('   1. Remove "vormiaphp/vormia" from your composer.json');
-        $this->line('   2. Run: composer update');
+        $this->line('   2. Run: composer remove vormiaphp/vormia');
         $this->line('   3. Review your User model for any remaining Vormia code');
+        $this->line('   4. Clean up app.css and app.js - remove Vormia imports and initialization code');
 
         if ($keepData) {
-            $this->line('   4. Manually remove database tables if needed');
+            $this->line('   5. Manually remove database tables if needed');
         }
 
         $this->newLine();
-        $this->comment('📦 To completely remove from Composer:');
-        $this->line('   composer remove vormiaphp/vormia');
+        $this->comment('⚠️  Manual cleanup required:');
+        $this->warn('   • Laravel Sanctum: If you want to remove Sanctum, run: composer remove laravel/sanctum');
+        $this->warn('   • CORS Config: If you want to remove CORS config, delete: config/cors.php');
         $this->newLine();
 
         $this->info('✨ Thank you for using Vormia!');
