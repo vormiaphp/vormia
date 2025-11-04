@@ -127,14 +127,7 @@ The installation process will check for this dependency and provide helpful warn
 php artisan vormia:install
 ```
 
-- All notification stubs will be copied to `app/Notifications`.
-- All jobs in `stubs/jobs/Vrm` will be copied to `app/Jobs/Vrm`.
-
-If you want API support, run:
-
-```sh
-php artisan vormia:install --api
-```
+This will install Vormia with all files and configurations, including API support:
 
 - All notification stubs will be copied to `app/Notifications`.
 - All jobs in `stubs/jobs/Vrm` will be copied to `app/Jobs/Vrm`.
@@ -190,14 +183,8 @@ open `bootstrap/providers.php` and add the above lines to the appropriate arrays
 php artisan migrate
 ```
 
-🟢 **API-first Vormia version**
-If you want to bootstrap your project with API support, use:
-
-```sh
-php artisan vormia:install --api
-```
-
-Then, install Sanctum manually:
+🟢 **API Support Included**
+Vormia installation includes API support by default. After installation, install Sanctum manually:
 
 ```sh
 php artisan install:api

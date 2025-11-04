@@ -18,7 +18,7 @@ class InstallationTest extends TestCase
         $signatureProperty = $reflection->getProperty('signature');
         $signatureProperty->setAccessible(true);
         $signature = $signatureProperty->getValue($command);
-        $this->assertEquals('vormia:install {--api : Install with API support (requires Sanctum, see instructions)}', $signature);
+        $this->assertEquals('vormia:install', $signature);
     }
 
     /**

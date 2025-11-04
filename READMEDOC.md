@@ -103,14 +103,10 @@ $category->setMeta('key', 'value');
    ```bash
    php artisan vormia:install
    ```
+   
+   This installs Vormia with all files and configurations, including API support.
 
-3. **For API Support**
-
-   ```bash
-   php artisan vormia:install --api
-   ```
-
-4. **Run Migrations**
+3. **Run Migrations**
    ```bash
    php artisan migrate
    ```

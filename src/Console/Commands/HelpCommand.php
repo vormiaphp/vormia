@@ -59,8 +59,8 @@ class HelpCommand extends Command
         $commands = [
             [
                 'command' => 'vormia:install',
-                'description' => 'Install Vormia package with all files and configurations',
-                'options' => '--api (Install with API support; you must install Sanctum yourself)'
+                'description' => 'Install Vormia package with all files and configurations (includes API support)',
+                'options' => null
             ],
             [
                 'command' => 'vormia:help',
@@ -99,14 +99,9 @@ class HelpCommand extends Command
 
         $examples = [
             [
-                'title' => 'Basic Installation',
+                'title' => 'Installation',
                 'command' => 'php artisan vormia:install',
-                'description' => 'Install Vormia with standard configuration'
-            ],
-            [
-                'title' => 'API Installation',
-                'command' => 'php artisan vormia:install --api',
-                'description' => 'Install Vormia with API support. You must run php artisan install:api to install Sanctum.'
+                'description' => 'Install Vormia with all files and configurations (includes API support). You must run php artisan install:api to install Sanctum.'
             ],
             [
                 'title' => 'Update Package',

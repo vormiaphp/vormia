@@ -14,7 +14,7 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'vormia:install {--api : Install with API support (requires Sanctum, see instructions)}';
+    protected $signature = 'vormia:install';
 
     /**
      * The console command description.
@@ -33,7 +33,7 @@ class InstallCommand extends Command
         // Check for required dependencies
         $this->checkRequiredDependencies();
 
-        $isApi = $this->option('api');
+        $isApi = true; // API support is always included
         $vormia = new VormiaVormia();
 
         // Step 1: Publish config
@@ -65,16 +65,14 @@ class InstallCommand extends Command
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
-        // Step 6: Install API if requested
-        if ($isApi) {
-            $this->step('API support selected. Sanctum is required.');
-            $this->info('Please run: php artisan install:api');
-            $this->info('This will install Laravel Sanctum and set up API authentication.');
-            $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
-            $this->warn('Reminder: Add the HasApiTokens trait to your User model (app/Models/User.php) for API authentication.');
-        }
+        // Step 6: API support information
+        $this->step('API support included. Sanctum is required.');
+        $this->info('Please run: php artisan install:api');
+        $this->info('This will install Laravel Sanctum and set up API authentication.');
+        $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
+        $this->warn('Reminder: Add the HasApiTokens trait to your User model (app/Models/User.php) for API authentication.');
 
-        $this->displayCompletionMessage($isApi);
+        $this->displayCompletionMessage();
 
         // Final message
         $this->info(PHP_EOL . '🎉 Vormia has been installed successfully!');
@@ -277,7 +275,7 @@ class InstallCommand extends Command
     /**
      * Display completion message
      */
-    private function displayCompletionMessage($isApi)
+    private function displayCompletionMessage()
     {
         $this->newLine();
         $this->info('🎉 Vormia package installed successfully!');
@@ -287,11 +285,8 @@ class InstallCommand extends Command
         $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
         $this->line('   2. Configure your .env file with VORMIA');
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
-
-        if ($isApi) {
-            $this->line('   4. Install Sanctum by running: php artisan install:api');
-            $this->line('   5. Configure Sanctum in your config/sanctum.php');
-        }
+        $this->line('   4. Install Sanctum by running: php artisan install:api');
+        $this->line('   5. Configure Sanctum in your config/sanctum.php');
 
         $this->newLine();
         $this->comment('📖 For help and available commands, run: php artisan vormia:help');
