@@ -34,6 +34,10 @@ class InstallCommand extends Command
         // Check for required dependencies
         $this->checkRequiredDependencies();
 
+        // Install intervention/image if not already installed
+        $this->step('Installing intervention/image package...');
+        $this->installInterventionImage();
+
         $isApi = true; // API support is always included
         $vormia = new VormiaVormia();
 
@@ -75,10 +79,16 @@ class InstallCommand extends Command
         $this->updateAppCss();
         $this->updateAppJs();
 
-        // Step 8: API support information
-        $this->step('API support included. Sanctum is required.');
-        $this->info('Please run: php artisan install:api');
-        $this->info('This will install Laravel Sanctum and set up API authentication.');
+        // Step 8: Install Sanctum (API)
+        $this->step('Installing Laravel Sanctum...');
+        $this->installSanctum();
+
+        // Step 9: Publish CORS config
+        $this->step('Publishing CORS configuration...');
+        $this->publishCorsConfig();
+
+        // Step 10: API support information
+        $this->step('API support information.');
         $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
         $this->warn('Reminder: Add the HasApiTokens trait to your User model (app/Models/User.php) for API authentication.');
 
@@ -448,6 +458,69 @@ class InstallCommand extends Command
     }
 
     /**
+     * Install intervention/image package
+     */
+    private function installInterventionImage(): void
+    {
+        // Check if already installed
+        if (class_exists('Intervention\Image\ImageManager')) {
+            $this->info('✅ intervention/image is already installed.');
+            return;
+        }
+
+        $this->line('   Installing intervention/image...');
+        $result = Process::path(base_path())->run('composer require intervention/image');
+
+        if ($result->successful()) {
+            $this->info('✅ intervention/image installed successfully.');
+        } else {
+            $this->warn('⚠️  Failed to install intervention/image automatically.');
+            $this->line('   Please install it manually by running: composer require intervention/image');
+            if ($result->errorOutput()) {
+                $this->line('   Error: ' . $result->errorOutput());
+            }
+        }
+    }
+
+    /**
+     * Install Laravel Sanctum
+     */
+    private function installSanctum(): void
+    {
+        $this->line('   Running: php artisan install:api');
+        $result = Process::path(base_path())->run('php artisan install:api');
+
+        if ($result->successful()) {
+            $this->info('✅ Sanctum installed successfully.');
+        } else {
+            $this->warn('⚠️  Failed to install Sanctum automatically.');
+            $this->line('   Please install it manually by running: php artisan install:api');
+            if ($result->errorOutput()) {
+                $this->line('   Error: ' . $result->errorOutput());
+            }
+        }
+    }
+
+    /**
+     * Publish CORS configuration
+     */
+    private function publishCorsConfig(): void
+    {
+        $this->line('   Running: php artisan config:publish cors');
+        $result = Process::path(base_path())->run('php artisan config:publish cors');
+
+        if ($result->successful()) {
+            $this->info('✅ CORS configuration published successfully.');
+        } else {
+            $this->warn('⚠️  Failed to publish CORS configuration automatically.');
+            $this->line('   Please publish it manually by running: php artisan config:publish cors');
+            if ($result->errorOutput()) {
+                $this->line('   Error: ' . $result->errorOutput());
+            }
+        }
+    }
+
+    /**
      * Install API support with Sanctum
      */
     private function installApiSupport()
@@ -469,8 +542,8 @@ class InstallCommand extends Command
         $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
         $this->line('   2. Configure your .env file with VORMIA');
         $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
-        $this->line('   4. Install Sanctum by running: php artisan install:api');
-        $this->line('   5. Configure Sanctum in your config/sanctum.php');
+        $this->line('   4. Review and configure Sanctum in your config/sanctum.php');
+        $this->line('   5. Review and configure CORS in your config/cors.php');
 
         $this->newLine();
         $this->comment('📖 For help and available commands, run: php artisan vormia:help');
