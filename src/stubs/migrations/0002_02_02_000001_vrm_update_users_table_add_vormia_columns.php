@@ -54,6 +54,11 @@ return new class extends Migration
             if (!Schema::hasColumn('users', 'is_active')) {
                 $table->boolean('is_active')->default(false)->after('remember_token');
             }
+
+            // Only add deleted_at if it doesn't exist (for soft deletes)
+            if (!Schema::hasColumn('users', 'deleted_at')) {
+                $table->softDeletes()->after('is_active');
+            }
         });
     }
 
@@ -104,6 +109,11 @@ return new class extends Migration
             // Only remove is_active if it exists
             if (Schema::hasColumn('users', 'is_active')) {
                 $table->dropColumn('is_active');
+            }
+
+            // Only remove deleted_at if it exists (for soft deletes)
+            if (Schema::hasColumn('users', 'deleted_at')) {
+                $table->dropColumn('deleted_at');
             }
         });
     }

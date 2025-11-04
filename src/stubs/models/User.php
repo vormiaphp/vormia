@@ -3,18 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Vrm\Model\HasSlugs;
+use App\Traits\Vrm\Model\HasUserMeta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Traits\Vrm\Model\HasUserMeta;
-use App\Traits\Vrm\Model\HasSlugs;
-// use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
+use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasSlugs, HasUserMeta; //, HasApiTokens;
+    use HasApiTokens, HasFactory, HasSlugs, HasUserMeta, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -165,7 +167,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(
             \App\Models\Vrm\Role::class,
-            config("vormia.table_prefix") . "role_user",
+            config('vormia.table_prefix') . 'role_user',
         );
     }
 
@@ -173,6 +175,24 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('name', $role)->exists();
+    }
+
+    // Todo: Check if the user has a role by ID
+    public function hasRoleId(int $roleId): bool
+    {
+        return $this->roles()->where('id', $roleId)->exists();
+    }
+
+    // Todo: Check if the user is a super admin (role ID 1)
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRoleId(1);
+    }
+
+    // Todo: Check if the user is an admin or super admin (role ID 1 or 2)
+    public function isAdminOrSuperAdmin(): bool
+    {
+        return $this->roles()->whereIn('id', [1, 2])->exists();
     }
 
     // Todo: Check if the user has the required role for the requested module
@@ -183,6 +203,7 @@ class User extends Authenticatable
             return explode(',', $module);
         }, $roles);
         $modules = array_merge(...$modules);
+
         return in_array($module, $modules);
     }
 
@@ -198,5 +219,19 @@ class User extends Authenticatable
     public function hasPermission(string $permission): bool
     {
         return $this->permissions()->where('name', $permission)->exists();
+    }
+
+    /**
+     * Houses relationship (many-to-many through pivot).
+     */
+    public function houses()
+    {
+        return $this->belongsToMany(
+            House::class,
+            'house_agent'
+        )
+            ->using(HouseAgent::class)
+            ->withPivot('assigned_at')
+            ->withTimestamps();
     }
 }
