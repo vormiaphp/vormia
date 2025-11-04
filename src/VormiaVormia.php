@@ -257,6 +257,9 @@ class VormiaVormia
             }
         }
 
+        // Copy CSS and JS files from pkg stubs to resources
+        $this->copyResourceFiles();
+
         // Copy migration files directly into database/migrations
         $migrationSource = __DIR__ . '/stubs/migrations';
         $migrationDest = $this->databasePath('migrations');
@@ -356,6 +359,46 @@ class VormiaVormia
 
         $this->filesystem->ensureDirectoryExists(dirname($destination));
         $this->filesystem->copyDirectory($source, $destination);
+    }
+
+    /**
+     * Copy CSS and JS files from pkg stubs to resources directory.
+     */
+    protected function copyResourceFiles(): void
+    {
+        // Copy CSS files
+        $cssSource = __DIR__ . '/stubs/pkg/css';
+        $cssDest = $this->resourcePath('css');
+        if ($this->filesystem->isDirectory($cssSource)) {
+            $this->filesystem->ensureDirectoryExists($cssDest);
+            foreach ($this->filesystem->allFiles($cssSource) as $file) {
+                // Skip .DS_Store files
+                if (basename($file->getPathname()) === '.DS_Store') {
+                    continue;
+                }
+                $relativePath = ltrim(str_replace($cssSource, '', $file->getPathname()), '/\\');
+                $destFile = rtrim($cssDest, '/\\') . '/' . $relativePath;
+                $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                $this->filesystem->copy($file->getPathname(), $destFile);
+            }
+        }
+
+        // Copy JS files
+        $jsSource = __DIR__ . '/stubs/pkg/js';
+        $jsDest = $this->resourcePath('js');
+        if ($this->filesystem->isDirectory($jsSource)) {
+            $this->filesystem->ensureDirectoryExists($jsDest);
+            foreach ($this->filesystem->allFiles($jsSource) as $file) {
+                // Skip .DS_Store files
+                if (basename($file->getPathname()) === '.DS_Store') {
+                    continue;
+                }
+                $relativePath = ltrim(str_replace($jsSource, '', $file->getPathname()), '/\\');
+                $destFile = rtrim($jsDest, '/\\') . '/' . $relativePath;
+                $this->filesystem->ensureDirectoryExists(dirname($destFile));
+                $this->filesystem->copy($file->getPathname(), $destFile);
+            }
+        }
     }
 
     /**

@@ -70,7 +70,12 @@ class InstallCommand extends Command
         $this->step('Installing npm packages...');
         $this->installNpmPackages();
 
-        // Step 7: API support information
+        // Step 7: Update CSS and JS files
+        $this->step('Updating CSS and JS files...');
+        $this->updateAppCss();
+        $this->updateAppJs();
+
+        // Step 8: API support information
         $this->step('API support included. Sanctum is required.');
         $this->info('Please run: php artisan install:api');
         $this->info('This will install Laravel Sanctum and set up API authentication.');
@@ -331,6 +336,115 @@ class InstallCommand extends Command
             $this->line('   You can manually install them later with:');
             $this->line('     npm i jquery flatpickr --save select2 sweetalert2');
         }
+    }
+
+    /**
+     * Update app.css with Vormia imports
+     */
+    private function updateAppCss(): void
+    {
+        $appCssPath = resource_path('css/app.css');
+
+        if (!File::exists($appCssPath)) {
+            $this->warn('⚠️  resources/css/app.css not found. Creating it...');
+            File::ensureDirectoryExists(resource_path('css'));
+            File::put($appCssPath, '');
+        }
+
+        $content = File::get($appCssPath);
+
+        // Check if imports already exist
+        $importsToAdd = [
+            "@import '../../vendor/livewire/flux/dist/flux.css';",
+            "@import './plugins/style.min.css';",
+        ];
+
+        $needsUpdate = false;
+        foreach ($importsToAdd as $import) {
+            if (strpos($content, $import) === false) {
+                $needsUpdate = true;
+                break;
+            }
+        }
+
+        if ($needsUpdate) {
+            // Add imports if not present
+            $newContent = trim($content);
+            if (!empty($newContent) && substr($newContent, -1) !== "\n") {
+                $newContent .= "\n";
+            }
+            $newContent .= "\n/* Include Style */\n\n";
+            foreach ($importsToAdd as $import) {
+                if (strpos($content, $import) === false) {
+                    $newContent .= $import . "\n";
+                }
+            }
+            File::put($appCssPath, $newContent);
+            $this->info('✅ app.css updated successfully.');
+        } else {
+            $this->info('✅ app.css already contains required imports.');
+        }
+    }
+
+    /**
+     * Update app.js with Vormia imports and initialization
+     */
+    private function updateAppJs(): void
+    {
+        $appJsPath = resource_path('js/app.js');
+
+        if (!File::exists($appJsPath)) {
+            $this->warn('⚠️  resources/js/app.js not found. Creating it...');
+            File::ensureDirectoryExists(resource_path('js'));
+            File::put($appJsPath, '');
+        }
+
+        $content = File::get($appJsPath);
+
+        // Check if Vormia code already exists
+        if (strpos($content, 'loadSelect2') !== false || strpos($content, 'initFlatpickr') !== false) {
+            $this->info('✅ app.js already contains Vormia initialization code.');
+            return;
+        }
+
+        // Add imports and initialization code
+        $vormiaCode = "\n\n// Vormia imports and initialization\n";
+        $vormiaCode .= "import \"./plugins/jquery\";\n\n";
+        $vormiaCode .= "import {\n";
+        $vormiaCode .= "    loadSelect2,\n";
+        $vormiaCode .= "    initSelect2,\n";
+        $vormiaCode .= "    safeReinitializeSelect2,\n";
+        $vormiaCode .= "} from \"./plugins/select2\";\n\n";
+        $vormiaCode .= "import { initFlatpickr } from \"./plugins/flatpickr\";\n\n";
+        $vormiaCode .= "import { setupLivewireHooks } from \"./helpers/livewire-hooks\";\n\n";
+        $vormiaCode .= "document.addEventListener(\"DOMContentLoaded\", async () => {\n";
+        $vormiaCode .= "    console.log(\"jQuery version:\", $.fn.jquery);\n\n";
+        $vormiaCode .= "    const select2Loaded = await loadSelect2();\n";
+        $vormiaCode .= "    if (select2Loaded) {\n";
+        $vormiaCode .= "        initSelect2();\n";
+        $vormiaCode .= "    } else {\n";
+        $vormiaCode .= "        console.error(\"CRITICAL: Failed to load Select2\");\n";
+        $vormiaCode .= "    }\n\n";
+        $vormiaCode .= "    initFlatpickr();\n\n";
+        $vormiaCode .= "    if (window.Livewire) {\n";
+        $vormiaCode .= "        setupLivewireHooks();\n";
+        $vormiaCode .= "    } else {\n";
+        $vormiaCode .= "        console.warn(\"Livewire not detected\");\n";
+        $vormiaCode .= "    }\n";
+        $vormiaCode .= "});\n\n";
+        $vormiaCode .= "// Swal\n";
+        $vormiaCode .= "import Swal from \"sweetalert2\";\n";
+        $vormiaCode .= "// Make it available globally\n";
+        $vormiaCode .= "window.Swal = Swal;\n";
+
+        $newContent = trim($content);
+        if (!empty($newContent) && substr($newContent, -1) !== "\n") {
+            $newContent .= "\n";
+        }
+        $newContent .= $vormiaCode;
+
+        File::put($appJsPath, $newContent);
+        $this->info('✅ app.js updated successfully.');
     }
 
     /**
