@@ -314,7 +314,7 @@ class InstallCommand extends Command
             $packageName = $package['name'];
             $flags = $package['flags'];
             $command = trim("npm install {$packageName} {$flags}");
-            
+
             $this->line("   Installing {$packageName}...");
             $result = Process::path(base_path())->run($command);
 
