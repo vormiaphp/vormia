@@ -31,33 +31,34 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v4.3.0 🎉
+## What's New in v4.4.0 🎉
 
 ### ✨ New Features
 
-- **API Authentication Middleware**: New `ApiAuthenticate` middleware for protected API routes
-- **AI Documentation Guides**: Comprehensive guides for developers and AI assistants
-- **Cache Management**: Enhanced utility service with cache clearing and fresh data methods
+- **Automated Installation Process**: Complete automation of installation including dependencies and assets
+- **NPM Package Management**: Automatic installation and removal of npm packages (jquery, flatpickr, select2, sweetalert2)
+- **CSS/JS Asset Integration**: Automatic copying of CSS/JS plugin files and integration into app.css/app.js
+- **Dependency Auto-Installation**: Automatic installation of intervention/image, Laravel Sanctum, and CORS configuration
+- **Enhanced Uninstallation**: Comprehensive cleanup including npm packages and dependencies
 
 ### 🔧 Improvements
 
-- **Database Protection**: Service providers now handle database connection issues gracefully
-- **Meta Methods**: Unified `setMeta`/`getMeta` across all models for consistency
-- **Error Handling**: Better error handling and troubleshooting documentation
+- **Streamlined Installation**: Removed `--api` flag - API support is now always included by default
+- **Frontend Integration**: Seamless integration of Vormia CSS/JS assets into Laravel projects
+- **Better Error Handling**: Graceful handling of missing npm or Composer dependencies during installation
 
 ### 🐛 Bug Fixes
 
-- **Type System Confusion**: Clarified utilities table structure and usage patterns
-- **Service Provider Errors**: Fixed crashes that occurred before migrations run
-- **Test Failures**: Resolved PHPUnit test issues
+- **Installation Consistency**: Fixed inconsistencies in installation process
+- **Documentation Updates**: Updated all documentation to reflect new automated installation process
 
 ### 📚 Documentation
 
-- **Enhanced README**: Added troubleshooting section and usage examples
-- **AI Assistant Guides**: Created `LLMFLOW.md` and `LLMRULES.md` for AI integration
-- **Usage Patterns**: Clear examples and best practices for all features
+- **Updated README**: Comprehensive installation and uninstallation documentation
+- **AI Assistant Guides**: Updated `LLMFLOW.md` and `READMEDOC.md` with new installation processes
+- **Troubleshooting**: Added new troubleshooting sections for CSS/JS assets and dependencies
 
-[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.2.7)
+[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.3.1)
 
 ## Key Improvements
 
@@ -124,6 +125,7 @@ php artisan vormia:install
 This will automatically install Vormia with all files and configurations, including API support:
 
 **Automatically Installed:**
+
 - ✅ All Vormia files and directories (models, services, middleware, providers, traits)
 - ✅ All notification stubs copied to `app/Notifications`
 - ✅ All jobs in `stubs/jobs/Vrm` copied to `app/Jobs/Vrm`
@@ -139,6 +141,7 @@ This will automatically install Vormia with all files and configurations, includ
 - ✅ **npm packages** installed: jquery, flatpickr, select2, sweetalert2
 
 **Manual Step Required:**
+
 - ⚠️ **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
 
 2. If you see a message like:
@@ -229,6 +232,7 @@ php artisan vormia:uninstall
 ```
 
 **What gets removed automatically:**
+
 - ✅ All Vormia files and directories
 - ✅ Configuration files
 - ✅ bootstrap/app.php middleware and providers
@@ -240,6 +244,7 @@ php artisan vormia:uninstall
 - ✅ Application caches cleared
 
 **Manual cleanup required:**
+
 - ⚠️ **Laravel Sanctum**: If you want to remove Sanctum, run: `composer remove laravel/sanctum`
 - ⚠️ **CORS Config**: If you want to remove CORS config, delete: `config/cors.php`
 - ⚠️ **app.css and app.js**: Remove Vormia imports and initialization code manually
@@ -277,7 +282,7 @@ class User extends Authenticatable
 **Problem**: 401 errors on protected routes
 **Solution**:
 
-1. Ensure Sanctum is installed: `php artisan install:api`
+1. Sanctum is automatically installed during `php artisan vormia:install`
 2. Add `HasApiTokens` trait to User model
 3. Check middleware alias: `'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class`
 
