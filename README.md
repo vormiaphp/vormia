@@ -113,13 +113,7 @@ cd myproject
 composer require vormiaphp/vormia
 ```
 
-**Note:** The MediaForge image processing functionality requires the `intervention/image` package. If you plan to use image processing features, install it with:
-
-```sh
-composer require intervention/image
-```
-
-The installation process will check for this dependency and provide helpful warnings if it's missing.
+**Note:** The `intervention/image` package will be automatically installed during the installation process. This package is required for MediaForge image processing functionality.
 
 ### Step 3: Run Vormia Installation
 
@@ -127,23 +121,25 @@ The installation process will check for this dependency and provide helpful warn
 php artisan vormia:install
 ```
 
-This will install Vormia with all files and configurations, including API support:
+This will automatically install Vormia with all files and configurations, including API support:
 
-- All notification stubs will be copied to `app/Notifications`.
-- All jobs in `stubs/jobs/Vrm` will be copied to `app/Jobs/Vrm`.
-- All jobs in `stubs/jobs/V1` will be copied to `app/Jobs/V1`.
-- All API controllers in `stubs/controllers/Api` will be copied to `app/Http/Controllers/Api`.
-- The API routes file in `stubs/routes/api.php` will be copied to `routes/api.php` (you may be prompted to overwrite).
-- The Postman collection in `stubs/public/Vormia.postman_collection.json` will be copied to `public/Vormia.postman_collection.json`.
-- **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
+**Automatically Installed:**
+- ✅ All Vormia files and directories (models, services, middleware, providers, traits)
+- ✅ All notification stubs copied to `app/Notifications`
+- ✅ All jobs in `stubs/jobs/Vrm` copied to `app/Jobs/Vrm`
+- ✅ All jobs in `stubs/jobs/V1` copied to `app/Jobs/V1`
+- ✅ All API controllers in `stubs/controllers/Api` copied to `app/Http/Controllers/Api`
+- ✅ API routes file copied to `routes/api.php` (you may be prompted to overwrite)
+- ✅ Postman collection copied to `public/Vormia.postman_collection.json`
+- ✅ CSS and JS plugin files copied to `resources/css/plugins` and `resources/js/plugins`
+- ✅ `app.css` and `app.js` updated with Vormia imports and initialization
+- ✅ **intervention/image** package installed via Composer
+- ✅ **Laravel Sanctum** installed via `php artisan install:api`
+- ✅ **CORS configuration** published via `php artisan config:publish cors`
+- ✅ **npm packages** installed: jquery, flatpickr, select2, sweetalert2
 
-Then, you must install Sanctum yourself:
-
-```sh
-php artisan install:api
-```
-
-This will install Laravel Sanctum and set up API authentication.
+**Manual Step Required:**
+- ⚠️ **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
 
 2. If you see a message like:
 
@@ -184,11 +180,7 @@ php artisan migrate
 ```
 
 🟢 **API Support Included**
-Vormia installation includes API support by default. After installation, install Sanctum manually:
-
-```sh
-php artisan install:api
-```
+Vormia installation includes API support by default. Sanctum and CORS configuration are automatically installed during the installation process.
 
 ## Usage
 
@@ -230,11 +222,28 @@ Route::get('/protected-endpoint', [Controller::class, 'method'])
 
 ## Uninstallation
 
-1. Run the uninstall command:
+Run the uninstall command:
 
-```
+```sh
 php artisan vormia:uninstall
 ```
+
+**What gets removed automatically:**
+- ✅ All Vormia files and directories
+- ✅ Configuration files
+- ✅ bootstrap/app.php middleware and providers
+- ✅ Environment variables
+- ✅ CSS and JS plugin files (`resources/css/plugins`, `resources/js/plugins`, `resources/js/helpers`)
+- ✅ npm packages (jquery, flatpickr, select2, sweetalert2)
+- ✅ intervention/image package (via Composer)
+- ✅ Database tables (unless `--keep-data` flag is used)
+- ✅ Application caches cleared
+
+**Manual cleanup required:**
+- ⚠️ **Laravel Sanctum**: If you want to remove Sanctum, run: `composer remove laravel/sanctum`
+- ⚠️ **CORS Config**: If you want to remove CORS config, delete: `config/cors.php`
+- ⚠️ **app.css and app.js**: Remove Vormia imports and initialization code manually
+- ⚠️ **Composer package**: Run `composer remove vormiaphp/vormia` to completely remove from composer.json
 
 ### **7. Troubleshooting Section**
 

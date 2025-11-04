@@ -103,8 +103,18 @@ $category->setMeta('key', 'value');
    ```bash
    php artisan vormia:install
    ```
-   
-   This installs Vormia with all files and configurations, including API support.
+
+   This automatically installs Vormia with all files and configurations, including API support:
+
+   **Automatically Installed:**
+
+   - All Vormia files and directories
+   - CSS and JS plugin files to `resources/css/plugins` and `resources/js/plugins`
+   - `app.css` and `app.js` updated with Vormia imports
+   - intervention/image package (via Composer)
+   - Laravel Sanctum (via `php artisan install:api`)
+   - CORS configuration (via `php artisan config:publish cors`)
+   - npm packages: jquery, flatpickr, select2, sweetalert2
 
 3. **Run Migrations**
    ```bash
@@ -145,6 +155,34 @@ The package publishes `config/vormia.php`. Key sections:
 - `auto_update_slugs`: Automatic slug updates
 - `mediaforge`: Image processing settings
 ````
+
+#### **CSS and JavaScript Assets**
+
+```markdown
+## Frontend Assets
+
+During installation, Vormia automatically:
+
+1. **Copies CSS/JS files** to `resources/css/plugins` and `resources/js/plugins`
+2. **Updates app.css** with required imports:
+   - `@import '../../vendor/livewire/flux/dist/flux.css';`
+   - `@import './plugins/style.min.css';`
+3. **Updates app.js** with:
+   - jQuery plugin import
+   - Select2 initialization (loadSelect2, initSelect2, safeReinitializeSelect2)
+   - Flatpickr initialization
+   - Livewire hooks setup
+   - SweetAlert2 global assignment
+
+**Installed npm packages:**
+
+- jquery
+- flatpickr
+- select2
+- sweetalert2
+
+These are automatically installed during `php artisan vormia:install`.
+```
 
 ### **4. Usage Documentation**
 
@@ -405,9 +443,30 @@ class User extends Authenticatable
 **Problem**: 401 errors on protected routes
 **Solution**:
 
-1. Ensure Sanctum is installed: `php artisan install:api`
+1. Sanctum is automatically installed during `php artisan vormia:install`
 2. Add `HasApiTokens` trait to User model
 3. Check middleware alias: `'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class`
+
+### CSS/JS Assets Not Loading
+
+**Problem**: jQuery, Select2, Flatpickr, or SweetAlert2 not working
+**Solution**:
+
+1. Verify npm packages are installed: `npm list jquery flatpickr select2 sweetalert2`
+2. Check that `app.css` contains the required imports
+3. Check that `app.js` contains the Vormia initialization code
+4. Rebuild assets: `npm run build` or `npm run dev`
+5. If packages are missing, reinstall: `npm install jquery flatpickr select2 sweetalert2`
+
+### Installation Dependencies Issues
+
+**Problem**: Missing intervention/image or other dependencies
+**Solution**:
+
+- intervention/image is automatically installed during installation
+- If installation fails, manually install: `composer require intervention/image`
+- npm packages are automatically installed if npm is available
+- If npm is not available, manually install: `npm install jquery flatpickr select2 sweetalert2`
 
 ```
 

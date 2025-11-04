@@ -274,6 +274,37 @@ try {
 - **Database unavailable**: Service providers skip database operations
 - **Configuration missing**: Sensible defaults are applied
 
+### **Installation Process**
+
+The `php artisan vormia:install` command automatically:
+- Installs all Vormia files and directories
+- Copies CSS/JS plugin files to `resources/css/plugins` and `resources/js/plugins`
+- Updates `app.css` with Vormia imports (`@import '../../vendor/livewire/flux/dist/flux.css'`, `@import './plugins/style.min.css'`)
+- Updates `app.js` with Vormia initialization code (jQuery, Select2, Flatpickr, SweetAlert2, Livewire hooks)
+- Installs intervention/image via `composer require intervention/image`
+- Installs Laravel Sanctum via `php artisan install:api`
+- Publishes CORS configuration via `php artisan config:publish cors`
+- Installs npm packages: jquery, flatpickr, select2, sweetalert2
+
+**Note**: API support is always included - no `--api` flag needed.
+
+### **Uninstallation Process**
+
+The `php artisan vormia:uninstall` command automatically:
+- Removes all Vormia files and directories
+- Removes CSS/JS plugin files from `resources/css/plugins` and `resources/js/plugins`
+- Removes npm packages: jquery, flatpickr, select2, sweetalert2
+- Removes intervention/image via `composer remove intervention/image`
+- Cleans up bootstrap/app.php configurations
+- Removes environment variables
+- Optionally removes database tables (unless `--keep-data` flag is used)
+
+**Manual cleanup required:**
+- Laravel Sanctum: `composer remove laravel/sanctum` (if desired)
+- CORS config: Delete `config/cors.php` (if desired)
+- app.css and app.js: Manually remove Vormia imports and initialization code
+- Composer package: `composer remove vormiaphp/vormia`
+
 ## 🔌 **Integration Points**
 
 ### **1. Laravel Integration**
@@ -282,6 +313,8 @@ try {
 - **Middleware**: Added to application middleware stack
 - **Models**: Enhanced with Vormia functionality through traits
 - **Routes**: API routes automatically included
+- **CSS/JS Assets**: Automatically copied to resources directory and integrated into app.css/app.js
+- **Dependencies**: intervention/image, Sanctum, and npm packages automatically installed
 
 ### **2. Sanctum Integration**
 
