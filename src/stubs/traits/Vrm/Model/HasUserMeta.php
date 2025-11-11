@@ -39,13 +39,13 @@ trait HasUserMeta
                 'notifications' => [
                     'email' => true,
                     'push' => true,
-                    'sms' => false
-                ]
+                    'sms' => false,
+                ],
             ],
             'last_login_ip' => null,
             'login_count' => 0,
-            'created_at_formatted' => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at_formatted' => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at_formatted' => $this->formatDateTime($this->created_at),
+            'updated_at_formatted' => $this->formatDateTime($this->updated_at),
         ];
 
         foreach ($defaultMeta as $key => $value) {
@@ -64,7 +64,8 @@ trait HasUserMeta
             'display_name' => $this->name,
             'full_name' => $this->name,
             'initials' => $this->generateInitials($this->name),
-            'updated_at_formatted' => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at_formatted' => $this->formatDateTime($this->created_at),
+            'updated_at_formatted' => $this->formatDateTime($this->updated_at),
         ];
 
         foreach ($syncFields as $key => $value) {
@@ -73,9 +74,32 @@ trait HasUserMeta
     }
 
     /**
+     * Format a datetime value safely.
+     *
+     * @param  mixed  $dateTime
+     * @return string|null
+     */
+    protected function formatDateTime($dateTime)
+    {
+        if ($dateTime === null) {
+            return null;
+        }
+
+        if (is_object($dateTime) && method_exists($dateTime, 'format')) {
+            return $dateTime->format('Y-m-d H:i:s');
+        }
+
+        if (is_string($dateTime)) {
+            return $dateTime;
+        }
+
+        return null;
+    }
+
+    /**
      * Generate initials from name.
      *
-     * @param string $name
+     * @param  string  $name
      * @return string
      */
     protected function generateInitials($name)
@@ -84,7 +108,7 @@ trait HasUserMeta
         $initials = '';
 
         foreach ($words as $word) {
-            if (!empty($word)) {
+            if (! empty($word)) {
                 $initials .= strtoupper(substr($word, 0, 1));
             }
         }
@@ -125,7 +149,7 @@ trait HasUserMeta
     /**
      * Set user avatar URL.
      *
-     * @param string $url
+     * @param  string  $url
      * @return void
      */
     public function setAvatarUrlAttribute($url)
@@ -146,7 +170,7 @@ trait HasUserMeta
     /**
      * Set user preferences.
      *
-     * @param array $preferences
+     * @param  array  $preferences
      * @return void
      */
     public function setPreferencesAttribute($preferences)
@@ -167,7 +191,7 @@ trait HasUserMeta
     /**
      * Set social links.
      *
-     * @param array $links
+     * @param  array  $links
      * @return void
      */
     public function setSocialLinksAttribute($links)
@@ -189,7 +213,7 @@ trait HasUserMeta
     /**
      * Set last login IP.
      *
-     * @param string $ip
+     * @param  string  $ip
      * @return void
      */
     public function setLastLoginIp($ip)
