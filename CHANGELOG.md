@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.0] - 2025-01-15
+
+### Added
+
+- **MediaForge Background Fill Color**: Resize operations now support background fill color when maintaining aspect ratio
+  - Creates exact dimensions with image centered on colored background
+  - Empty areas are filled with specified color (e.g., `#5a85b9`)
+- **Advanced Thumbnail Controls**: Full control over thumbnail generation
+  - `keepAspectRatio` parameter: Control whether thumbnails maintain aspect ratio or use exact dimensions
+  - `fromOriginal` parameter: Choose to generate thumbnails from original uploaded image or processed image
+  - `fillColor` parameter: Fill empty areas with background color when aspect ratio is maintained
+- **Thumbnail Configuration**: New environment variables for thumbnail defaults
+  - `VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO` (default: true)
+  - `VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL` (default: false)
+- **Consistent File Naming**: Predictable file naming patterns for all processed images
+  - Resize: `{baseName}-{width}-{height}.{extension}`
+  - Resize + Convert: `{baseName}-{width}-{height}-{format}.{format}`
+  - Thumbnails: `{baseName}_{suffix}.{extension}`
+
+### Changed
+
+- **Resize Operation**: Always saves with width-height format for consistent naming
+- **File Path Handling**: Improved path resolution to ensure files are saved in correct directories
+- **Thumbnail Generation**: Enhanced to support multiple control options with config defaults
+
+### Fixed
+
+- **Resize Directory Issue**: Fixed resize operations saving to wrong directory when `override=false`
+- **Background Fill Bug**: Fixed background fill color hiding the image - now properly creates canvas with fill color
+- **Thumbnail Source Selection**: Fixed `fromOriginal` parameter to correctly use original uploaded file instead of processed image
+- **File Naming**: Fixed return values to reflect correct file names after resize and convert operations
+- **Path Consistency**: Ensured all processed files (resized, converted, thumbnails) are saved in the same directory
+
+### Documentation
+
+- **Updated LLMFLOW.md**: Added comprehensive MediaForge usage examples and configuration
+- **Updated LLMRULES.md**: Added MediaForge code patterns and best practices
+- **Updated README.md**: Added MediaForge usage section with examples and configuration
+- **Updated READMEDOC.md**: Enhanced MediaForge documentation with all new features
+
 ## [4.3.0] - 2024-12-19
 
 ### Added
