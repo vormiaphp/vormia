@@ -160,6 +160,42 @@ Route::middleware('auth')->group(function () { // Use Vormia middleware
 });
 ```
 
+### **4. MediaForge Image Processing**
+
+```php
+// ✅ CORRECT MediaForge usage with resize and background fill
+use App\Facades\Vrm\MediaForge;
+
+$imageUrl = MediaForge::upload($request->file('image'))
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // width, height, keepAspectRatio, fillColor
+    ->convert('webp', 90, true, true)     // format, quality, progressive, override
+    ->run();
+
+// ✅ CORRECT thumbnail generation with controls
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->thumbnail(
+        [[500, 500, 'thumb'], [400, 267, 'featured']],  // sizes array
+        true,   // keepAspectRatio (null = use config default)
+        false,  // fromOriginal (null = use config default)
+        '#ffffff' // fillColor (null = no fill)
+    )
+    ->run();
+
+// ✅ CORRECT thumbnail from original image
+$imageUrl = MediaForge::upload($file)
+    ->resize(606, 606)
+    ->thumbnail([[500, 500, 'thumb']], true, true) // fromOriginal = true
+    ->run();
+
+// ❌ WRONG - missing required parameters or incorrect usage
+$imageUrl = MediaForge::upload($file)->resize(606); // Missing height parameter
+$imageUrl = MediaForge::upload($file)->thumbnail([500, 500]); // Wrong format - needs nested array
+```
+
 ## 📁 **File Structure Rules**
 
 ### **1. Model Organization**

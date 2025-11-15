@@ -40,17 +40,30 @@ The package will automatically check for required dependencies during installati
 - **CSS/JS Asset Integration**: Automatic copying of CSS/JS plugin files and integration into app.css/app.js
 - **Dependency Auto-Installation**: Automatic installation of intervention/image, Laravel Sanctum, and CORS configuration
 - **Enhanced Uninstallation**: Comprehensive cleanup including npm packages and dependencies
+- **MediaForge Enhancements**: 
+  - Background fill color support for resize operations (exact dimensions with colored background)
+  - Advanced thumbnail controls (aspect ratio, source image selection, fill color)
+  - Consistent file naming patterns for all processed images
+  - Configurable thumbnail defaults via environment variables
 
 ### 🔧 Improvements
 
 - **Streamlined Installation**: Removed `--api` flag - API support is now always included by default
 - **Frontend Integration**: Seamless integration of Vormia CSS/JS assets into Laravel projects
 - **Better Error Handling**: Graceful handling of missing npm or Composer dependencies during installation
+- **MediaForge Reliability**: 
+  - Fixed resize operations to always save in correct directory
+  - Fixed background fill implementation (image now visible with proper background)
+  - Improved file path handling and naming consistency
 
 ### 🐛 Bug Fixes
 
 - **Installation Consistency**: Fixed inconsistencies in installation process
 - **Documentation Updates**: Updated all documentation to reflect new automated installation process
+- **MediaForge Fixes**:
+  - Fixed resize with `override=false` saving to wrong directory
+  - Fixed background fill color hiding the image
+  - Fixed file naming to return correct paths after operations
 
 ### 📚 Documentation
 
@@ -221,6 +234,70 @@ Or apply to individual routes:
 ```php
 Route::get('/protected-endpoint', [Controller::class, 'method'])
     ->middleware('api-auth');
+```
+
+### MediaForge Image Processing
+
+MediaForge provides comprehensive image processing with resize, conversion, and thumbnail generation:
+
+```php
+use App\Facades\Vrm\MediaForge;
+
+// Basic upload with resize and convert
+$imageUrl = MediaForge::upload($request->file('image'))
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // Resize with background fill color
+    ->convert('webp', 90, true, true)     // Convert to WebP with override
+    ->run();
+
+// Resize with background fill (exact dimensions with image centered)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // Creates 606x606 with #5a85b9 background
+    ->run();
+
+// Thumbnail generation with full control
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')
+    ->thumbnail(
+        [[500, 500, 'thumb'], [400, 267, 'featured'], [400, 300, 'product']],
+        true,   // keepAspectRatio: maintain aspect ratio
+        false,  // fromOriginal: use processed image (not original)
+        '#ffffff' // fillColor: fill empty areas when aspect ratio maintained
+    )
+    ->run();
+
+// Generate thumbnails from original image (before resize/convert)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606)
+    ->thumbnail([[500, 500, 'thumb']], true, true) // fromOriginal = true
+    ->run();
+
+// Exact thumbnail dimensions (no aspect ratio preservation)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->thumbnail([[500, 500, 'thumb']], false) // keepAspectRatio = false
+    ->run();
+```
+
+**File Naming:**
+- Resize: `{baseName}-{width}-{height}.{extension}` (e.g., `abc123-606-606.jpg`)
+- Resize + Convert: `{baseName}-{width}-{height}-{format}.{format}` (e.g., `abc123-606-606-webp.webp`)
+- Thumbnails: `{baseName}_{suffix}.{extension}` (e.g., `abc123-606-606_thumb.webp`)
+
+**Configuration:**
+```env
+VORMIA_MEDIAFORGE_DRIVER=auto
+VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
+VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
+VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false
+VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true
+VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
+VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
 
 ## Uninstallation

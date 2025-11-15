@@ -251,6 +251,8 @@ class InstallCommand extends Command
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false\n";
 
         // Update .env
         if (File::exists($envPath)) {

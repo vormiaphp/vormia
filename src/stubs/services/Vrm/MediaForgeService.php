@@ -354,6 +354,26 @@ class MediaForgeService
         return config('vormia.mediaforge.preserve_originals', true);
     }
 
+    /**
+     * Get thumbnail keep aspect ratio setting from config
+     *
+     * @return bool
+     */
+    public static function getThumbnailKeepAspectRatio(): bool
+    {
+        return config('vormia.mediaforge.thumbnail_keep_aspect_ratio', true);
+    }
+
+    /**
+     * Get thumbnail from original setting from config
+     *
+     * @return bool
+     */
+    public static function getThumbnailFromOriginal(): bool
+    {
+        return config('vormia.mediaforge.thumbnail_from_original', false);
+    }
+
 
     /**
      * Upload files or images
@@ -553,9 +573,12 @@ class MediaForgeService
      * Add thumbnail generation operation to the queue
      *
      * @param array $sizes Array of [width, height, name] arrays
+     * @param bool|null $keepAspectRatio Whether to maintain aspect ratio (null = use config default)
+     * @param bool|null $fromOriginal Whether to generate from original uploaded image or processed image (null = use config default)
+     * @param string|null $fillColor Background color to fill empty areas when aspect ratio is maintained (hex color like '#5a85b9' or null for no fill)
      * @return self
      */
-    public function thumbnail(array $sizes): self
+    public function thumbnail(array $sizes, ?bool $keepAspectRatio = null, ?bool $fromOriginal = null, ?string $fillColor = null): self
     {
         foreach ($sizes as $size) {
             if (!is_array($size) || count($size) < 2) {
@@ -563,9 +586,16 @@ class MediaForgeService
             }
         }
 
+        // Use config defaults if not provided
+        $keepAspectRatio = $keepAspectRatio ?? self::getThumbnailKeepAspectRatio();
+        $fromOriginal = $fromOriginal ?? self::getThumbnailFromOriginal();
+
         $this->operations[] = [
             'type' => 'thumbnail',
-            'sizes' => $sizes
+            'sizes' => $sizes,
+            'keepAspectRatio' => $keepAspectRatio,
+            'fromOriginal' => $fromOriginal,
+            'fillColor' => $fillColor
         ];
         return $this;
     }
@@ -1288,7 +1318,9 @@ class MediaForgeService
 
         // Apply image operations if it's an image
         if ($this->isImage($fileName)) {
-            $this->applyImageOperations($fullPath . '/' . $fileName);
+            $finalPath = $this->applyImageOperations($fullPath . '/' . $fileName);
+            // Return the path from applyImageOperations which includes the correct naming
+            return $finalPath;
         }
 
         return $this->privateUpload
@@ -1339,7 +1371,9 @@ class MediaForgeService
         file_put_contents($fullPath . '/' . $fileName, $fileData);
 
         if ($this->isImage($fileName)) {
-            $this->applyImageOperations($fullPath . '/' . $fileName);
+            $finalPath = $this->applyImageOperations($fullPath . '/' . $fileName);
+            // Return the path from applyImageOperations which includes the correct naming
+            return $finalPath;
         }
 
         return $this->privateUpload
@@ -1456,14 +1490,16 @@ class MediaForgeService
      * Apply image operations to the image
      *
      * @param string $filePath
-     * @return void
+     * @return string Relative path to the final processed image file
      */
-    protected function applyImageOperations(string $filePath): void
+    protected function applyImageOperations(string $filePath): string
     {
         try {
             $image = $this->imageManager->read($filePath);
             $currentDriver = $this->getCurrentDriver();
+            $originalUploadedFilePath = $filePath; // Track the very first original uploaded file (never updated)
             $originalFilePath = $filePath; // Track original file for potential deletion
+            $lastOperationSaved = false; // Track if the last operation already saved the image
 
             foreach ($this->operations as $operation) {
                 switch ($operation['type']) {
@@ -1474,37 +1510,60 @@ class MediaForgeService
                         $fillColor = $operation['fillColor'];
                         $override = $operation['override'];
 
-                        if ($keepAspectRatio) {
-                            $image->scale($newWidth, $newHeight);
-                        } else {
-                            $image->resize($newWidth, $newHeight);
-                        }
-
+                        // If fill color is provided, we always want exact dimensions with the image centered
                         if ($fillColor) {
-                            $image->fill($fillColor);
+                            // Scale/resize the image first (maintaining aspect ratio if requested)
+                            if ($keepAspectRatio) {
+                                $image->scale($newWidth, $newHeight);
+                            } else {
+                                $image->resize($newWidth, $newHeight);
+                            }
+
+                            // Create a new canvas with exact target dimensions and fill color
+                            $canvas = $this->imageManager->create($newWidth, $newHeight);
+                            $canvas->fill($fillColor);
+
+                            // Place the resized image on the canvas (centered)
+                            // The canvas maintains its dimensions (newWidth x newHeight)
+                            $canvas->place($image, 'center');
+
+                            // Replace the image with the canvas (which is exactly newWidth x newHeight)
+                            $image = $canvas;
+                        } else {
+                            // No fill color: resize to exact dimensions or scale maintaining aspect ratio
+                            if ($keepAspectRatio) {
+                                $image->scale($newWidth, $newHeight);
+                            } else {
+                                $image->resize($newWidth, $newHeight);
+                            }
                         }
 
-                        if ($override) {
-                            // Generate new filename with width-height format
-                            $pathInfo = pathinfo($filePath);
-                            $baseName = $pathInfo['filename'];
-                            $extension = $pathInfo['extension'];
-                            $directory = $pathInfo['dirname'];
+                        // Determine the file path for saving
+                        $pathInfo = pathinfo($filePath);
+                        $baseName = $pathInfo['filename'];
+                        $extension = $pathInfo['extension'];
+                        $directory = $pathInfo['dirname'];
 
-                            $newFileName = $baseName . '-' . $newWidth . '-' . $newHeight . '.' . $extension;
-                            $newFilePath = $directory . '/' . $newFileName;
+                        // Always generate filename with width-height format for resize
+                        // This ensures consistent naming: {baseName}-{width}-{height}.{extension}
+                        $newFileName = $baseName . '-' . $newWidth . '-' . $newHeight . '.' . $extension;
 
-                            // Ensure unique filename
-                            $newFilePath = $this->ensureUniqueFileName($directory, $newFileName);
+                        // Ensure unique filename
+                        $uniqueFileName = $this->ensureUniqueFileName($directory, $newFileName);
+                        $newFilePath = $directory . '/' . $uniqueFileName;
 
-                            $image->save($newFilePath);
-                            $filePath = $newFilePath; // Update filePath for subsequent operations
+                        // Save the resized image immediately
+                        $image->save($newFilePath);
+                        $filePath = $newFilePath; // Update filePath for subsequent operations
+                        $lastOperationSaved = true; // Mark that we've saved
 
-                            // Track original file for deletion
-                            if ($originalFilePath !== $filePath) {
-                                $this->originalFiles[] = $originalFilePath;
-                                $originalFilePath = $filePath;
-                            }
+                        // Reload the image from the new file path for subsequent operations
+                        $image = $this->imageManager->read($filePath);
+
+                        // Track original file for deletion
+                        if ($originalFilePath !== $newFilePath) {
+                            $this->originalFiles[] = $originalFilePath;
+                            $originalFilePath = $newFilePath;
                         }
                         break;
 
@@ -1527,6 +1586,7 @@ class MediaForgeService
                     case 'convert':
                         $filePath = $this->convertFormat($image, $filePath, $operation['format'], $operation['quality'], $operation['progressive'], $operation['override']);
                         $image = $this->imageManager->read($filePath); // reload the image with new format
+                        $lastOperationSaved = true; // Mark that we've saved
 
                         // Track original file for deletion if override is true
                         if ($operation['override'] ?? false) {
@@ -1536,12 +1596,21 @@ class MediaForgeService
                         break;
 
                     case 'thumbnail':
-                        $this->generateThumbnails($image, $filePath, $operation['sizes']);
+                        $this->generateThumbnails(
+                            $image,
+                            $filePath,
+                            $operation['sizes'],
+                            $operation['keepAspectRatio'] ?? true,
+                            $operation['fromOriginal'] ?? false,
+                            $originalUploadedFilePath, // Use the very first original uploaded file
+                            $operation['fillColor'] ?? null
+                        );
                         break;
 
                     case 'watermark':
                         $filePath = $this->applyWatermark($image, $operation, $filePath);
                         $image = $this->imageManager->read($filePath); // Reload updated version
+                        $lastOperationSaved = true; // Mark that we've saved (if override was true)
 
                         // Track original file for deletion if override is true
                         if ($operation['override'] ?? false) {
@@ -1562,18 +1631,23 @@ class MediaForgeService
                 }
             }
 
-            // Save final image with driver-specific options
-            $saveOptions = [];
+            // Save final image with driver-specific options (only if not already saved by last operation)
+            if (!$lastOperationSaved) {
+                $saveOptions = [];
 
-            // Handle progressive JPEG for Imagick
-            if ($currentDriver === 'imagick' && pathinfo($filePath, PATHINFO_EXTENSION) === 'jpg') {
-                $saveOptions['progressive'] = true;
+                // Handle progressive JPEG for Imagick
+                if ($currentDriver === 'imagick' && pathinfo($filePath, PATHINFO_EXTENSION) === 'jpg') {
+                    $saveOptions['progressive'] = true;
+                }
+
+                $image->save($filePath, ...$saveOptions);
             }
-
-            $image->save($filePath, ...$saveOptions);
 
             // Delete original files after successful processing
             $this->deleteOriginalFiles();
+
+            // Return the final file path (relative path for consistency)
+            return $this->getRelativePath($filePath);
         } catch (\Exception $e) {
             // Log error and optionally delete corrupted file
             Log::error("Image processing failed for file $filePath: " . $e->getMessage());
@@ -1583,6 +1657,31 @@ class MediaForgeService
             }
 
             throw new \Exception("Failed to process image file.");
+        }
+    }
+
+    /**
+     * Convert absolute file path to relative path for return value
+     *
+     * @param string $fullPath
+     * @return string
+     */
+    protected function getRelativePath(string $fullPath): string
+    {
+        if ($this->privateUpload) {
+            // Remove storage_path("app/public/") prefix
+            $storagePath = storage_path("app/public/");
+            if (str_starts_with($fullPath, $storagePath)) {
+                return "storage/" . substr($fullPath, strlen($storagePath));
+            }
+            return $fullPath;
+        } else {
+            // Remove public_path() prefix
+            $publicPath = public_path();
+            if (str_starts_with($fullPath, $publicPath)) {
+                return substr($fullPath, strlen($publicPath) + 1); // +1 to remove leading slash
+            }
+            return $fullPath;
         }
     }
 
@@ -1606,14 +1705,15 @@ class MediaForgeService
 
         if ($override) {
             // Override original file with new format
-            $newPath = $directory . '/' . $baseName . '.' . $format;
+            $newFileName = $baseName . '.' . $format;
         } else {
             // Create new file with format suffix
-            $newPath = $directory . '/' . $baseName . '-' . $format . '.' . $format;
+            $newFileName = $baseName . '-' . $format . '.' . $format;
         }
 
         // Ensure unique filename
-        $newPath = $this->ensureUniqueFileName($directory, basename($newPath));
+        $uniqueFileName = $this->ensureUniqueFileName($directory, $newFileName);
+        $newPath = $directory . '/' . $uniqueFileName;
 
         try {
             $image->save($newPath, quality: $quality);
@@ -1645,14 +1745,15 @@ class MediaForgeService
 
         if ($override) {
             // Override original file
-            $outputPath = $directory . '/' . $baseName . '.' . $format;
+            $newFileName = $baseName . '.' . $format;
         } else {
             // Create new file with compressed suffix
-            $outputPath = $directory . '/' . $baseName . '-compressed.' . $format;
+            $newFileName = $baseName . '-compressed.' . $format;
         }
 
         // Ensure unique filename
-        $outputPath = $this->ensureUniqueFileName($directory, basename($outputPath));
+        $uniqueFileName = $this->ensureUniqueFileName($directory, $newFileName);
+        $outputPath = $directory . '/' . $uniqueFileName;
 
         // Save with desired format, quality
         $image->save($outputPath, quality: $quality);
@@ -1664,25 +1765,66 @@ class MediaForgeService
      * Generate thumbnails for an image
      *
      * @param \Intervention\Image\Image $image
-     * @param string $filePath
+     * @param string $filePath Current processed file path
      * @param array $sizes Array of [width, height, name] arrays
+     * @param bool $keepAspectRatio Whether to maintain aspect ratio
+     * @param bool $fromOriginal Whether to generate from original uploaded image
+     * @param string $originalFilePath Original uploaded file path
+     * @param string|null $fillColor Background color to fill empty areas when aspect ratio is maintained
      * @return void
      */
-    protected function generateThumbnails(\Intervention\Image\Image $image, string $filePath, array $sizes): void
-    {
+    protected function generateThumbnails(
+        \Intervention\Image\Image $image,
+        string $filePath,
+        array $sizes,
+        bool $keepAspectRatio = true,
+        bool $fromOriginal = false,
+        string $originalFilePath = '',
+        ?string $fillColor = null
+    ): void {
+        // Determine source file path: use original if requested, otherwise use processed
+        $sourceFilePath = $fromOriginal && $originalFilePath ? $originalFilePath : $filePath;
+
+        // Get base name and extension from the current file path (for naming thumbnails)
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+        $base = pathinfo($filePath, PATHINFO_FILENAME);
+        $directory = dirname($filePath);
+
         foreach ($sizes as $size) {
             [$width, $height, $nameSuffix] = array_pad($size, 3, null);
 
-            $thumbnail = $this->imageManager->read($filePath);
+            // Load thumbnail from source file
+            $thumbnail = $this->imageManager->read($sourceFilePath);
 
-            // Use scaleDown() to prevent upscaling, or scale() to allow
-            $thumbnail->scale($width, $height); // or ->scaleDown($width, $height)
+            // Resize based on aspect ratio setting
+            if ($keepAspectRatio) {
+                // Maintain aspect ratio - scale to fit within dimensions
+                $thumbnail->scale($width, $height);
 
-            $ext = pathinfo($filePath, PATHINFO_EXTENSION);
-            $base = pathinfo($filePath, PATHINFO_FILENAME);
+                // If fill color is provided, create a canvas with the fill color and place the scaled thumbnail on top
+                if ($fillColor) {
+                    // Create a new canvas with exact target dimensions and fill color
+                    $canvas = $this->imageManager->create($width, $height);
+                    $canvas->fill($fillColor);
+
+                    // Place the scaled thumbnail on the canvas (centered)
+                    // The canvas maintains its dimensions (width x height)
+                    $canvas->place($thumbnail, 'center');
+
+                    // Replace the thumbnail with the canvas (which is exactly width x height)
+                    $thumbnail = $canvas;
+                }
+            } else {
+                // Exact dimensions - resize to exact width and height (may crop/distort)
+                // Fill color is ignored when exact dimensions are used
+                $thumbnail->resize($width, $height);
+            }
+
+            // Generate thumbnail filename
             $thumbName = $base . ($nameSuffix ? "_$nameSuffix" : "_{$width}x{$height}") . '.' . $ext;
 
-            $thumbnail->save(dirname($filePath) . '/' . $thumbName);
+            // Save thumbnail in the same directory as the processed file
+            $thumbnail->save($directory . '/' . $thumbName);
         }
     }
 
@@ -1743,10 +1885,10 @@ class MediaForgeService
             $directory = $pathInfo['dirname'];
 
             $newFileName = $baseName . '-watermark.' . $extension;
-            $newFilePath = $directory . '/' . $newFileName;
 
             // Ensure unique filename
-            $newFilePath = $this->ensureUniqueFileName($directory, $newFileName);
+            $uniqueFileName = $this->ensureUniqueFileName($directory, $newFileName);
+            $newFilePath = $directory . '/' . $uniqueFileName;
 
             $image->save($newFilePath);
             return $newFilePath; // Return updated file path

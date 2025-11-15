@@ -314,28 +314,114 @@ class User extends Authenticatable
 ````markdown
 ## MediaForge - Image Processing
 
+MediaForge provides comprehensive image processing capabilities including resizing, format conversion, compression, watermarking, and thumbnail generation with full control over aspect ratios, background fills, and source images.
+
 ### Basic Image Operations
 
 ```php
-use App\Services\Vrm\MediaForgeService;
+use App\Facades\Vrm\MediaForge;
 
-$mediaForge = new MediaForgeService();
-
-// Resize and optimize image
-$mediaForge->resize('path/to/image.jpg', 800, 600)
-    ->quality(85)
-    ->format('webp')
-    ->save('path/to/output.webp');
+// Basic upload with resize
+$imageUrl = MediaForge::upload($request->file('image'))
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('products')
+    ->resize(606, 606)
+    ->run();
 ```
-````
+
+### Resize with Background Fill
+
+When maintaining aspect ratio, you can fill empty areas with a background color:
+
+```php
+// Resize with background fill color
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // Creates exact 606x606 with #5a85b9 background
+    ->run();
+
+// The image is scaled to fit within 606x606 while maintaining aspect ratio
+// Empty areas are filled with the specified color (#5a85b9)
+// Final image is exactly 606x606 pixels
+```
+
+### Format Conversion
+
+```php
+// Convert to WebP with quality control
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')
+    ->convert('webp', 90, true, true)  // format, quality, progressive, override
+    ->run();
+```
+
+### Thumbnail Generation with Full Control
+
+Thumbnails can be generated with precise control over aspect ratio, source image, and fill color:
+
+```php
+// Thumbnail with all controls
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')
+    ->thumbnail(
+        [[500, 500, 'thumb'], [400, 267, 'featured'], [400, 300, 'product']],
+        true,   // keepAspectRatio: true = maintain, false = exact dimensions
+        false,  // fromOriginal: false = from processed, true = from original uploaded
+        '#ffffff' // fillColor: fill empty areas when aspect ratio maintained
+    )
+    ->run();
+
+// Generate thumbnails from original image (before resize/convert)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606)
+    ->thumbnail([[500, 500, 'thumb']], true, true) // fromOriginal = true
+    ->run();
+
+// Exact thumbnail dimensions (no aspect ratio)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->thumbnail([[500, 500, 'thumb']], false) // keepAspectRatio = false
+    ->run();
+```
+
+### File Naming Convention
+
+MediaForge uses consistent naming patterns:
+
+- **Resize only**: `{baseName}-{width}-{height}.{extension}`
+  - Example: `abc123-606-606.jpg`
+  
+- **Resize + Convert**: `{baseName}-{width}-{height}-{format}.{format}`
+  - Example: `abc123-606-606-webp.webp`
+  
+- **Thumbnails**: `{baseName}_{suffix}.{extension}`
+  - Example: `abc123-606-606_thumb.webp`
+  - Suffix can be custom name or `{width}x{height}`
 
 ### Configuration Options
 
-```php
-// Set default quality and format
-$mediaForge->setDefaultQuality(90);
-$mediaForge->setDefaultFormat('jpeg');
+```env
+# MediaForge Configuration
+VORMIA_MEDIAFORGE_DRIVER=auto
+VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
+VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
+VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false
+VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true
+VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
+VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
+
+### Key Features
+
+- **Background Fill**: Resize with fill color creates exact dimensions with image centered on colored background
+- **Thumbnail Controls**: Control aspect ratio, source image (original vs processed), and fill color
+- **Consistent Naming**: Files always saved with predictable naming patterns
+- **Directory Structure**: All processed files (resized, converted, thumbnails) saved in same directory
+- **Driver Support**: Automatic detection and switching between GD and Imagick drivers
 
 ````
 

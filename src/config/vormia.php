@@ -41,6 +41,8 @@ return [
         'default_format' => env('VORMIA_MEDIAFORGE_DEFAULT_FORMAT', 'webp'),
         'auto_override' => env('VORMIA_MEDIAFORGE_AUTO_OVERRIDE', false),
         'preserve_originals' => env('VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS', true),
+        'thumbnail_keep_aspect_ratio' => env('VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO', true),
+        'thumbnail_from_original' => env('VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL', false),
     ],
 
 ];

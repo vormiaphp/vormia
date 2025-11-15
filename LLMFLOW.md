@@ -342,6 +342,10 @@ VORMIA_SLUG_APPROVAL_REQUIRED=true
 VORMIA_MEDIAFORGE_DRIVER=auto
 VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
 VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
+VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false
+VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true
+VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
+VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
 
 ### **Configuration File**
@@ -356,6 +360,10 @@ return [
         'driver' => env('VORMIA_MEDIAFORGE_DRIVER', 'auto'),
         'default_quality' => env('VORMIA_MEDIAFORGE_DEFAULT_QUALITY', 85),
         'default_format' => env('VORMIA_MEDIAFORGE_DEFAULT_FORMAT', 'webp'),
+        'auto_override' => env('VORMIA_MEDIAFORGE_AUTO_OVERRIDE', false),
+        'preserve_originals' => env('VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS', true),
+        'thumbnail_keep_aspect_ratio' => env('VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO', true),
+        'thumbnail_from_original' => env('VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL', false),
     ],
 ];
 ```
@@ -408,7 +416,65 @@ $techCategory->setMeta('icon', 'fas fa-microchip');
 $techCategory->setMeta('color', '#3B82F6');
 ```
 
-### **3. API Development**
+### **3. MediaForge Image Processing**
+
+```php
+use App\Facades\Vrm\MediaForge;
+
+// Basic upload with resize and convert
+$imageUrl = MediaForge::upload($request->file('image'))
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // Resize with background fill
+    ->convert('webp', 90, true, true)     // Convert to WebP with override
+    ->run();
+
+// Resize with background fill color
+// When aspect ratio is maintained, empty areas are filled with the specified color
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')  // 606x606 with #5a85b9 background
+    ->run();
+
+// Thumbnail generation with full control
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606, true, '#5a85b9')
+    ->thumbnail(
+        [[500, 500, 'thumb'], [400, 267, 'featured'], [400, 300, 'product']],
+        true,   // keepAspectRatio: true = maintain, false = exact dimensions
+        false,  // fromOriginal: false = from processed, true = from original
+        '#ffffff' // fillColor: fill empty areas when aspect ratio maintained
+    )
+    ->run();
+
+// Thumbnail from original image (before resize/convert)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->resize(606, 606)
+    ->thumbnail([[500, 500, 'thumb']], true, true) // fromOriginal = true
+    ->run();
+
+// Exact thumbnail dimensions (no aspect ratio)
+$imageUrl = MediaForge::upload($file)
+    ->to('products')
+    ->thumbnail([[500, 500, 'thumb']], false) // keepAspectRatio = false
+    ->run();
+```
+
+**File Naming Convention:**
+- Resize only: `{baseName}-{width}-{height}.{extension}` (e.g., `image-606-606.jpg`)
+- Resize + Convert: `{baseName}-{width}-{height}-{format}.{format}` (e.g., `image-606-606-webp.webp`)
+- Thumbnails: `{baseName}_{suffix}.{extension}` (e.g., `image-606-606_thumb.webp`)
+
+**Key Features:**
+- **Background Fill**: Resize with fill color creates exact dimensions with image centered on colored background
+- **Thumbnail Controls**: Control aspect ratio, source image (original vs processed), and fill color
+- **Consistent Naming**: Files always saved with predictable naming patterns
+- **Directory Structure**: All processed files (resized, converted, thumbnails) saved in same directory
+
+### **4. API Development**
 
 ```php
 // Protected API routes
