@@ -280,6 +280,27 @@ class VormiaVormia
                 $this->filesystem->copy($file->getPathname(), $destFile);
             }
         }
+
+        // Copy seeder files directly into database/seeders
+        $seederSource = __DIR__ . '/stubs/seeders';
+        $seederDest = $this->databasePath('seeders');
+        if ($this->filesystem->isDirectory($seederSource)) {
+            foreach ($this->filesystem->files($seederSource) as $file) {
+                $destFile = $seederDest . '/' . $file->getFilename();
+                if ($this->filesystem->exists($destFile)) {
+                    if (app()->runningInConsole() && app()->bound('command')) {
+                        $command = app('command');
+                        if (method_exists($command, 'confirm')) {
+                            if (!$command->confirm("Seeder {$destFile} already exists. Override?", false)) {
+                                $command->line("  Skipped: {$destFile}");
+                                continue;
+                            }
+                        }
+                    }
+                }
+                $this->filesystem->copy($file->getPathname(), $destFile);
+            }
+        }
     }
 
     /**
@@ -330,6 +351,15 @@ class VormiaVormia
         if ($this->filesystem->isDirectory($migrationSource)) {
             foreach ($this->filesystem->files($migrationSource) as $file) {
                 $this->filesystem->copy($file->getPathname(), $migrationDest . '/' . $file->getFilename());
+            }
+        }
+
+        // Update seeder files directly into database/seeders
+        $seederSource = __DIR__ . '/stubs/seeders';
+        $seederDest = $this->databasePath('seeders');
+        if ($this->filesystem->isDirectory($seederSource)) {
+            foreach ($this->filesystem->files($seederSource) as $file) {
+                $this->filesystem->copy($file->getPathname(), $seederDest . '/' . $file->getFilename());
             }
         }
     }
