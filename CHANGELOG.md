@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.1] - 2025-01-15
+
+### Added
+
+- **RoleSeeder**: New database seeder for initial role setup
+  - Automatically creates three default roles: Super Admin, Admin, and Member
+  - Seeder is copied to `database/seeders` during package installation and updates
+  - Includes proper role configuration with authority levels and module assignments
+  - Seeder follows Laravel conventions and uses the Vrm\Role model
+
+### Changed
+
+- **Installation Process**: Enhanced to include seeder file copying
+  - Seeders are now automatically copied during `vormia:install` command
+  - Seeders are updated during `vormia:update` command
+  - Follows the same pattern as migrations for consistency
+
+### Documentation
+
+- **Seeder Integration**: Added RoleSeeder to package stubs for automatic distribution
+
 ## [4.5.0] - 2025-01-15
 
 ### Added
