@@ -234,6 +234,8 @@ class UpdateCommand extends Command
             'role' => '\\App\\Http\\Middleware\\Vrm\\CheckRole::class',
             'module' => '\\App\\Http\\Middleware\\Vrm\\CheckModule::class',
             'permission' => '\\App\\Http\\Middleware\\Vrm\\CheckPermission::class',
+            'api-auth' => '\\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class',
+            'authority' => '\\App\\Http\\Middleware\\Vrm\\CheckAuthority::class',
         ];
 
         foreach ($middlewareAliases as $alias => $class) {
@@ -276,6 +278,8 @@ class UpdateCommand extends Command
         if (strpos($finalContent, "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class") === false) $missing[] = "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class";
         if (strpos($finalContent, "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class") === false) $missing[] = "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class";
         if (strpos($finalContent, "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class") === false) $missing[] = "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class";
+        if (strpos($finalContent, "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class") === false) $missing[] = "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class";
+        if (strpos($finalContent, "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class") === false) $missing[] = "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class";
         $providersList = [
             'App\\Providers\\Vrm\\NotificationServiceProvider::class',
             'App\\Providers\\Vrm\\TokenServiceProvider::class',
@@ -308,7 +312,9 @@ class UpdateCommand extends Command
         $middlewareAliases = "
             'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class,
             'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class,
-            'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class,";
+            'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class,
+            'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class,
+            'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class,";
 
         // Add providers
         $providers = "

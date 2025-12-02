@@ -40,7 +40,7 @@ The package will automatically check for required dependencies during installati
 - **CSS/JS Asset Integration**: Automatic copying of CSS/JS plugin files and integration into app.css/app.js
 - **Dependency Auto-Installation**: Automatic installation of intervention/image, Laravel Sanctum, and CORS configuration
 - **Enhanced Uninstallation**: Comprehensive cleanup including npm packages and dependencies
-- **MediaForge Enhancements**: 
+- **MediaForge Enhancements**:
   - Background fill color support for resize operations (exact dimensions with colored background)
   - Advanced thumbnail controls (aspect ratio, source image selection, fill color)
   - Consistent file naming patterns for all processed images
@@ -51,7 +51,7 @@ The package will automatically check for required dependencies during installati
 - **Streamlined Installation**: Removed `--api` flag - API support is now always included by default
 - **Frontend Integration**: Seamless integration of Vormia CSS/JS assets into Laravel projects
 - **Better Error Handling**: Graceful handling of missing npm or Composer dependencies during installation
-- **MediaForge Reliability**: 
+- **MediaForge Reliability**:
   - Fixed resize operations to always save in correct directory
   - Fixed background fill implementation (image now visible with proper background)
   - Improved file path handling and naming consistency
@@ -169,6 +169,7 @@ Add these to your middleware aliases array:
             'module' => \App\Http\Middleware\Vrm\CheckModule::class,
             'permission' => \App\Http\Middleware\Vrm\CheckPermission::class,
             'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class,
+            'authority' => \App\Http\Middleware\Vrm\CheckAuthority::class,
         ]);
     })
 ```
@@ -285,11 +286,13 @@ $imageUrl = MediaForge::upload($file)
 ```
 
 **File Naming:**
+
 - Resize: `{baseName}-{width}-{height}.{extension}` (e.g., `abc123-606-606.jpg`)
 - Resize + Convert: `{baseName}-{width}-{height}-{format}.{format}` (e.g., `abc123-606-606-webp.webp`)
 - Thumbnails: `{baseName}_{suffix}.{extension}` (e.g., `abc123-606-606_thumb.webp`)
 
 **Configuration:**
+
 ```env
 VORMIA_MEDIAFORGE_DRIVER=auto
 VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85

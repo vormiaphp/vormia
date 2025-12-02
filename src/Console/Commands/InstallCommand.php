@@ -180,7 +180,8 @@ class InstallCommand extends Command
             'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class,
             'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class,
             'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class,
-            'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class,";
+            'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class,
+            'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class,";
 
         // Add providers
         $providers = "
