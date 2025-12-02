@@ -220,18 +220,4 @@ class User extends Authenticatable
     {
         return $this->permissions()->where('name', $permission)->exists();
     }
-
-    /**
-     * Houses relationship (many-to-many through pivot).
-     */
-    public function houses()
-    {
-        return $this->belongsToMany(
-            House::class,
-            'house_agent'
-        )
-            ->using(HouseAgent::class)
-            ->withPivot('assigned_at')
-            ->withTimestamps();
-    }
 }
