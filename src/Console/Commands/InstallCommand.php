@@ -211,6 +211,7 @@ class InstallCommand extends Command
         if (strpos($finalContent, "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class") === false) $missing[] = "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class";
         if (strpos($finalContent, "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class") === false) $missing[] = "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class";
         if (strpos($finalContent, "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class") === false) $missing[] = "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class";
+        if (strpos($finalContent, "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class") === false) $missing[] = "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class";
         $providersList = [
             'App\\Providers\\Vrm\\NotificationServiceProvider::class',
             'App\\Providers\\Vrm\\TokenServiceProvider::class',
@@ -223,7 +224,7 @@ class InstallCommand extends Command
             $this->warn('Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:');
             if ($missing) {
                 $this->line("\nAdd these to your middleware aliases array:");
-                foreach ($missing as $m) $this->line('    ' . $m);
+                foreach ($missing as $m) $this->line('    ' . $m . ',');
             }
             if ($missingProviders) {
                 $this->line("\nAdd these to your providers array:");
