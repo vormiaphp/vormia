@@ -16,7 +16,10 @@
         "psr-4": {
             "VormiaPHP\\Vormia\\": "src/",
             "Vormia\\": "src/"
-        }
+        },
+        "exclude-from-classmap": [
+            "src/stubs/"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
