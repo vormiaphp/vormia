@@ -223,7 +223,7 @@ class InstallCommand extends Command
         if ($missing || $missingProviders) {
             $this->warn('Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:');
             if ($missing) {
-                $this->line("\nAdd these to your middleware aliases array:");
+                $this->line("\nAdd these to your middleware aliases array (\$middleware->alias([...]):");
                 foreach ($missing as $m) $this->line('    ' . $m . ',');
             }
             if ($missingProviders) {
