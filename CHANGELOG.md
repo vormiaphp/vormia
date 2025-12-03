@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.2] - 2025-01-15
+
+### Fixed
+
+- **PSR-4 Autoloading Compliance**: Fixed PSR-4 autoloading warnings for stub files
+  - Excluded `src/stubs/` directory from Composer autoloading
+  - Stub files are template files with `App\` namespaces meant for Laravel applications
+  - These files should not be autoloaded from the package itself
+  - Resolves warnings: `Class src\stubs\Controllers\... does not comply with psr-4 autoloading standard`
+
+### Technical
+
+- **Composer Configuration**: Added `exclude-from-classmap` to `composer.json` autoload section
+  - Prevents Composer from scanning stub files during autoload generation
+  - Maintains proper PSR-4 compliance for package classes
+
 ## [4.5.1] - 2025-01-15
 
 ### Added
