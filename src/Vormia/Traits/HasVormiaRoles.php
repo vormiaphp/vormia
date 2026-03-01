@@ -13,7 +13,7 @@ use Vormia\Vormia\Models\Role;
  */
 trait HasVormiaRoles
 {
-    use Traits\Model\HasUserMeta;
+    use \Vormia\Vormia\Traits\Model\HasUserMeta;
 
     public function roles()
     {

@@ -16,7 +16,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasSlugs, HasUserMeta, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasApiTokens, HasSlugs, HasUserMeta, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -39,6 +39,8 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
         'remember_token',
     ];
 
@@ -51,14 +53,11 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'password' => 'hashed',
             'phone_verified_at' => 'datetime',
             'is_active' => 'boolean',
-            'password' => 'hashed',
         ];
     }
-
-    // Eager load slugs when needed
-    // protected $with = ['slugs'];
 
     /**
      * Get the user's initials
@@ -68,25 +67,24 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
     /* -------------------------------------------------------------------------------- */
+    // User Meta
+    /* -------------------------------------------------------------------------------- */
 
-    // Todo: User meta
     public function meta()
     {
         return $this->hasMany(\App\Models\Vrm\UserMeta::class, 'user_id');
     }
 
-    // Todo: Get meta value by key
     public function getMeta($key, $default = null)
     {
         return optional($this->meta->firstWhere('key', $key))->value ?? $default;
     }
 
-    // Todo: Set or update meta
     public function setMeta($key, $value, $is_active = 1)
     {
         return $this->meta()->updateOrCreate(
@@ -95,7 +93,6 @@ class User extends Authenticatable
         );
     }
 
-    // Todo: Delete meta
     public function deleteMeta($key)
     {
         return $this->meta()->where('key', $key)->delete();
@@ -105,52 +102,25 @@ class User extends Authenticatable
     // Slug Methods
     /* -------------------------------------------------------------------------------- */
 
-    // Slug relationship is handled by HasSlugs trait
-    // Use $this->slugs() to access slugs with proper entity_type filtering
-
-    /**
-     * Define which field should be used for generating slugs.
-     *
-     * @return string
-     */
     public function getSluggableField()
     {
         return 'name';
     }
 
-    /**
-     * Enable automatic slug updates for this model.
-     *
-     * @return bool
-     */
     public function shouldAutoUpdateSlug()
     {
-        // Development: Allow automatic updates
         if (app()->environment('local', 'development')) {
             return false;
         }
 
-        // Production: Require manual approval
         return config('vormia.auto_update_slugs', false);
     }
 
-    /**
-     * Get the route key for the model.
-     *
-     * @return string
-     */
     public function getRouteKeyName()
     {
         return 'slug';
     }
 
-    /**
-     * Retrieve the model for a bound value.
-     *
-     * @param  mixed  $value
-     * @param  string|null  $field
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
     public function resolveRouteBinding($value, $field = null)
     {
         if ($field === 'slug' || $field === null) {
@@ -161,8 +131,9 @@ class User extends Authenticatable
     }
 
     /* -------------------------------------------------------------------------------- */
+    // Roles
+    /* -------------------------------------------------------------------------------- */
 
-    // Todo: User roles
     public function roles()
     {
         return $this->belongsToMany(
@@ -171,31 +142,26 @@ class User extends Authenticatable
         );
     }
 
-    // Todo: Check if the user has the required role
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('name', $role)->exists();
     }
 
-    // Todo: Check if the user has a role by ID
     public function hasRoleId(int $roleId): bool
     {
         return $this->roles()->where('id', $roleId)->exists();
     }
 
-    // Todo: Check if the user is a super admin (role ID 1)
     public function isSuperAdmin(): bool
     {
         return $this->hasRoleId(1);
     }
 
-    // Todo: Check if the user is an admin or super admin (role ID 1 or 2)
     public function isAdminOrSuperAdmin(): bool
     {
         return $this->roles()->whereIn('id', [1, 2])->exists();
     }
 
-    // Todo: Check if the user has the required role for the requested module
     public function hasModule(string $module): bool
     {
         $roles = $this->roles()->pluck('module')->toArray();
@@ -207,7 +173,10 @@ class User extends Authenticatable
         return in_array($module, $modules);
     }
 
-    // Todo: User permissions
+    /* -------------------------------------------------------------------------------- */
+    // Permissions
+    /* -------------------------------------------------------------------------------- */
+
     public function permissions()
     {
         return $this->roles->flatMap(function ($role) {
@@ -215,7 +184,6 @@ class User extends Authenticatable
         })->unique('name');
     }
 
-    // Todo: Check if the user has the required permission
     public function hasPermission(string $permission): bool
     {
         return $this->permissions()->where('name', $permission)->exists();

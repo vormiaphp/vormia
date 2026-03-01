@@ -1,7 +1,14 @@
 {
     "name": "vormiaphp/vormia",
     "description": "A comprehensive Laravel package for user management, roles, permissions, and utilities",
-    "keywords": ["laravel", "php", "roles", "permissions", "user-management", "vormia"],
+    "keywords": [
+        "laravel",
+        "php",
+        "roles",
+        "permissions",
+        "user-management",
+        "vormia"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -23,7 +30,11 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "VormiaPHP\\Vormia\\Tests\\": "tests/"
+            "App\\": "workbench/app/",
+            "VormiaPHP\\Vormia\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "extra": {
@@ -45,12 +56,26 @@
         "livewire/livewire": "For Livewire traits (WithNotifications)"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0"
+        "laravel/sanctum": "^4.3",
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.5|^12.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ]
     }
 }

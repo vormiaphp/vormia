@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create(config('vormia.table_prefix') . 'auth_tokens', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->default(null)->constrained('users')->onDelete('cascade');
             $table->string('type', 40); // e.g., email_verification, otp, reset_password
             $table->string('name', 40)->nullable()->default(null); // optional: e.g., login_otp, email_code
             $table->text('token');

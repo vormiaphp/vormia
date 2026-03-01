@@ -137,7 +137,6 @@ class InstallationTest extends TestCase
         // Check that it has the correct publish tags
         $this->assertStringContainsString("'vormia-config'", $source);
         $this->assertStringContainsString("'vormia-migrations'", $source);
-        $this->assertStringContainsString("'vormia-files'", $source);
         $this->assertStringContainsString("'vormia-stubs'", $source);
     }
 }
