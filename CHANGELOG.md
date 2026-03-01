@@ -79,10 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- **Updated LLMFLOW.md**: Added comprehensive MediaForge usage examples and configuration
-- **Updated LLMRULES.md**: Added MediaForge code patterns and best practices
+- **Updated AI/MCP Guide**: Added comprehensive MediaForge usage examples and configuration
+- **Updated AI/MCP Rules**: Added MediaForge code patterns and best practices
 - **Updated README.md**: Added MediaForge usage section with examples and configuration
-- **Updated READMEDOC.md**: Enhanced MediaForge documentation with all new features
+- **Updated AI Docs**: Enhanced documentation with all new features
 
 ## [4.3.0] - 2024-12-19
 
@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **New API Authentication Middleware**: Added `ApiAuthenticate` middleware with `'api-auth'` alias for protected API routes
-- **Comprehensive AI Documentation**: Created `LLMFLOW.md` and `LLMRULES.md` guides for AI assistants and developers
+- **Comprehensive AI Documentation**: Added dedicated AI guidance for assistants and developers
 - **Database Dependency Protection**: Added error handling in service providers to prevent crashes before migrations run
 - **Enhanced Troubleshooting**: Added comprehensive troubleshooting section in README with cache management instructions
 - **Cache Management Methods**: Added `clearCache()`, `fresh()` methods to UtilityService for better performance

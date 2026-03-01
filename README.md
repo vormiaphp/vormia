@@ -3,9 +3,31 @@
 [![Packagist](https://img.shields.io/packagist/v/vormiaphp/vormia.svg)](https://packagist.org/packages/vormiaphp/vormia)
 [![GitHub](https://img.shields.io/github/stars/vormiaphp/vormia.svg)](https://github.com/vormiaphp/vormia)
 
+## AI Conversion Guides
+
+The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides for migrating between React and various Laravel/Next.js stacks. These are automatically applied by Cursor and compatible AI assistants.
+
+| Guide | Conversion |
+|-------|-----------|
+| [react-to-laravel-livewire-inline.mdc](aiguide/react-to-laravel-livewire-inline.mdc) | React → Laravel Blade + Livewire Volt (inline) |
+| [react-to-inertia-react.mdc](aiguide/react-to-inertia-react.mdc) | React → Inertia.js + React |
+| [react-to-inertia-vue.mdc](aiguide/react-to-inertia-vue.mdc) | React → Inertia.js + Vue 3 |
+| [react-to-inertia-svelte.mdc](aiguide/react-to-inertia-svelte.mdc) | React → Inertia.js + Svelte 5 |
+| [laravel-to-nextjs-tanstack.mdc](aiguide/laravel-to-nextjs-tanstack.mdc) | Laravel → Next.js (App Router) + TanStack Query |
+| [laravel-to-react.mdc](aiguide/laravel-to-react.mdc) | Laravel → Standalone React SPA |
+| [react-to-expo-react-native.mdc](aiguide/react-to-expo-react-native.mdc) | React → Expo React Native |
+| [react-to-expo-react-native-gluestack.mdc](aiguide/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2 |
+
+See also: [references/react-laravel.mdc](references/react-laravel.mdc) for the original React → Blade/Livewire Volt (class-style) guide.
+
+---
+
 ## Introduction
 
 A comprehensive Laravel development package that streamlines media handling, notifications, and role management with a modular, maintainable approach.
+
+**Installation:** See [docs/INSTALLATION.md](docs/INSTALLATION.md) for setup with Laravel 12 and Livewire 4.
+**MCP/AI Guide:** See [CURSOR_CODEX_MCP_GUIDE.md](CURSOR_CODEX_MCP_GUIDE.md) for Cursor IDE and Codex agent conventions.
 
 VormiaPHP offers robust tools for handling media, managing notifications, and implementing essential features like user roles and permissions. The package is designed with a modular structure, separating concerns through dedicated namespaces for models, services, middleware, and traits.
 
@@ -68,7 +90,7 @@ The package will automatically check for required dependencies during installati
 ### 📚 Documentation
 
 - **Updated README**: Comprehensive installation and uninstallation documentation
-- **AI Assistant Guides**: Updated `LLMFLOW.md` and `READMEDOC.md` with new installation processes
+- **MCP/AI Guide**: Consolidated into `CURSOR_CODEX_MCP_GUIDE.md`
 - **Troubleshooting**: Added new troubleshooting sections for CSS/JS assets and dependencies
 
 [View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.3.1)

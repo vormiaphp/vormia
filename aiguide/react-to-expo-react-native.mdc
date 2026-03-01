@@ -1,0 +1,641 @@
+---
+alwaysApply: true
+---
+
+# React (Web) to Expo React Native Conversion Guide
+
+## Overview
+
+This guide covers converting a React web application to a **React Native app using Expo**. React Native uses the same JavaScript/TypeScript and component model as React, but instead of rendering HTML to a browser, it renders **native mobile UI components** (iOS & Android). Many React concepts map directly, but the rendering layer, styling, navigation, and platform APIs are completely different.
+
+## Tech Stack
+
+- **Expo**: SDK 52+ (managed workflow)
+- **React Native**: 0.76+ (via Expo)
+- **Expo Router**: v4.x (file-based navigation — replaces React Router)
+- **React**: 19.x
+- **TypeScript**: 5.x
+- **NativeWind**: v4.x (Tailwind-style classes for React Native, optional)
+
+---
+
+## Core Mental Shift
+
+| React Web | React Native (Expo) |
+|-----------|---------------------|
+| Renders HTML elements (`div`, `p`, `button`, `input`) | Renders native components (`View`, `Text`, `Pressable`, `TextInput`) |
+| CSS / Tailwind for styling | `StyleSheet.create()` or NativeWind |
+| `className="..."` | `style={styles.xxx}` or NativeWind `className` |
+| Browser routing (URL bar) | Stack/tab navigation (no URL bar on mobile) |
+| `React Router` / `Next.js` | `Expo Router` (file-based) |
+| `window`, `document` | Not available — use Expo APIs |
+| `localStorage` | `AsyncStorage` / `expo-secure-store` |
+| `fetch()` / Axios | Same — works in React Native |
+| `onClick` | `onPress` |
+| Scrollable by default | Must use `ScrollView` or `FlatList` explicitly |
+| CSS `display: flex` (horizontal default) | `View` is `flexDirection: 'column'` by default |
+
+> React Native's `View` uses **Flexbox** but defaults to **column direction**, not row like CSS.
+
+---
+
+## File Structure
+
+### React Web (Before)
+
+```
+src/
+├── components/
+│   ├── Button.tsx
+│   └── ProductCard.tsx
+├── pages/
+│   ├── HomePage.tsx
+│   └── products/
+│       └── ProductsPage.tsx
+└── main.tsx
+```
+
+### Expo (After — using Expo Router)
+
+```
+app/                        ← Expo Router pages (file = route)
+├── (tabs)/                 ← Tab group
+│   ├── index.tsx           ← Home tab
+│   └── products.tsx        ← Products tab
+├── products/
+│   └── [id].tsx            ← Product detail (dynamic route)
+├── login.tsx
+└── _layout.tsx             ← Root layout
+components/
+├── Button.tsx
+└── ProductCard.tsx
+hooks/
+└── useProducts.ts
+constants/
+└── Colors.ts
+```
+
+---
+
+## Component Conversion
+
+### 1. Basic Component — HTML Tags → Native Components
+
+**React Web:**
+
+```tsx
+export default function ProductCard({ name, price }) {
+    return (
+        <div className="border rounded p-4">
+            <h3 className="font-bold text-lg">{name}</h3>
+            <p className="text-gray-500">${price}</p>
+        </div>
+    );
+}
+```
+
+**React Native:**
+
+```tsx
+import { View, Text, StyleSheet } from 'react-native';
+
+export default function ProductCard({ name, price }: { name: string; price: number }) {
+    return (
+        // div → View
+        <View style={styles.card}>
+            {/* All text MUST be inside <Text> — no bare strings */}
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.price}>${price.toFixed(2)}</Text>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    card: {
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 8,
+        padding: 16,
+    },
+    name: {
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    price: {
+        color: '#6b7280',
+        marginTop: 4,
+    },
+});
+```
+
+---
+
+### 2. Button / Click → Pressable / onPress
+
+**React Web:**
+
+```tsx
+<button onClick={() => handleDelete(id)} className="bg-red-500 text-white px-4 py-2 rounded">
+    Delete
+</button>
+```
+
+**React Native:**
+
+```tsx
+import { Pressable, Text, StyleSheet } from 'react-native';
+
+<Pressable
+    onPress={() => handleDelete(id)}
+    style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+>
+    <Text style={styles.buttonText}>Delete</Text>
+</Pressable>
+
+const styles = StyleSheet.create({
+    button: { backgroundColor: '#ef4444', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+    buttonPressed: { opacity: 0.7 },
+    buttonText: { color: '#fff' },
+});
+```
+
+> Use `Pressable` (preferred) or `TouchableOpacity`. Never use `div` with `onClick` for interactive elements in React Native.
+
+---
+
+### 3. Text Input
+
+**React Web:**
+
+```tsx
+<input
+    type="text"
+    value={name}
+    onChange={e => setName(e.target.value)}
+    placeholder="Enter name"
+    className="border rounded px-3 py-2"
+/>
+```
+
+**React Native:**
+
+```tsx
+import { TextInput, StyleSheet } from 'react-native';
+
+<TextInput
+    value={name}
+    onChangeText={setName}            // No event object — just the string value
+    placeholder="Enter name"
+    style={styles.input}
+    autoCapitalize="none"
+    keyboardType="default"
+/>
+
+const styles = StyleSheet.create({
+    input: {
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        fontSize: 16,
+    },
+});
+```
+
+> `onChangeText` receives the value string directly — no `e.target.value` needed.
+
+---
+
+### 4. Scrollable Lists
+
+**React Web:**
+
+```tsx
+<div className="overflow-y-auto h-64">
+    {products.map(p => <ProductCard key={p.id} product={p} />)}
+</div>
+```
+
+**React Native — ScrollView (small lists):**
+
+```tsx
+import { ScrollView } from 'react-native';
+
+<ScrollView>
+    {products.map(p => <ProductCard key={p.id} product={p} />)}
+</ScrollView>
+```
+
+**React Native — FlatList (large/infinite lists, preferred):**
+
+```tsx
+import { FlatList } from 'react-native';
+
+<FlatList
+    data={products}
+    keyExtractor={item => item.id.toString()}
+    renderItem={({ item }) => <ProductCard product={item} />}
+    ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+    onEndReached={loadMore}        // pagination
+    onEndReachedThreshold={0.5}
+/>
+```
+
+> Prefer `FlatList` over `ScrollView + map` for any list that might grow — it only renders visible items.
+
+---
+
+### 5. Images
+
+**React Web:**
+
+```tsx
+<img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+```
+
+**React Native:**
+
+```tsx
+import { Image, StyleSheet } from 'react-native';
+
+<Image
+    source={{ uri: product.imageUrl }}
+    style={styles.image}
+    resizeMode="cover"
+/>
+
+const styles = StyleSheet.create({
+    image: { width: '100%', height: 192 },
+});
+```
+
+---
+
+## Styling
+
+### CSS / Tailwind → StyleSheet.create()
+
+React Native has **no CSS**. Styles are JavaScript objects.
+
+| CSS / Tailwind | React Native StyleSheet |
+|----------------|------------------------|
+| `display: flex` | default (no need to declare) |
+| `flex-direction: row` | `flexDirection: 'row'` |
+| `align-items: center` | `alignItems: 'center'` |
+| `justify-content: space-between` | `justifyContent: 'space-between'` |
+| `padding: 16px` | `padding: 16` (numbers, not strings) |
+| `border-radius: 8px` | `borderRadius: 8` |
+| `font-size: 16px` | `fontSize: 16` |
+| `color: #333` | `color: '#333'` |
+| `background-color: blue` | `backgroundColor: 'blue'` |
+| `width: 100%` | `width: '100%'` (strings for %) |
+| `margin-top: 8px` | `marginTop: 8` |
+| `box-shadow` | `shadow*` props (iOS) + `elevation` (Android) |
+| `overflow: hidden` | `overflow: 'hidden'` |
+
+```tsx
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 16,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#111827',
+    },
+});
+```
+
+### NativeWind (Optional — Tailwind classes in React Native)
+
+If you prefer Tailwind syntax, install NativeWind:
+
+```tsx
+// With NativeWind installed, use className like web React
+<View className="flex-1 bg-white p-4">
+    <Text className="text-2xl font-bold text-gray-900">Title</Text>
+</View>
+```
+
+---
+
+## Navigation
+
+### React Router → Expo Router (File-Based)
+
+Expo Router uses the `app/` folder — the file path becomes the route, just like Next.js.
+
+| React Router | Expo Router |
+|--------------|-------------|
+| `<Route path="/" element={<Home />} />` | `app/index.tsx` |
+| `<Route path="/products" element={<Products />} />` | `app/products/index.tsx` |
+| `<Route path="/products/:id" element={<Show />} />` | `app/products/[id].tsx` |
+| `<Link to="/products">` | `<Link href="/products">` from `expo-router` |
+| `useNavigate()` | `useRouter()` from `expo-router` |
+| `useParams()` | `useLocalSearchParams()` from `expo-router` |
+
+### Navigation in Code
+
+```tsx
+// React Web
+import { useNavigate, useParams } from 'react-router-dom';
+const navigate = useNavigate();
+navigate('/products');
+const { id } = useParams();
+
+// React Native (Expo Router)
+import { useRouter, useLocalSearchParams, Link } from 'expo-router';
+const router = useRouter();
+router.push('/products');
+router.back();
+const { id } = useLocalSearchParams<{ id: string }>();
+```
+
+### Stack Navigation Layout
+
+```tsx
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+    return (
+        <Stack>
+            <Stack.Screen name="index" options={{ title: 'Home' }} />
+            <Stack.Screen name="products/index" options={{ title: 'Products' }} />
+            <Stack.Screen name="products/[id]" options={{ title: 'Product Detail' }} />
+        </Stack>
+    );
+}
+```
+
+### Tab Navigation
+
+```tsx
+// app/(tabs)/_layout.tsx
+import { Tabs } from 'expo-router';
+
+export default function TabLayout() {
+    return (
+        <Tabs>
+            <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ... }} />
+            <Tabs.Screen name="products" options={{ title: 'Products' }} />
+            <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+        </Tabs>
+    );
+}
+```
+
+---
+
+## Data Fetching
+
+No change — `fetch()` and Axios work identically:
+
+```ts
+// hooks/useProducts.ts
+import { useState, useEffect } from 'react';
+
+export function useProducts() {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/products`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(r => r.json())
+            .then(res => setProducts(res.data))
+            .finally(() => setLoading(false));
+    }, []);
+
+    return { products, loading };
+}
+```
+
+> Use `EXPO_PUBLIC_` prefix for public env variables in Expo (equivalent to `VITE_` in web).
+
+---
+
+## Storage
+
+| Web | React Native |
+|-----|-------------|
+| `localStorage.setItem('key', val)` | `await AsyncStorage.setItem('key', val)` |
+| `localStorage.getItem('key')` | `await AsyncStorage.getItem('key')` |
+| `localStorage.removeItem('key')` | `await AsyncStorage.removeItem('key')` |
+| Sensitive data (tokens) | `expo-secure-store` (encrypted keychain) |
+
+```ts
+import * as SecureStore from 'expo-secure-store';
+
+// Store token securely
+await SecureStore.setItemAsync('token', tokenValue);
+const token = await SecureStore.getItemAsync('token');
+await SecureStore.deleteItemAsync('token');
+```
+
+---
+
+## Platform-Specific Code
+
+```tsx
+import { Platform } from 'react-native';
+
+// Conditional style
+const styles = StyleSheet.create({
+    shadow: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+});
+
+// Conditional JSX
+{Platform.OS === 'ios' && <IOSOnlyComponent />}
+```
+
+---
+
+## Common Patterns
+
+### Conditional Rendering — Identical
+
+```tsx
+{isLoading ? <ActivityIndicator /> : <ProductList />}
+{error && <Text style={{ color: 'red' }}>{error}</Text>}
+```
+
+> Use `ActivityIndicator` instead of custom spinners for loading states.
+
+### Safe Area (Notch / Status Bar)
+
+```tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Wrap screen content to avoid notch/home indicator overlap
+<SafeAreaView style={{ flex: 1 }}>
+    <YourContent />
+</SafeAreaView>
+```
+
+---
+
+## Best Practices
+
+1. **All text must be inside `<Text>`** — bare strings outside `<Text>` crash the app
+2. **Use `FlatList` for lists** — `ScrollView` with `.map()` does not virtualize and will be slow
+3. **Style numbers, not strings** for pixels: `padding: 16` not `padding: '16px'`
+4. **`flex: 1`** gives a View all available space (equivalent to `flex-1` in Tailwind)
+5. **`KeyboardAvoidingView`** wraps forms so the keyboard doesn't cover input fields
+6. **`SafeAreaView`** on every screen root to handle notch/status bar
+7. **`expo-secure-store`** for tokens — never `AsyncStorage` for sensitive data
+8. **Test on real device** — simulator does not replicate performance, touch accuracy, or permissions
+9. **`Pressable` over `TouchableOpacity`** for new code — more flexible press state control
+10. **`useLocalSearchParams`** for route params — `useParams()` from React Router does not exist in Expo Router
+
+---
+
+## Migration Checklist
+
+- [ ] Create Expo app: `npx create-expo-app@latest MyApp`
+- [ ] Enable TypeScript: project is TypeScript by default
+- [ ] Replace all `div` → `View`, `p`/`span`/`h1..h6` → `Text`
+- [ ] Replace `button` → `Pressable` + `Text`
+- [ ] Replace `input[type=text]` → `TextInput` with `onChangeText`
+- [ ] Replace `img` → `Image` with `source={{ uri: ... }}`
+- [ ] Replace CSS / `className` → `StyleSheet.create()` objects (or NativeWind)
+- [ ] Replace `onClick` → `onPress`
+- [ ] Replace `React Router` with `Expo Router` (`app/` folder = routes)
+- [ ] Replace `<Link to>` → `<Link href>` from `expo-router`
+- [ ] Replace `useNavigate()` → `useRouter()` from `expo-router`
+- [ ] Replace `useParams()` → `useLocalSearchParams()` from `expo-router`
+- [ ] Replace `localStorage` → `AsyncStorage` / `expo-secure-store`
+- [ ] Replace `window.*` / `document.*` → Expo SDK equivalents
+- [ ] Wrap screen root in `SafeAreaView`
+- [ ] Replace spinner `div` → `ActivityIndicator`
+- [ ] Wrap list with `FlatList` (not `ScrollView + map`)
+- [ ] Add `EXPO_PUBLIC_API_URL` to `.env`
+- [ ] Test on iOS and Android (real devices or Expo Go)
+
+---
+
+## Full Example
+
+### React Web (Before)
+
+```tsx
+export default function ProductsPage() {
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        fetch('/api/products').then(r => r.json()).then(res => setProducts(res.data));
+    }, []);
+
+    return (
+        <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Products</h1>
+            <div className="space-y-3">
+                {products.map(p => (
+                    <div key={p.id} className="border rounded p-3">
+                        <p className="font-semibold">{p.name}</p>
+                        <p className="text-gray-500">${p.price}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+```
+
+### React Native / Expo (After)
+
+```tsx
+// app/(tabs)/products.tsx
+import { useEffect, useState } from 'react';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+type Product = { id: number; name: string; price: number };
+
+export default function ProductsScreen() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/products`)
+            .then(r => r.json())
+            .then(res => setProducts(res.data))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.center}>
+                <ActivityIndicator size="large" />
+            </SafeAreaView>
+        );
+    }
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Products</Text>
+            <FlatList
+                data={products}
+                keyExtractor={item => item.id.toString()}
+                contentContainerStyle={styles.list}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                renderItem={({ item }) => (
+                    <View style={styles.card}>
+                        <Text style={styles.name}>{item.name}</Text>
+                        <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+                    </View>
+                )}
+            />
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#fff' },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    title: { fontSize: 24, fontWeight: 'bold', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
+    list: { paddingHorizontal: 16 },
+    separator: { height: 12 },
+    card: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12 },
+    name: { fontSize: 16, fontWeight: '600' },
+    price: { color: '#6b7280', marginTop: 4 },
+});
+```
+
+---
+
+## Resources
+
+- [Expo Docs](https://docs.expo.dev)
+- [Expo Router Docs](https://docs.expo.dev/router/introduction/)
+- [React Native Core Components](https://reactnative.dev/docs/components-and-apis)
+- [React Native StyleSheet](https://reactnative.dev/docs/stylesheet)
+- [AsyncStorage](https://docs.expo.dev/versions/latest/sdk/async-storage/)
+- [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/)
+- [NativeWind](https://www.nativewind.dev)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Expo SDK 52, React Native 0.76, Expo Router 4.x, React 19.x

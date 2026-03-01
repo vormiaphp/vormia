@@ -5,17 +5,13 @@ namespace App\Providers\Vrm;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use App\Services\Vrm\TokenService;
+use Vormia\Vormia\Services\TokenService;
 
 class TokenServiceProvider extends ServiceProvider
 {
-
-    // Todo: Register services
     public function register(): void
     {
-        $this->app->singleton(TokenService::class, function ($app) {
-            return new TokenService();
-        });
+        $this->app->singleton(TokenService::class, fn () => new TokenService());
     }
 
     /**

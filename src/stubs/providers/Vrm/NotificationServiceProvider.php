@@ -12,9 +12,7 @@ class NotificationServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton('notification', function ($app) {
-            return new \App\Services\Vrm\NotificationService();
-        });
+        $this->app->singleton('notification', fn () => new \Vormia\Vormia\Services\NotificationService());
     }
 
     /**
@@ -38,7 +36,7 @@ class NotificationServiceProvider extends ServiceProvider
     protected function registerBladeDirectives(): void
     {
         Blade::directive('notifications', function () {
-            return "<?php echo \App\Facades\Vrm\Notification::render(session('notification')); ?>";
+            return "<?php echo \Vormia\Vormia\Services\NotificationService::render(session('notification')); ?>";
         });
     }
 }

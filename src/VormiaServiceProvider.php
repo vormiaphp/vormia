@@ -2,37 +2,36 @@
 
 namespace VormiaPHP\Vormia;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Route;
-use Vormia\Console\Commands\InstallCommand;
-use Vormia\Console\Commands\HelpCommand;
-use Vormia\Console\Commands\UpdateCommand;
-use Vormia\Console\Commands\UninstallCommand;
 use Vormia\Console\Commands\CheckDependenciesCommand;
+use Vormia\Console\Commands\HelpCommand;
+use Vormia\Console\Commands\InstallCommand;
+use Vormia\Console\Commands\UninstallCommand;
+use Vormia\Console\Commands\UpdateCommand;
+use Illuminate\Support\Facades\Blade;
+use Vormia\Vormia\Http\Middleware\ApiAuthenticate;
+use Vormia\Vormia\Services\NotificationService;
+use Vormia\Vormia\Services\TokenService;
 
 class VormiaServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/config/vormia.php', 'vormia');
 
-        // Register facades
         $this->app->bind('vormia', function () {
-            return new \VormiaPHP\Vormia\VormiaVormia();
+            return new VormiaVormia();
         });
+
+        $this->app->singleton(TokenService::class, fn () => new TokenService());
     }
 
-    /**
-     * Bootstrap services.
-     */
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->registerBladeDirectives();
 
-        // Register commands
         if ($this->app->runningInConsole()) {
             $this->commands([
                 InstallCommand::class,
@@ -43,31 +42,50 @@ class VormiaServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Publish config
+        $this->registerMiddleware();
+        $this->registerRoutes();
+        $this->registerPublishing();
+    }
+
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('api-auth', ApiAuthenticate::class);
+        $router->aliasMiddleware('role', \Vormia\Vormia\Http\Middleware\CheckRole::class);
+        $router->aliasMiddleware('permission', \Vormia\Vormia\Http\Middleware\CheckPermission::class);
+        $router->aliasMiddleware('authority', \Vormia\Vormia\Http\Middleware\CheckAuthority::class);
+        $router->aliasMiddleware('module', \Vormia\Vormia\Http\Middleware\CheckModule::class);
+    }
+
+    protected function registerRoutes(): void
+    {
+        $this->app->booted(function () {
+            \Illuminate\Support\Facades\Route::prefix('api')
+                ->middleware('api')
+                ->group(__DIR__ . '/../routes/api.php');
+        });
+    }
+
+    protected function registerBladeDirectives(): void
+    {
+        Blade::directive('notifications', function () {
+            return "<?php echo \Vormia\Vormia\Services\NotificationService::render(session('notification')); ?>";
+        });
+    }
+
+    protected function registerPublishing(): void
+    {
         $this->publishes([
             __DIR__ . '/config/vormia.php' => config_path('vormia.php'),
         ], 'vormia-config');
 
-        // Publish migrations
         $this->publishes([
             __DIR__ . '/database/migrations' => database_path('migrations'),
         ], 'vormia-migrations');
 
-        // Publish all files
-        $this->publishes([
-            __DIR__ . '/app/Facades/Vrm' => app_path('Facades/Vrm'),
-            // __DIR__ . '/app/Helpers/Vrm' => app_path('Helpers/Vrm'),
-            __DIR__ . '/app/Jobs/Vrm' => app_path('Jobs/Vrm'),
-            __DIR__ . '/app/Http/Middleware/Vrm' => app_path('Http/Middleware/Vrm'),
-            __DIR__ . '/app/Models/Vrm' => app_path('Models/Vrm'),
-            __DIR__ . '/app/Providers/Vrm' => app_path('Providers/Vrm'),
-            __DIR__ . '/app/Services/Vrm' => app_path('Services/Vrm'),
-            __DIR__ . '/app/Traits/Vrm' => app_path('Traits/Vrm'),
-        ], 'vormia-files');
-
-        // Publish stubs
         $this->publishes([
             __DIR__ . '/stubs' => resource_path('stubs/vormia'),
         ], 'vormia-stubs');
     }
 }
+

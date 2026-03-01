@@ -45,6 +45,4 @@ workspace.xml
 *.crt
 *.csr
 
-/DefaultLaravel
-/A2Commerce
-/FXZidii
+/references

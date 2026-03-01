@@ -1,0 +1,782 @@
+---
+alwaysApply: true
+---
+
+# Laravel to React (Standalone SPA) Conversion Guide
+
+## Overview
+
+This guide covers migrating a Laravel application (Blade/Livewire/Inertia) into a **decoupled architecture**: Laravel becomes a pure **JSON API backend** (using Sanctum for auth), and React becomes a standalone **Single Page Application** managed independently. Unlike the Inertia approach, there is no server-side HTML rendering for pages — React runs fully client-side.
+
+## Tech Stack
+
+- **Laravel**: 12.x (API only)
+- **React**: 19.x
+- **Vite**: 6.x (standalone React build, separate from Laravel)
+- **React Router**: v7.x (client-side routing)
+- **Axios** or native `fetch` for API calls
+- **Laravel Sanctum**: API token authentication
+- **Tailwind CSS**: 4.x (in React app via PostCSS)
+
+---
+
+## Architecture Overview
+
+```
+BEFORE (Monolith)                  AFTER (Decoupled SPA)
+──────────────────────────         ─────────────────────────────────
+Browser → Laravel Routes           Browser → React SPA (static files / CDN)
+         → Blade/Livewire                   → React Router (client routes)
+         → PHP renders HTML                 → fetch/Axios → Laravel JSON API
+                                            → Laravel validates + returns JSON
+```
+
+### Key Mental Shifts
+
+| Laravel Monolith | Laravel API + React SPA |
+|------------------|------------------------|
+| Routes render HTML pages | Routes return JSON only |
+| Session auth (cookies) | Sanctum token auth (Bearer) |
+| `Redirect::route()` | API returns JSON; React Router navigates |
+| Blade `{{ $var }}` | JSX `{variable}` |
+| Livewire public properties | React `useState` |
+| `@foreach` / `@if` | `.map()` / ternary / `&&` |
+| Laravel validation → redirect back | 422 JSON with `errors` object |
+| Flash messages | API JSON `{ message: '...' }` / toast library |
+| Laravel Mix / Vite (monolith) | Standalone Vite React app |
+
+---
+
+## File Structure
+
+### Laravel API (After)
+
+```
+app/
+├── Http/
+│   ├── Controllers/Api/
+│   │   ├── AuthController.php
+│   │   ├── ProductController.php
+│   │   └── UserController.php
+│   └── Resources/
+│       ├── ProductResource.php
+│       └── UserResource.php
+└── Models/
+routes/
+└── api.php
+config/
+└── cors.php          ← Must allow React dev server origin
+```
+
+### React SPA (New project, separate repo or `frontend/` subfolder)
+
+```
+src/
+├── api/
+│   └── client.ts          ← Axios/fetch wrapper with base URL + auth header
+├── hooks/
+│   ├── useAuth.ts
+│   └── useProducts.ts     ← Data fetching hooks
+├── pages/
+│   ├── HomePage.tsx
+│   ├── LoginPage.tsx
+│   └── products/
+│       ├── ProductsPage.tsx
+│       └── ProductDetailPage.tsx
+├── components/
+│   ├── Navbar.tsx
+│   └── ProductCard.tsx
+├── router.tsx             ← React Router route definitions
+└── main.tsx               ← App entry point
+```
+
+---
+
+## Laravel API Layer
+
+### Routes
+
+**Before (Blade routes):**
+
+```php
+// routes/web.php
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::post('/products', [ProductController::class, 'store']);
+```
+
+**After (API routes):**
+
+```php
+// routes/api.php
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::apiResource('products', ProductController::class);
+});
+```
+
+---
+
+### Controllers → Return JSON
+
+**Before (Blade/Inertia controller):**
+
+```php
+public function index()
+{
+    return Inertia::render('Products/Index', ['products' => Product::all()]);
+}
+```
+
+**After (API controller):**
+
+```php
+use App\Http\Resources\ProductResource;
+
+public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+{
+    return ProductResource::collection(Product::paginate(20));
+}
+
+public function show(Product $product): ProductResource
+{
+    return new ProductResource($product);
+}
+
+public function store(Request $request): ProductResource
+{
+    $data = $request->validate([
+        'name'  => 'required|string|max:255',
+        'price' => 'required|numeric|min:0',
+    ]);
+    return new ProductResource(Product::create($data));
+}
+
+public function update(Request $request, Product $product): ProductResource
+{
+    $product->update($request->validate(['name' => 'string', 'price' => 'numeric']));
+    return new ProductResource($product);
+}
+
+public function destroy(Product $product): \Illuminate\Http\JsonResponse
+{
+    $product->delete();
+    return response()->json(['message' => 'Deleted.']);
+}
+```
+
+---
+
+### API Resources (Shape the JSON)
+
+```php
+// app/Http/Resources/ProductResource.php
+class ProductResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'         => $this->id,
+            'name'       => $this->name,
+            'price'      => $this->price,
+            'created_at' => $this->created_at->toDateTimeString(),
+        ];
+    }
+}
+```
+
+---
+
+### Authentication (Sanctum Token)
+
+```php
+// app/Http/Controllers/Api/AuthController.php
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
+class AuthController extends Controller
+{
+    public function login(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json(['message' => 'Invalid credentials.'], 401);
+        }
+
+        $token = $request->user()->createToken('spa-token')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user'  => new \App\Http\Resources\UserResource($request->user()),
+        ]);
+    }
+
+    public function logout(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out.']);
+    }
+
+    public function user(Request $request): \App\Http\Resources\UserResource
+    {
+        return new \App\Http\Resources\UserResource($request->user());
+    }
+}
+```
+
+---
+
+### CORS Configuration
+
+```php
+// config/cors.php
+return [
+    'paths'         => ['api/*'],
+    'allowed_origins' => [
+        'http://localhost:5173',   // Vite dev server
+        env('FRONTEND_URL', ''),   // production React URL
+    ],
+    'allowed_methods' => ['*'],
+    'allowed_headers' => ['*'],
+    'supports_credentials' => false,
+];
+```
+
+---
+
+## React SPA Layer
+
+### API Client (Base Fetch Wrapper)
+
+```ts
+// src/api/client.ts
+import axios from 'axios';
+
+const client = axios.create({
+    baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    },
+});
+
+// Attach token on every request
+client.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+// Redirect to login on 401
+client.interceptors.response.use(
+    (res) => res,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default client;
+```
+
+---
+
+### Blade Template → React Component
+
+**Before (Blade):**
+
+```blade
+{{-- resources/views/livewire/products/index.blade.php --}}
+<div>
+    @foreach($products as $product)
+        <div wire:key="product-{{ $product['id'] }}">
+            <h3>{{ $product['name'] }}</h3>
+            <p>${{ number_format($product['price'], 2) }}</p>
+            <button wire:click="deleteProduct({{ $product['id'] }})">Delete</button>
+        </div>
+    @endforeach
+</div>
+```
+
+**After (React):**
+
+```tsx
+// src/components/ProductList.tsx
+import { useState, useEffect } from 'react';
+import client from '@/api/client';
+
+type Product = { id: number; name: string; price: number };
+
+export default function ProductList() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        client.get('/products')
+            .then(res => setProducts(res.data.data))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const deleteProduct = async (id: number) => {
+        await client.delete(`/products/${id}`);
+        setProducts(prev => prev.filter(p => p.id !== id));
+    };
+
+    if (loading) return <p>Loading...</p>;
+
+    return (
+        <div>
+            {products.map(product => (
+                <div key={product.id}>
+                    <h3>{product.name}</h3>
+                    <p>${product.price.toFixed(2)}</p>
+                    <button onClick={() => deleteProduct(product.id)}>Delete</button>
+                </div>
+            ))}
+        </div>
+    );
+}
+```
+
+---
+
+## State Management Mapping
+
+| Livewire / Blade | React |
+|-----------------|-------|
+| `public $name = ''` | `const [name, setName] = useState('')` |
+| `public array $items = []` | `const [items, setItems] = useState([])` |
+| `mount()` data load | `useEffect(() => { fetch... }, [])` |
+| `updatedName()` hook | `useEffect(() => { ... }, [name])` |
+| `#[Computed]` property | `useMemo(() => ..., [deps])` |
+| `wire:model="name"` | `value={name} onChange={e => setName(e.target.value)}` |
+| `wire:click="save"` | `onClick={save}` |
+| `wire:submit="submit"` | `onSubmit={handleSubmit}` |
+
+---
+
+## Routing Mapping
+
+### Laravel Web Routes → React Router
+
+**Before (Laravel routes/web.php):**
+
+```php
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/create', [ProductController::class, 'create']);
+```
+
+**After (React Router):**
+
+```tsx
+// src/router.tsx
+import { createBrowserRouter } from 'react-router-dom';
+import AppLayout from '@/components/AppLayout';
+import ProductsPage from '@/pages/products/ProductsPage';
+import ProductDetailPage from '@/pages/products/ProductDetailPage';
+import LoginPage from '@/pages/LoginPage';
+
+export const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <AppLayout />,
+        children: [
+            { path: 'products', element: <ProductsPage /> },
+            { path: 'products/:id', element: <ProductDetailPage /> },
+        ],
+    },
+    { path: '/login', element: <LoginPage /> },
+]);
+```
+
+```tsx
+// src/main.tsx
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
+
+createRoot(document.getElementById('root')!).render(
+    <RouterProvider router={router} />
+);
+```
+
+### Route Params
+
+```tsx
+// src/pages/products/ProductDetailPage.tsx
+import { useParams } from 'react-router-dom';
+
+export default function ProductDetailPage() {
+    const { id } = useParams<{ id: string }>();
+    const [product, setProduct] = useState(null);
+
+    useEffect(() => {
+        client.get(`/products/${id}`).then(res => setProduct(res.data.data));
+    }, [id]);
+
+    return <h1>{product?.name}</h1>;
+}
+```
+
+### Navigation
+
+```tsx
+import { Link, useNavigate } from 'react-router-dom';
+
+// Link
+<Link to="/products">Products</Link>
+<Link to={`/products/${id}`}>View</Link>
+
+// Programmatic
+const navigate = useNavigate();
+navigate('/products');
+navigate(-1); // go back
+```
+
+---
+
+## Form Handling
+
+### Livewire Form → React Controlled Form
+
+**Before (Livewire):**
+
+```blade
+<form wire:submit="createProduct">
+    <input wire:model="name" type="text" />
+    @error('name') <p>{{ $message }}</p> @enderror
+    <button type="submit">Create</button>
+</form>
+```
+
+**After (React):**
+
+```tsx
+import { useState } from 'react';
+import client from '@/api/client';
+import { useNavigate } from 'react-router-dom';
+
+export default function CreateProductForm() {
+    const [name, setName] = useState('');
+    const [price, setPrice] = useState('');
+    const [errors, setErrors] = useState<Record<string, string[]>>({});
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setErrors({});
+
+        try {
+            await client.post('/products', { name, price: parseFloat(price) });
+            navigate('/products');
+        } catch (err: any) {
+            // Laravel 422 validation errors
+            if (err.response?.status === 422) {
+                setErrors(err.response.data.errors ?? {});
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Product name"
+                    className="border rounded px-3 py-2 w-full"
+                />
+                {errors.name && <p className="text-red-500 text-sm">{errors.name[0]}</p>}
+            </div>
+            <div className="mt-3">
+                <input
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
+                    placeholder="Price"
+                    type="number"
+                    step="0.01"
+                    className="border rounded px-3 py-2 w-full"
+                />
+                {errors.price && <p className="text-red-500 text-sm">{errors.price[0]}</p>}
+            </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+            >
+                {loading ? 'Saving...' : 'Create Product'}
+            </button>
+        </form>
+    );
+}
+```
+
+---
+
+## Authentication Flow
+
+```tsx
+// src/hooks/useAuth.ts
+import { useState } from 'react';
+import client from '@/api/client';
+import { useNavigate } from 'react-router-dom';
+
+export function useLogin() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const login = async (email: string, password: string) => {
+        setLoading(true);
+        setError('');
+        try {
+            const res = await client.post('/auth/login', { email, password });
+            localStorage.setItem('token', res.data.token);
+            navigate('/dashboard');
+        } catch {
+            setError('Invalid email or password.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { login, loading, error };
+}
+
+export function logout() {
+    client.post('/auth/logout').finally(() => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+}
+```
+
+### Protected Route Wrapper
+
+```tsx
+// src/components/ProtectedRoute.tsx
+import { Navigate } from 'react-router-dom';
+
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+    const token = localStorage.getItem('token');
+    return token ? <>{children}</> : <Navigate to="/login" replace />;
+}
+```
+
+```tsx
+// In router.tsx
+{ path: 'dashboard', element: <ProtectedRoute><DashboardPage /></ProtectedRoute> }
+```
+
+---
+
+## Common Blade → JSX Patterns
+
+### Conditional Rendering
+
+**Blade:**
+
+```blade
+@if($isLoggedIn)
+    <p>Welcome, {{ $user->name }}</p>
+@else
+    <a href="/login">Login</a>
+@endif
+```
+
+**React:**
+
+```tsx
+{isLoggedIn ? <p>Welcome, {user.name}</p> : <a href="/login">Login</a>}
+// or
+{isLoggedIn && <p>Welcome, {user.name}</p>}
+```
+
+### Loops
+
+**Blade:**
+
+```blade
+@foreach($products as $product)
+    <div>{{ $product['name'] }}</div>
+@endforeach
+```
+
+**React:**
+
+```tsx
+{products.map(product => (
+    <div key={product.id}>{product.name}</div>
+))}
+```
+
+### Slots / Layout
+
+**Blade layout:**
+
+```blade
+<x-layouts.app>
+    <x-slot:header><h1>Products</h1></x-slot:header>
+    <p>Content</p>
+</x-layouts.app>
+```
+
+**React layout (Outlet):**
+
+```tsx
+// components/AppLayout.tsx
+import { Outlet } from 'react-router-dom';
+
+export default function AppLayout() {
+    return (
+        <div>
+            <nav>Navbar</nav>
+            <main><Outlet /></main>
+        </div>
+    );
+}
+```
+
+---
+
+## Best Practices
+
+1. **Always use `JsonResource`** in Laravel — never return raw model arrays to the frontend
+2. **Centralize API calls** in `src/api/` or `src/hooks/` — never call `client.get()` inline in JSX
+3. **Handle 422 errors explicitly** — destructure `err.response.data.errors` and map to fields
+4. **Use Axios interceptors** for auth token injection and 401 redirect — avoids repetition
+5. **Configure CORS** in Laravel for your React dev server origin (`localhost:5173`)
+6. **Use environment variables**: `VITE_API_URL` in React, `FRONTEND_URL` in Laravel `.env`
+7. **`key` prop on all lists** — must be unique and stable (use `id`, not index)
+8. **TypeScript interfaces** that match your Laravel `ApiResource` shape — keeps types in sync
+9. **Use React Router `<Link>`** instead of `<a href>` for SPA navigation (no full reload)
+
+---
+
+## Migration Checklist
+
+### Laravel API Setup
+- [ ] Convert all Blade/Inertia controllers to return `JsonResource`
+- [ ] Add `apiResource` routes to `routes/api.php`
+- [ ] Remove `routes/web.php` page routes (or replace with a single catch-all for the SPA)
+- [ ] Install and configure Laravel Sanctum
+- [ ] Add `HasApiTokens` trait to `User` model
+- [ ] Create API resources for all models exposed to the frontend
+- [ ] Configure `config/cors.php` with the React dev server origin
+- [ ] Test all API endpoints with Postman/Insomnia
+
+### React SPA Setup
+- [ ] Create React app: `npm create vite@latest my-app -- --template react-ts`
+- [ ] Install React Router: `npm install react-router-dom`
+- [ ] Install Axios: `npm install axios`
+- [ ] Create `src/api/client.ts` with base URL, auth header, and 401 interceptor
+- [ ] Add `VITE_API_URL` to `.env`
+- [ ] Set up `src/router.tsx` with all page routes
+- [ ] Map each Laravel web route to a React Router route
+- [ ] Replace each Blade page with a React page component
+- [ ] Replace Livewire `mount()` data loads with `useEffect + client.get()`
+- [ ] Replace Livewire form actions with `client.post/put/delete()`
+- [ ] Handle 422 validation errors in each form
+- [ ] Add auth login/logout flow with token storage
+- [ ] Add `ProtectedRoute` wrapper for authenticated pages
+- [ ] Test CORS — no errors in browser network tab
+
+---
+
+## Full Example
+
+### Laravel (API)
+
+```php
+// routes/api.php
+Route::middleware('auth:sanctum')->apiResource('products', ProductController::class);
+
+// ProductController
+public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+{
+    return ProductResource::collection(Product::latest()->paginate(15));
+}
+```
+
+### React (SPA)
+
+```tsx
+// src/pages/products/ProductsPage.tsx
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import client from '@/api/client';
+
+type Product = { id: number; name: string; price: number };
+
+export default function ProductsPage() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        client.get('/products')
+            .then(res => setProducts(res.data.data))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <p className="p-4">Loading...</p>;
+
+    return (
+        <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Products</h1>
+                <Link
+                    to="/products/create"
+                    className="bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                    Add Product
+                </Link>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+                {products.map(product => (
+                    <div key={product.id} className="border rounded p-4">
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <p className="text-gray-600">${product.price.toFixed(2)}</p>
+                        <Link
+                            to={`/products/${product.id}`}
+                            className="text-blue-600 text-sm mt-2 inline-block"
+                        >
+                            View
+                        </Link>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+```
+
+---
+
+## Resources
+
+- [React Docs](https://react.dev)
+- [React Router v7](https://reactrouter.com/home)
+- [Axios](https://axios-http.com/docs/intro)
+- [Laravel Sanctum](https://laravel.com/docs/sanctum)
+- [Laravel API Resources](https://laravel.com/docs/eloquent-resources)
+- [Vite](https://vite.dev)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Laravel 12, React 19.x, React Router 7.x, Axios 1.x, Tailwind CSS 4.x, Vite 6.x

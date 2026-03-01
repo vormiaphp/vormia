@@ -88,48 +88,28 @@ class VormiaVormia
     }
 
     /**
-     * Copy all stubs to their respective directories.
+     * Copy stubs to app. Models, traits, services, middleware now live in package.
      */
     protected function copyStubs(bool $apiOnly = false): void
     {
         $stubs = [
-            // Migrations handled separately below
-            'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            // 'helpers' => $this->appPath('Helpers'),
             'facades' => $this->appPath('Facades'),
-            'config' => $this->configPath(),
             'providers' => $this->appPath('Providers'),
-            'traits' => $this->appPath('Traits'),
             'services' => $this->appPath('Services'),
-            'middleware' => $this->appPath('Http/Middleware'),
         ];
 
-        // Copy all non-migration stubs
         foreach ($stubs as $source => $destination) {
             $sourcePath = __DIR__ . '/stubs/' . $source;
             if ($this->filesystem->isDirectory($sourcePath)) {
                 foreach ($this->filesystem->allFiles($sourcePath) as $file) {
                     $relativePath = ltrim(str_replace($sourcePath, '', $file->getPathname()), '/\\');
                     $destFile = rtrim($destination, '/\\') . '/' . $relativePath;
-                    if ($this->filesystem->exists($destFile)) {
-                        if (app()->runningInConsole() && app()->bound('command')) {
-                            $command = app('command');
-                            if (method_exists($command, 'confirm')) {
-                                if (!$command->confirm("File {$destFile} already exists. Override?", false)) {
-                                    $command->line("  Skipped: {$destFile}");
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                    $this->filesystem->copy($file->getPathname(), $destFile);
+                    $this->copyFileWithConfirm($file->getPathname(), $destFile);
                 }
             }
         }
 
-        // Always copy notifications
         $notificationsSource = __DIR__ . '/stubs/notifications';
         $notificationsDest = $this->appPath('Notifications');
         if ($this->filesystem->isDirectory($notificationsSource)) {
@@ -137,22 +117,11 @@ class VormiaVormia
             foreach ($this->filesystem->allFiles($notificationsSource) as $file) {
                 $relativePath = ltrim(str_replace($notificationsSource, '', $file->getPathname()), '/\\');
                 $destFile = rtrim($notificationsDest, '/\\') . '/' . $relativePath;
-                if ($this->filesystem->exists($destFile)) {
-                    if (app()->runningInConsole() && app()->bound('command')) {
-                        $command = app('command');
-                        if (method_exists($command, 'confirm')) {
-                            if (!$command->confirm("Notification {$destFile} already exists. Override?", false)) {
-                                $command->line("  Skipped: {$destFile}");
-                                continue;
-                            }
-                        }
-                    }
-                }
-                $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                $this->filesystem->copy($file->getPathname(), $destFile);
+                $this->copyFileWithConfirm($file->getPathname(), $destFile);
             }
         }
-        // Always copy jobs/Vrm
+
+        // Copy jobs/Vrm
         $jobsVrmSource = __DIR__ . '/stubs/jobs/Vrm';
         $jobsVrmDest = $this->appPath('Jobs/Vrm');
         if ($this->filesystem->isDirectory($jobsVrmSource)) {
@@ -160,22 +129,11 @@ class VormiaVormia
             foreach ($this->filesystem->allFiles($jobsVrmSource) as $file) {
                 $relativePath = ltrim(str_replace($jobsVrmSource, '', $file->getPathname()), '/\\');
                 $destFile = rtrim($jobsVrmDest, '/\\') . '/' . $relativePath;
-                if ($this->filesystem->exists($destFile)) {
-                    if (app()->runningInConsole() && app()->bound('command')) {
-                        $command = app('command');
-                        if (method_exists($command, 'confirm')) {
-                            if (!$command->confirm("Job {$destFile} already exists. Override?", false)) {
-                                $command->line("  Skipped: {$destFile}");
-                                continue;
-                            }
-                        }
-                    }
-                }
-                $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                $this->filesystem->copy($file->getPathname(), $destFile);
+                $this->copyFileWithConfirm($file->getPathname(), $destFile);
             }
         }
-        // API-only jobs/V1
+
+        // API jobs/V1
         if ($apiOnly) {
             $jobsV1Source = __DIR__ . '/stubs/jobs/V1';
             $jobsV1Dest = $this->appPath('Jobs/V1');
@@ -184,72 +142,10 @@ class VormiaVormia
                 foreach ($this->filesystem->allFiles($jobsV1Source) as $file) {
                     $relativePath = ltrim(str_replace($jobsV1Source, '', $file->getPathname()), '/\\');
                     $destFile = rtrim($jobsV1Dest, '/\\') . '/' . $relativePath;
-                    if ($this->filesystem->exists($destFile)) {
-                        if (app()->runningInConsole() && app()->bound('command')) {
-                            $command = app('command');
-                            if (method_exists($command, 'confirm')) {
-                                if (!$command->confirm("Job {$destFile} already exists. Override?", false)) {
-                                    $command->line("  Skipped: {$destFile}");
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                    $this->filesystem->copy($file->getPathname(), $destFile);
+                    $this->copyFileWithConfirm($file->getPathname(), $destFile);
                 }
             }
-        }
 
-        // API-only stubs
-        if ($apiOnly) {
-            // Controllers
-            $apiControllersSource = __DIR__ . '/stubs/controllers/Api';
-            $apiControllersDest = $this->appPath('Http/Controllers/Api');
-            if ($this->filesystem->isDirectory($apiControllersSource)) {
-                $this->filesystem->ensureDirectoryExists($apiControllersDest);
-                foreach ($this->filesystem->allFiles($apiControllersSource) as $file) {
-                    $relativePath = ltrim(str_replace($apiControllersSource, '', $file->getPathname()), '/\\');
-                    $destFile = rtrim($apiControllersDest, '/\\') . '/' . $relativePath;
-                    if ($this->filesystem->exists($destFile)) {
-                        if (app()->runningInConsole() && app()->bound('command')) {
-                            $command = app('command');
-                            if (method_exists($command, 'confirm')) {
-                                if (!$command->confirm("API Controller {$destFile} already exists. Override?", false)) {
-                                    $command->line("  Skipped: {$destFile}");
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                    $this->filesystem->copy($file->getPathname(), $destFile);
-                }
-            }
-            // Routes
-            $apiRoutesSource = __DIR__ . '/stubs/routes/api.php';
-            $apiRoutesDest = base_path('routes/api.php');
-            if (file_exists($apiRoutesSource)) {
-                if ($this->filesystem->exists($apiRoutesDest)) {
-                    if (app()->runningInConsole() && app()->bound('command')) {
-                        $command = app('command');
-                        if (method_exists($command, 'confirm')) {
-                            if (!$command->confirm("routes/api.php already exists. Override?", false)) {
-                                $command->line("  Skipped: {$apiRoutesDest}");
-                            } else {
-                                $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
-                            }
-                        } else {
-                            $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
-                        }
-                    } else {
-                        $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
-                    }
-                } else {
-                    $this->filesystem->copy($apiRoutesSource, $apiRoutesDest);
-                }
-            }
-            // Postman collection
             $postmanSource = __DIR__ . '/stubs/public/Vormia.postman_collection.json';
             $postmanDest = $this->publicPath('Vormia.postman_collection.json');
             if (file_exists($postmanSource)) {
@@ -257,50 +153,30 @@ class VormiaVormia
             }
         }
 
-        // Copy CSS and JS files from pkg stubs to resources
         $this->copyResourceFiles();
 
-        // Copy migration files directly into database/migrations
-        $migrationSource = __DIR__ . '/stubs/migrations';
-        $migrationDest = $this->databasePath('migrations');
-        if ($this->filesystem->isDirectory($migrationSource)) {
-            foreach ($this->filesystem->files($migrationSource) as $file) {
-                $destFile = $migrationDest . '/' . $file->getFilename();
-                if ($this->filesystem->exists($destFile)) {
-                    if (app()->runningInConsole() && app()->bound('command')) {
-                        $command = app('command');
-                        if (method_exists($command, 'confirm')) {
-                            if (!$command->confirm("Migration {$destFile} already exists. Override?", false)) {
-                                $command->line("  Skipped: {$destFile}");
-                                continue;
-                            }
-                        }
-                    }
-                }
-                $this->filesystem->copy($file->getPathname(), $destFile);
-            }
-        }
-
-        // Copy seeder files directly into database/seeders
+        // Copy seeder files
         $seederSource = __DIR__ . '/stubs/seeders';
         $seederDest = $this->databasePath('seeders');
         if ($this->filesystem->isDirectory($seederSource)) {
             foreach ($this->filesystem->files($seederSource) as $file) {
                 $destFile = $seederDest . '/' . $file->getFilename();
-                if ($this->filesystem->exists($destFile)) {
-                    if (app()->runningInConsole() && app()->bound('command')) {
-                        $command = app('command');
-                        if (method_exists($command, 'confirm')) {
-                            if (!$command->confirm("Seeder {$destFile} already exists. Override?", false)) {
-                                $command->line("  Skipped: {$destFile}");
-                                continue;
-                            }
-                        }
-                    }
-                }
-                $this->filesystem->copy($file->getPathname(), $destFile);
+                $this->copyFileWithConfirm($file->getPathname(), $destFile);
             }
         }
+    }
+
+    protected function copyFileWithConfirm(string $source, string $dest): void
+    {
+        if ($this->filesystem->exists($dest) && app()->runningInConsole() && app()->bound('command')) {
+            $command = app('command');
+            if (method_exists($command, 'confirm') && ! $command->confirm("File {$dest} already exists. Override?", false)) {
+                $command->line("  Skipped: {$dest}");
+                return;
+            }
+        }
+        $this->filesystem->ensureDirectoryExists(dirname($dest));
+        $this->filesystem->copy($source, $dest);
     }
 
     /**
@@ -325,19 +201,12 @@ class VormiaVormia
     protected function updateStubs(): void
     {
         $stubs = [
-            // Migrations handled separately below
-            'models' => $this->appPath('Models'),
             'jobs' => $this->appPath('Jobs'),
-            // 'helpers' => $this->appPath('Helpers'),
             'facades' => $this->appPath('Facades'),
-            'config' => $this->configPath(),
             'providers' => $this->appPath('Providers'),
-            'traits' => $this->appPath('Traits'),
             'services' => $this->appPath('Services'),
-            'middleware' => $this->appPath('Http/Middleware'),
         ];
 
-        // Update all non-migration stubs
         foreach ($stubs as $source => $destination) {
             $sourcePath = __DIR__ . "/stubs/{$source}";
             if ($this->filesystem->isDirectory($sourcePath)) {
@@ -345,16 +214,7 @@ class VormiaVormia
             }
         }
 
-        // Update migration files directly into database/migrations
-        $migrationSource = __DIR__ . '/stubs/migrations';
-        $migrationDest = $this->databasePath('migrations');
-        if ($this->filesystem->isDirectory($migrationSource)) {
-            foreach ($this->filesystem->files($migrationSource) as $file) {
-                $this->filesystem->copy($file->getPathname(), $migrationDest . '/' . $file->getFilename());
-            }
-        }
-
-        // Update seeder files directly into database/seeders
+        // Update seeder files
         $seederSource = __DIR__ . '/stubs/seeders';
         $seederDest = $this->databasePath('seeders');
         if ($this->filesystem->isDirectory($seederSource)) {
@@ -485,25 +345,13 @@ class VormiaVormia
     protected function removeInstalledFiles(): void
     {
         $directoriesToRemove = [
-            // Helpers
-            // $this->appPath('Helpers/Vrm'),
-            // Facades
             $this->appPath('Facades/Vrm'),
-            // Jobs
             $this->appPath('Jobs/Vrm'),
-            // Middleware
-            $this->appPath('Http/Middleware/Vrm'),
-            // Models
-            $this->appPath('Models/Vrm'),
-            // Providers
+            $this->appPath('Jobs/V1'),
             $this->appPath('Providers/Vrm'),
-            // Services
             $this->appPath('Services/Vrm'),
-            // Traits
-            $this->appPath('Traits/Vrm'),
-            // Config
+            $this->appPath('Notifications'),
             $this->configPath('vormia.php'),
-            // Public assets (if any were ever published)
             $this->publicPath('vendor/vormia'),
         ];
 

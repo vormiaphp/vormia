@@ -1,0 +1,628 @@
+---
+alwaysApply: true
+---
+
+# React to Inertia.js with Vue 3 Conversion Guide
+
+## Overview
+
+This guide covers converting a React SPA to a **Laravel + Inertia.js + Vue 3** stack. Vue 3 uses Single File Components (SFCs) with the Composition API (preferred) and `<script setup>` syntax. The Laravel side is identical to the React adapter — only the frontend view layer changes.
+
+## Tech Stack
+
+- **Laravel**: 12.x
+- **Inertia.js**: 2.x (`inertiajs/inertia-laravel`)
+- **Inertia Vue adapter**: `@inertiajs/vue3` 2.x
+- **Vue**: 3.x (Composition API + `<script setup>`)
+- **Tailwind CSS**: 4.x
+- **Vite**: 6.x
+
+---
+
+## File Structure
+
+### React SPA (Before)
+
+```
+src/
+├── components/
+│   └── ProductCard.jsx
+├── pages/
+│   ├── Home.jsx
+│   └── Products/
+│       ├── Index.jsx
+│       └── Show.jsx
+└── main.jsx
+```
+
+### Laravel + Inertia + Vue (After)
+
+```
+resources/
+└── js/
+    ├── Pages/                  ← Inertia page components (.vue)
+    │   ├── Home.vue
+    │   └── Products/
+    │       ├── Index.vue
+    │       └── Show.vue
+    ├── Components/             ← Reusable Vue components
+    │   └── ProductCard.vue
+    ├── Layouts/
+    │   └── AppLayout.vue
+    └── app.js                  ← Inertia + Vue bootstrap
+```
+
+---
+
+## JSX to Vue SFC Conversion
+
+### 1. React Function Component → Vue SFC with `<script setup>`
+
+**React:**
+
+```jsx
+function ProductCard({ product, onAddToCart }) {
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+        <div>
+            <h3>{product.name}</h3>
+            <input type="number" value={quantity} onChange={e => setQuantity(+e.target.value)} />
+            <button onClick={() => onAddToCart(product.id, quantity)}>Add</button>
+        </div>
+    );
+}
+```
+
+**Vue SFC (`<script setup>`):**
+
+```vue
+<!-- resources/js/Components/ProductCard.vue -->
+<script setup>
+import { ref } from 'vue';
+
+// Props — replaces React function arguments
+const props = defineProps({
+    product: Object,
+});
+
+// Emits — replaces React callback props (onAddToCart)
+const emit = defineEmits(['add-to-cart']);
+
+// ref() replaces useState()
+const quantity = ref(1);
+
+const handleAdd = () => {
+    emit('add-to-cart', props.product.id, quantity.value);
+};
+</script>
+
+<template>
+    <div>
+        <h3>{{ product.name }}</h3>
+        <!-- v-model replaces controlled input + onChange -->
+        <input type="number" v-model.number="quantity" />
+        <button @click="handleAdd">Add</button>
+    </div>
+</template>
+```
+
+---
+
+### 2. Inertia Page Component (Receives Laravel Props)
+
+**React:**
+
+```jsx
+export default function ProductsIndex({ products }) {
+    return (
+        <div>
+            {products.map(p => <ProductCard key={p.id} product={p} />)}
+        </div>
+    );
+}
+```
+
+**Vue:**
+
+```vue
+<!-- resources/js/Pages/Products/Index.vue -->
+<script setup>
+import ProductCard from '@/Components/ProductCard.vue';
+
+// defineProps replaces function args — keys match controller's array keys
+defineProps({
+    products: Array,
+});
+</script>
+
+<template>
+    <div>
+        <ProductCard
+            v-for="product in products"
+            :key="product.id"
+            :product="product"
+        />
+    </div>
+</template>
+```
+
+Laravel controller (identical to React version):
+
+```php
+public function index(): \Inertia\Response
+{
+    return Inertia::render('Products/Index', [
+        'products' => Product::all(),
+    ]);
+}
+```
+
+---
+
+## State Management Mapping
+
+| React | Vue 3 (`<script setup>`) |
+|-------|--------------------------|
+| `useState(value)` | `ref(value)` (access via `.value` in JS, direct in template) |
+| `useState([])` | `ref([])` or `reactive([])` |
+| `useState({})` | `reactive({})` (no `.value` needed) |
+| `useMemo(fn, [deps])` | `computed(() => ...)` |
+| `useEffect(fn, [])` | `onMounted(() => ...)` |
+| `useEffect(fn, [dep])` | `watch(dep, fn)` |
+| `useEffect(fn, [a, b])` | `watchEffect(() => ...)` or `watch([a, b], fn)` |
+| `useCallback(fn, [])` | Plain function (no memoization needed by default) |
+| `useRef(null)` | `ref(null)` (template refs work the same way) |
+
+### ref vs reactive
+
+```js
+// ref — for primitives and single values
+const count = ref(0);
+count.value++; // access via .value in <script>
+// In template: {{ count }} (no .value)
+
+// reactive — for objects/arrays (avoid for primitives)
+const form = reactive({ name: '', email: '' });
+form.name = 'John'; // no .value needed
+```
+
+---
+
+## Event Handling
+
+| React JSX | Vue Template |
+|-----------|-------------|
+| `onClick={fn}` | `@click="fn"` |
+| `onClick={() => fn(id)}` | `@click="fn(id)"` |
+| `onClick={e => e.stopPropagation()}` | `@click.stop="fn"` |
+| `onChange={e => setVal(e.target.value)}` | `v-model="val"` |
+| `onSubmit={handleSubmit}` | `@submit.prevent="handleSubmit"` |
+| `onKeyDown={e => ...}` | `@keydown="fn"` |
+
+### Controlled vs v-model
+
+**React:**
+
+```jsx
+<input value={name} onChange={e => setName(e.target.value)} />
+```
+
+**Vue:**
+
+```vue
+<input v-model="name" />
+<!-- v-model is shorthand for :value="name" @input="name = $event.target.value" -->
+```
+
+---
+
+## Data Fetching
+
+### Page Data — From Laravel Controller
+
+```vue
+<script setup>
+// Data comes from Laravel via Inertia — no fetch needed
+defineProps({ products: Array });
+</script>
+```
+
+### Mutations — Inertia useForm
+
+**React:**
+
+```jsx
+const { data, setData, post, processing, errors } = useForm({ name: '' });
+```
+
+**Vue:**
+
+```vue
+<script setup>
+import { useForm } from '@inertiajs/vue3';
+
+const form = useForm({ name: '' });
+
+const submit = () => {
+    form.post(route('products.store'));
+};
+</script>
+
+<template>
+    <form @submit.prevent="submit">
+        <input v-model="form.name" type="text" />
+        <p v-if="form.errors.name">{{ form.errors.name }}</p>
+        <button :disabled="form.processing">Save</button>
+    </form>
+</template>
+```
+
+---
+
+## Routing & Navigation
+
+### React Router Link → Inertia Link
+
+**React:**
+
+```jsx
+import { Link } from 'react-router-dom';
+<Link to="/products">Products</Link>
+```
+
+**Vue:**
+
+```vue
+<script setup>
+import { Link } from '@inertiajs/vue3';
+</script>
+
+<template>
+    <Link href="/products">Products</Link>
+    <!-- With named route (Ziggy) -->
+    <Link :href="route('products.index')">Products</Link>
+</template>
+```
+
+### Programmatic Navigation
+
+**React:**
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+const navigate = useNavigate();
+navigate('/products');
+```
+
+**Vue:**
+
+```vue
+<script setup>
+import { router } from '@inertiajs/vue3';
+
+const goToProducts = () => {
+    router.visit(route('products.index'));
+};
+</script>
+```
+
+---
+
+## Layouts
+
+### Persistent Layout in Vue
+
+```vue
+<!-- resources/js/Layouts/AppLayout.vue -->
+<template>
+    <div>
+        <nav><!-- Navbar --></nav>
+        <main>
+            <!-- slot = children in React terms -->
+            <slot />
+        </main>
+    </div>
+</template>
+```
+
+```vue
+<!-- resources/js/Pages/Home.vue -->
+<script setup>
+import AppLayout from '@/Layouts/AppLayout.vue';
+
+// Attach persistent layout (Navbar won't remount on navigation)
+defineOptions({
+    layout: AppLayout,
+});
+</script>
+
+<template>
+    <div>Home content</div>
+</template>
+```
+
+---
+
+## Shared Data (Global Props)
+
+```php
+// app/Http/Middleware/HandleInertiaRequests.php
+public function share(Request $request): array
+{
+    return [
+        ...parent::share($request),
+        'auth' => ['user' => $request->user()],
+        'flash' => ['success' => session('success')],
+    ];
+}
+```
+
+```vue
+<script setup>
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+// page.props.auth.user
+// page.props.flash.success
+</script>
+
+<template>
+    <div v-if="page.props.flash.success" class="alert">
+        {{ page.props.flash.success }}
+    </div>
+</template>
+```
+
+---
+
+## Common Patterns
+
+### Conditional Rendering
+
+**React:**
+
+```jsx
+{isLoading ? <Spinner /> : <Content />}
+{items.length > 0 && <List />}
+```
+
+**Vue:**
+
+```vue
+<Spinner v-if="isLoading" />
+<Content v-else />
+
+<List v-if="items.length > 0" :items="items" />
+```
+
+### Loops
+
+**React:**
+
+```jsx
+{products.map(p => <ProductCard key={p.id} product={p} />)}
+```
+
+**Vue:**
+
+```vue
+<ProductCard
+    v-for="product in products"
+    :key="product.id"
+    :product="product"
+/>
+```
+
+### Props Passing (`:` prefix = dynamic binding)
+
+**React:**
+
+```jsx
+<ProductCard product={product} isHighlighted={true} count={5} />
+```
+
+**Vue:**
+
+```vue
+<!-- Static string -->
+<ProductCard title="Hello" />
+
+<!-- Dynamic (: prefix binds a JS expression) -->
+<ProductCard :product="product" :is-highlighted="true" :count="5" />
+```
+
+### Slots (replaces React children/slots)
+
+**React:**
+
+```jsx
+<Card>
+    <p>Content</p>
+</Card>
+```
+
+**Vue:**
+
+```vue
+<!-- In Card.vue -->
+<template>
+    <div class="card">
+        <slot /> <!-- default slot = children -->
+    </div>
+</template>
+
+<!-- Usage -->
+<Card>
+    <p>Content</p>
+</Card>
+```
+
+Named slots:
+
+```vue
+<!-- Layout.vue -->
+<template>
+    <div>
+        <header><slot name="header" /></header>
+        <main><slot /></main>
+    </div>
+</template>
+
+<!-- Page.vue -->
+<template>
+    <Layout>
+        <template #header>
+            <h1>Page Title</h1>
+        </template>
+        <p>Body content</p>
+    </Layout>
+</template>
+```
+
+---
+
+## Best Practices
+
+1. **Use `<script setup>`** — more concise than Options API, closer to React Hooks mentally
+2. **`ref` for primitives, `reactive` for objects** — avoid `reactive` with primitives (it won't be reactive)
+3. **Never mutate props directly** — use `defineEmits` and emit events up to the parent
+4. **`v-model` over manual `:value` + `@input`** for all form inputs
+5. **`@submit.prevent`** on forms — replaces `e.preventDefault()` in React
+6. **`defineOptions({ layout })` pattern** for persistent Inertia layouts
+7. **Use Ziggy** for `route()` helper available in Vue templates
+8. **`:key` on `v-for`** — required, same as React's `key` prop
+
+---
+
+## Migration Checklist
+
+- [ ] Install Vue 3: `npm install vue@latest`
+- [ ] Install Inertia Vue adapter: `npm install @inertiajs/vue3`
+- [ ] Replace `createRoot` in `app.js` with Inertia Vue bootstrap (`createApp`)
+- [ ] Rename page files from `.jsx` to `.vue`
+- [ ] Convert JSX templates to Vue `<template>` blocks
+- [ ] Replace `useState` with `ref()` / `reactive()`
+- [ ] Replace `useMemo` with `computed()`
+- [ ] Replace `useEffect(fn, [])` with `onMounted(fn)`
+- [ ] Replace `useEffect(fn, [dep])` with `watch(dep, fn)`
+- [ ] Replace `onClick={fn}` with `@click="fn"`
+- [ ] Replace controlled inputs with `v-model`
+- [ ] Replace `onSubmit` + `e.preventDefault()` with `@submit.prevent`
+- [ ] Replace `props.X` with `defineProps` declarations
+- [ ] Replace callback props with `defineEmits` + `emit()`
+- [ ] Replace `{condition && <X />}` with `<X v-if="condition" />`
+- [ ] Replace `.map()` with `v-for` + `:key`
+- [ ] Replace `children` with `<slot />`
+- [ ] Add persistent layout via `defineOptions({ layout })`
+- [ ] Add shared data in `HandleInertiaRequests`
+- [ ] Test flash messages and auth user from `usePage()`
+- [ ] Verify Ziggy route() helper works in templates
+
+---
+
+## Full Example
+
+### React Component (Before)
+
+```jsx
+function ProductShow({ productId }) {
+    const [product, setProduct] = useState(null);
+
+    useEffect(() => {
+        fetch(`/api/products/${productId}`).then(r => r.json()).then(setProduct);
+    }, [productId]);
+
+    const [comment, setComment] = useState('');
+
+    const submitComment = async () => {
+        await fetch(`/api/products/${productId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ body: comment }),
+        });
+    };
+
+    if (!product) return null;
+
+    return (
+        <div>
+            <h1>{product.name}</h1>
+            <textarea value={comment} onChange={e => setComment(e.target.value)} />
+            <button onClick={submitComment}>Comment</button>
+        </div>
+    );
+}
+```
+
+### Vue + Inertia (After)
+
+```php
+// app/Http/Controllers/ProductController.php
+public function show(Product $product): \Inertia\Response
+{
+    return Inertia::render('Products/Show', ['product' => $product]);
+}
+
+public function storeComment(Request $request, Product $product): \Illuminate\Http\RedirectResponse
+{
+    $product->comments()->create($request->validate(['body' => 'required|string']));
+    return back()->with('success', 'Comment added.');
+}
+```
+
+```vue
+<!-- resources/js/Pages/Products/Show.vue -->
+<script setup>
+import { useForm } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+
+defineOptions({ layout: AppLayout });
+
+defineProps({ product: Object });
+
+const form = useForm({ body: '' });
+
+const submit = () => {
+    form.post(route('products.comments.store', product.id), {
+        onSuccess: () => form.reset(),
+    });
+};
+</script>
+
+<template>
+    <div>
+        <h1 class="text-2xl font-bold">{{ product.name }}</h1>
+
+        <form @submit.prevent="submit" class="mt-4">
+            <textarea
+                v-model="form.body"
+                class="border rounded p-2 w-full"
+                rows="3"
+            />
+            <p v-if="form.errors.body" class="text-red-500 text-sm">{{ form.errors.body }}</p>
+            <button
+                type="submit"
+                :disabled="form.processing"
+                class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+            >
+                Comment
+            </button>
+        </form>
+    </div>
+</template>
+```
+
+---
+
+## Resources
+
+- [Inertia.js with Vue](https://inertiajs.com/client-side-setup)
+- [Vue 3 Composition API](https://vuejs.org/guide/extras/composition-api-faq.html)
+- [Vue 3 `<script setup>`](https://vuejs.org/api/sfc-script-setup.html)
+- [Vue 3 Reactivity (ref/reactive/computed)](https://vuejs.org/guide/essentials/reactivity-fundamentals.html)
+- [Ziggy](https://github.com/tighten/ziggy)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/vue3 2.x, Vue 3.x, Tailwind CSS 4.x

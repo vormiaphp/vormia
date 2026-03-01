@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Vrm\Role;
+use Vormia\Vormia\Models\Role;
 
 class RoleSeeder extends Seeder
 {

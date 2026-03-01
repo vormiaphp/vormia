@@ -58,15 +58,11 @@ class InstallCommand extends Command
             return 1;
         }
 
-        // Step 3: Update User model
-        $this->step('Updating User model...');
-        $this->updateUserModel();
-
-        // Step 4: Update bootstrap/app.php
-        $this->step('Updating bootstrap/app.php...');
+        // Step 3: Update bootstrap/app.php
+        $this->step('Updating bootstrap/providers.php...');
         $this->updateBootstrapApp();
 
-        // Step 5: Update .env files
+        // Step 4: Update .env files
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
@@ -87,10 +83,9 @@ class InstallCommand extends Command
         $this->step('Publishing CORS configuration...');
         $this->publishCorsConfig();
 
-        // Step 10: API support information
+        // Step 9: API support information
         $this->step('API support information.');
-        $this->info('A Postman collection has been published to public/Vormia.postman_collection.json. Download it to test your API endpoints.');
-        $this->warn('Reminder: Add the HasApiTokens trait to your User model (app/Models/User.php) for API authentication.');
+        $this->info('A Postman collection has been published to public/Vormia.postman_collection.json.');
 
         $this->displayCompletionMessage();
 
@@ -125,40 +120,6 @@ class InstallCommand extends Command
     private function step($message)
     {
         $this->info("📦 {$message}");
-    }
-
-    /**
-     * Update the User model with Vormia functionality
-     */
-    private function updateUserModel()
-    {
-        $userModelPath = app_path('Models/User.php');
-        $stubPath = base_path('vendor/vormiaphp/vormia/src/stubs/models/User.php');
-        // If developing inside the package, use local stub path
-        if (!file_exists($stubPath)) {
-            $stubPath = base_path('src/stubs/models/User.php');
-        }
-
-        if (!File::exists($userModelPath)) {
-            $this->error('❌ User model not found. Please ensure it exists.');
-            return;
-        }
-        if (!File::exists($stubPath)) {
-            $this->error('❌ User.php stub not found in vormia package.');
-            return;
-        }
-
-        /*
-        $this->newLine();
-        if ($this->confirm('Would you like to create a backup of your current User.php model?', true)) {
-            $backupPath = $userModelPath . '.backup.' . date('Y-m-d-H-i-s');
-            File::copy($userModelPath, $backupPath);
-            $this->info('✅ Backup created: ' . $backupPath);
-        }
-        */
-
-        File::copy($stubPath, $userModelPath);
-        $this->info('✅ User model replaced with Vormia stub.');
     }
 
     /**
@@ -542,15 +503,14 @@ class InstallCommand extends Command
         $this->info('🎉 Vormia package installed successfully!');
         $this->newLine();
 
-        $this->comment('📋 Next steps:');
-        $this->line('   1. Review your app/Models/User.php model, bootstrap/app.php and bootstrap/providers.php changes');
-        $this->line('   2. Configure your .env file with VORMIA');
-        $this->line('   3. Run: php artisan migrate (if you haven\'t already)');
-        $this->line('   4. Review and configure Sanctum in your config/sanctum.php');
-        $this->line('   5. Review and configure CORS in your config/cors.php');
+        $this->comment('📋 Next steps (see docs/INSTALLATION.md for details):');
+        $this->line('   1. Add HasVormiaRoles trait and is_active to your User model');
+        $this->line('   2. Run: php artisan migrate');
+        $this->line('   3. Add HasApiTokens to User for API auth');
+        $this->line('   4. In CreateNewUser (or your registration flow): attach default role after creating user');
 
         $this->newLine();
-        $this->comment('📖 For help and available commands, run: php artisan vormia:help');
+        $this->comment('📖 For help: php artisan vormia:help');
         $this->newLine();
 
         $this->info('✨ Happy coding with Vormia!');

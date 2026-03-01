@@ -2,7 +2,7 @@
 
 namespace App\Providers\Vrm;
 
-use App\Models\Vrm\SlugRegistry;
+use Vormia\Vormia\Models\SlugRegistry;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 

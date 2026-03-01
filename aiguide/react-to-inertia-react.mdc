@@ -1,0 +1,568 @@
+---
+alwaysApply: true
+---
+
+# React to Inertia.js with React Conversion Guide
+
+## Overview
+
+This guide covers migrating a standalone React SPA (with its own router and API calls) to a **Laravel + Inertia.js + React** stack. With Inertia, your React components become full-page "views" served by Laravel — no separate API needed for page data. The server renders the first HTML, Inertia handles subsequent client-side navigation.
+
+## Tech Stack
+
+- **Laravel**: 12.x
+- **Inertia.js**: 2.x (server-side adapter: `inertiajs/inertia-laravel`)
+- **Inertia React adapter**: `@inertiajs/react` 2.x
+- **React**: 19.x
+- **Tailwind CSS**: 4.x
+- **Vite**: 6.x (via `laravel-vite-plugin`)
+
+---
+
+## File Structure
+
+### Standalone React SPA (Before)
+
+```
+src/
+├── components/
+│   ├── Navbar.jsx
+│   └── ProductCard.jsx
+├── pages/
+│   ├── Home.jsx
+│   ├── Products.jsx
+│   └── ProductDetail.jsx
+├── router.jsx          ← React Router
+├── api/
+│   └── products.js     ← fetch wrappers
+└── main.jsx
+```
+
+### Laravel + Inertia + React (After)
+
+```
+app/
+└── Http/Controllers/
+    ├── HomeController.php
+    ├── ProductController.php
+    └── ...
+resources/
+└── js/
+    ├── Pages/              ← Inertia page components (replaces src/pages/)
+    │   ├── Home.jsx
+    │   ├── Products/
+    │   │   ├── Index.jsx
+    │   │   └── Show.jsx
+    │   └── Auth/
+    │       └── Login.jsx
+    ├── Components/         ← Reusable React components
+    │   ├── Navbar.jsx
+    │   └── ProductCard.jsx
+    ├── Layouts/            ← Persistent layout wrappers
+    │   └── AppLayout.jsx
+    └── app.jsx             ← Inertia bootstrap (replaces main.jsx)
+routes/
+└── web.php                 ← All page routes (no API routes for page data)
+```
+
+---
+
+## Component Conversion Patterns
+
+### 1. React Router Page → Inertia Page Component
+
+**Before (React SPA):**
+
+```jsx
+// src/pages/Products.jsx
+function Products() {
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        fetch('/api/products').then(r => r.json()).then(setProducts);
+    }, []);
+
+    return <div>{products.map(p => <ProductCard key={p.id} product={p} />)}</div>;
+}
+```
+
+**After (Inertia Page + Laravel Controller):**
+
+```php
+// app/Http/Controllers/ProductController.php
+use Inertia\Inertia;
+
+class ProductController extends Controller
+{
+    public function index(): \Inertia\Response
+    {
+        return Inertia::render('Products/Index', [
+            'products' => Product::all(),
+        ]);
+    }
+}
+```
+
+```jsx
+// resources/js/Pages/Products/Index.jsx
+export default function ProductsIndex({ products }) {
+    return (
+        <div>
+            {products.map(p => (
+                <ProductCard key={p.id} product={p} />
+            ))}
+        </div>
+    );
+}
+```
+
+> No `useState` + `useEffect` + `fetch` needed. Laravel passes data directly as React props.
+
+---
+
+### 2. React Router → Laravel Routes + Inertia Links
+
+**Before:**
+
+```jsx
+// React Router
+import { Link } from 'react-router-dom';
+
+<Link to="/products">Products</Link>
+<Link to={`/products/${id}`}>View</Link>
+```
+
+**After:**
+
+```jsx
+// Inertia Link (handles client-side navigation without full reload)
+import { Link } from '@inertiajs/react';
+
+<Link href="/products">Products</Link>
+<Link href={route('products.show', id)}>View</Link>
+```
+
+Laravel route:
+
+```php
+// routes/web.php
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+```
+
+> Install `ziggy` (`tightenco/ziggy`) to use `route()` helper in JavaScript.
+
+---
+
+### 3. Persistent Layout
+
+**Before (React Router Layout):**
+
+```jsx
+function App() {
+    return (
+        <Router>
+            <Navbar />
+            <Routes>
+                <Route path="/" element={<Home />} />
+            </Routes>
+        </Router>
+    );
+}
+```
+
+**After (Inertia Persistent Layout):**
+
+```jsx
+// resources/js/Layouts/AppLayout.jsx
+export default function AppLayout({ children }) {
+    return (
+        <div>
+            <Navbar />
+            <main>{children}</main>
+        </div>
+    );
+}
+```
+
+```jsx
+// resources/js/Pages/Home.jsx
+import AppLayout from '@/Layouts/AppLayout';
+
+export default function Home({ featuredProducts }) {
+    return <div>{/* page content */}</div>;
+}
+
+// Attach layout — persists across Inertia navigation (Navbar doesn't remount)
+Home.layout = page => <AppLayout>{page}</AppLayout>;
+```
+
+---
+
+## State Management
+
+### Local UI State — Still useState
+
+Client-only state (modals, toggles, counters) works exactly the same:
+
+```jsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+### Server-Originated Data — Props, Not fetch()
+
+Data that comes from the database arrives as page props. Never `fetch()` for initial page data.
+
+```jsx
+// ✅ Correct — data from Laravel controller via Inertia
+export default function Show({ product, relatedProducts }) {
+    return <div>{product.name}</div>;
+}
+
+// ❌ Avoid — unnecessary client fetch for page data
+export default function Show({ productId }) {
+    const [product, setProduct] = useState(null);
+    useEffect(() => { fetch(`/api/products/${productId}`) ... }, []);
+}
+```
+
+### Shared Data (Global Props) — usePage()
+
+Data available across all pages (e.g., auth user, flash messages):
+
+```php
+// app/Http/Middleware/HandleInertiaRequests.php
+public function share(Request $request): array
+{
+    return [
+        ...parent::share($request),
+        'auth' => [
+            'user' => $request->user(),
+        ],
+        'flash' => [
+            'success' => session('success'),
+            'error'   => session('error'),
+        ],
+    ];
+}
+```
+
+```jsx
+// In any component
+import { usePage } from '@inertiajs/react';
+
+const { auth, flash } = usePage().props;
+```
+
+---
+
+## Forms and Mutations
+
+### React fetch POST → Inertia useForm
+
+**Before:**
+
+```jsx
+const [name, setName] = useState('');
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    await fetch('/api/products', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+```
+
+**After:**
+
+```jsx
+import { useForm } from '@inertiajs/react';
+
+const { data, setData, post, processing, errors } = useForm({ name: '' });
+
+const handleSubmit = (e) => {
+    e.preventDefault();
+    post(route('products.store')); // calls Laravel controller, handles CSRF automatically
+};
+
+return (
+    <form onSubmit={handleSubmit}>
+        <input
+            value={data.name}
+            onChange={e => setData('name', e.target.value)}
+        />
+        {errors.name && <p>{errors.name}</p>}
+        <button disabled={processing}>Save</button>
+    </form>
+);
+```
+
+Laravel controller:
+
+```php
+public function store(Request $request): \Illuminate\Http\RedirectResponse
+{
+    $validated = $request->validate(['name' => 'required|string|max:255']);
+    Product::create($validated);
+    return redirect()->route('products.index')->with('success', 'Product created.');
+}
+```
+
+---
+
+## Partial Reloads (Refresh Only Some Props)
+
+When you only want to reload part of the page data without a full Inertia visit:
+
+```jsx
+import { router } from '@inertiajs/react';
+
+// Only reload 'products' prop from the controller
+router.reload({ only: ['products'] });
+```
+
+---
+
+## Event Handling
+
+| React | Inertia + React |
+|-------|-----------------|
+| `<Link to="/path">` | `<Link href="/path">` |
+| `<a href>` (full reload) | `<Link href>` (SPA nav) |
+| `fetch POST` | `useForm().post(route(...))` |
+| `fetch PUT/PATCH` | `useForm().put(route(...))` |
+| `fetch DELETE` | `router.delete(route(...))` |
+| Manual CSRF header | Handled automatically by Inertia |
+
+---
+
+## Data Fetching
+
+### What Stays Client-Side
+
+For data that changes without navigation (e.g., live search autocomplete), you can still use `fetch` or a library like TanStack Query for async client requests. But page-level data always comes from the controller.
+
+```jsx
+// Client-side fetch only for dynamic/partial data
+const [suggestions, setSuggestions] = useState([]);
+
+const search = async (term) => {
+    const res = await fetch(`/api/search?q=${term}`);
+    setSuggestions(await res.json());
+};
+```
+
+For this case, define a separate API route:
+
+```php
+// routes/api.php
+Route::get('/search', [SearchController::class, 'suggestions']);
+```
+
+---
+
+## Routing & Navigation
+
+### Programmatic Navigation
+
+**React Router:**
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+const navigate = useNavigate();
+navigate('/products');
+```
+
+**Inertia:**
+
+```jsx
+import { router } from '@inertiajs/react';
+router.visit('/products');
+// or with named route (requires Ziggy)
+router.visit(route('products.index'));
+```
+
+### Route Parameters
+
+```php
+// routes/web.php
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+```
+
+```php
+// Controller — model binding automatically resolves Product
+public function show(Product $product): \Inertia\Response
+{
+    return Inertia::render('Products/Show', ['product' => $product]);
+}
+```
+
+```jsx
+// Page component receives it as a prop
+export default function Show({ product }) {
+    return <h1>{product.name}</h1>;
+}
+```
+
+---
+
+## Common Patterns
+
+### Conditional Rendering
+
+No change — still JSX:
+
+```jsx
+{isLoading ? <Spinner /> : <Content />}
+{items.length > 0 && <List items={items} />}
+```
+
+### Loops
+
+No change:
+
+```jsx
+{products.map(product => (
+    <ProductCard key={product.id} product={product} />
+))}
+```
+
+### Flash Messages
+
+```jsx
+// In AppLayout or a FlashMessage component
+import { usePage } from '@inertiajs/react';
+
+const { flash } = usePage().props;
+
+return flash.success && <div className="alert">{flash.success}</div>;
+```
+
+---
+
+## Best Practices
+
+1. **Page components live in `resources/js/Pages/`** — Inertia resolves them by name from `Inertia::render('Folder/File', [...])`
+2. **Never fetch page data client-side** — pass it from the controller as props
+3. **Use `useForm` for all mutations** — it handles CSRF, redirects, and validation errors automatically
+4. **Use persistent layouts** (`Page.layout = page => <Layout>{page}</Layout>`) to prevent Navbar remounting on navigation
+5. **Use Ziggy** for `route()` helper in JavaScript — avoids hardcoding URLs
+6. **Use `router.reload({ only: [...] })`** for polling or partial refreshes instead of separate API calls
+7. **TypeScript tip**: Define prop types with an interface matching the controller's returned array keys
+
+---
+
+## Migration Checklist
+
+- [ ] Install Inertia Laravel adapter: `composer require inertiajs/inertia-laravel`
+- [ ] Install Inertia React adapter: `npm install @inertiajs/react`
+- [ ] Replace `main.jsx` with Inertia bootstrap (`createInertiaApp`)
+- [ ] Add `@inertia` directive to root Blade layout (`resources/views/app.blade.php`)
+- [ ] Move page components from `src/pages/` to `resources/js/Pages/`
+- [ ] Remove React Router — replace with Inertia `<Link>` and `router.visit()`
+- [ ] Replace all page-level `useEffect + fetch` with data from Laravel controller
+- [ ] Replace `fetch POST` forms with `useForm` hook
+- [ ] Replace `fetch PUT/DELETE` with `useForm().put()` / `router.delete()`
+- [ ] Configure shared data (auth user, flash) in `HandleInertiaRequests` middleware
+- [ ] Install Ziggy and use `route()` helper for named routes
+- [ ] Add persistent layout to each page component
+- [ ] Test back/forward browser navigation
+- [ ] Test form validation error display
+- [ ] Verify CSRF protection on all mutations
+
+---
+
+## Full Example
+
+### Before: Standalone React
+
+```jsx
+// src/pages/ProductDetail.jsx
+function ProductDetail({ match }) {
+    const [product, setProduct] = useState(null);
+
+    useEffect(() => {
+        fetch(`/api/products/${match.params.id}`)
+            .then(r => r.json())
+            .then(setProduct);
+    }, [match.params.id]);
+
+    const handleDelete = async () => {
+        await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
+        window.location.href = '/products';
+    };
+
+    if (!product) return <div>Loading...</div>;
+
+    return (
+        <div>
+            <h1>{product.name}</h1>
+            <button onClick={handleDelete}>Delete</button>
+        </div>
+    );
+}
+```
+
+### After: Inertia + React
+
+```php
+// app/Http/Controllers/ProductController.php
+public function show(Product $product): \Inertia\Response
+{
+    return Inertia::render('Products/Show', ['product' => $product]);
+}
+
+public function destroy(Product $product): \Illuminate\Http\RedirectResponse
+{
+    $product->delete();
+    return redirect()->route('products.index')->with('success', 'Deleted.');
+}
+```
+
+```php
+// routes/web.php
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+```
+
+```jsx
+// resources/js/Pages/Products/Show.jsx
+import AppLayout from '@/Layouts/AppLayout';
+import { router } from '@inertiajs/react';
+
+export default function Show({ product }) {
+    const handleDelete = () => {
+        if (confirm('Are you sure?')) {
+            router.delete(route('products.destroy', product.id));
+        }
+    };
+
+    return (
+        <div>
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded">
+                Delete
+            </button>
+        </div>
+    );
+}
+
+Show.layout = page => <AppLayout>{page}</AppLayout>;
+```
+
+---
+
+## Resources
+
+- [Inertia.js Docs](https://inertiajs.com)
+- [Inertia Laravel Adapter](https://inertiajs.com/server-side-setup)
+- [Inertia React Adapter](https://inertiajs.com/client-side-setup)
+- [Ziggy (route() helper for JS)](https://github.com/tighten/ziggy)
+- [Laravel Controllers](https://laravel.com/docs/controllers)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/react 2.x, React 19.x, Tailwind CSS 4.x

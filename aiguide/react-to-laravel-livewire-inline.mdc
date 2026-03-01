@@ -1,0 +1,709 @@
+---
+alwaysApply: true
+---
+
+# React to Laravel Blade + Livewire Volt (Inline/Non-Class) Conversion Guide
+
+## Overview
+
+This guide covers converting React function components (non-class) to Laravel Blade templates with **Livewire Volt inline components** — the functional composition API (not the `new class extends Component` class style). Inline Volt components are written using free functions like `state()`, `computed()`, `on()`, and `mount()` imported from `Livewire\Volt\Volt`.
+
+## Tech Stack
+
+- **Laravel**: 12.x
+- **Livewire**: 4.x
+- **Livewire Volt**: 1.x (inline/functional style)
+- **Alpine.js**: 3.x (client-only interactions)
+- **Tailwind CSS**: 4.x
+
+---
+
+## File Structure
+
+### React (Before)
+
+```
+src/
+├── components/
+│   ├── Counter.jsx
+│   ├── UserCard.jsx
+│   └── SearchBar.jsx
+├── pages/
+│   ├── Home.jsx
+│   └── Profile.jsx
+└── App.jsx
+```
+
+### Laravel Blade + Volt (After)
+
+```
+resources/views/
+├── livewire/
+│   ├── counter.blade.php
+│   ├── user-card.blade.php
+│   ├── search-bar.blade.php
+│   └── pages/
+│       ├── home.blade.php
+│       └── profile.blade.php
+├── components/
+│   └── layouts/
+│       └── app.blade.php
+└── partials/
+```
+
+---
+
+## Component Conversion Patterns
+
+### 1. Basic Function Component → Volt Inline Component
+
+**React:**
+
+```jsx
+function Counter() {
+    const [count, setCount] = useState(0);
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(count + 1)}>Increment</button>
+        </div>
+    );
+}
+```
+
+**Volt Inline (functional style):**
+
+```php
+<?php
+use function Livewire\Volt\{state, computed};
+
+state(['count' => 0]);
+
+$increment = fn() => $this->count++;
+?>
+
+<div>
+    <p>Count: {{ $count }}</p>
+    <button wire:click="increment">Increment</button>
+</div>
+```
+
+> Key difference from class-style: use `state()` instead of declaring public properties. Actions are declared as arrow functions assigned to variables.
+
+---
+
+### 2. Props → Volt `state()` with External Values
+
+**React:**
+
+```jsx
+function UserCard({ name, email }) {
+    return (
+        <div>
+            <h2>{name}</h2>
+            <p>{email}</p>
+        </div>
+    );
+}
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state};
+
+// Props passed from parent livewire component or route
+state(['name' => '', 'email' => '']);
+?>
+
+<div>
+    <h2>{{ $name }}</h2>
+    <p>{{ $email }}</p>
+</div>
+```
+
+**Blade component for pure display (no server state needed):**
+
+```php
+{{-- resources/views/components/user-card.blade.php --}}
+@props(['name', 'email'])
+
+<div>
+    <h2>{{ $name }}</h2>
+    <p>{{ $email }}</p>
+</div>
+```
+
+```blade
+{{-- Usage --}}
+<x-user-card name="John" email="john@example.com" />
+```
+
+---
+
+### 3. Component with Layout
+
+**React:**
+
+```jsx
+function HomePage() {
+    return (
+        <Layout>
+            <main>Home content</main>
+        </Layout>
+    );
+}
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{layout};
+
+layout('components.layouts.app');
+?>
+
+<main>Home content</main>
+```
+
+---
+
+## State Management
+
+### useState → state()
+
+**React:**
+
+```jsx
+const [isOpen, setIsOpen] = useState(false);
+const [items, setItems] = useState([]);
+const [name, setName] = useState('');
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state};
+
+state([
+    'isOpen' => false,
+    'items'  => [],
+    'name'   => '',
+]);
+?>
+```
+
+---
+
+### useEffect (on mount) → mount()
+
+**React:**
+
+```jsx
+useEffect(() => {
+    fetchItems().then(setItems);
+}, []);
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state, mount};
+use Illuminate\Support\Facades\Log;
+
+state(['items' => []]);
+
+mount(function () {
+    try {
+        $file = public_path('media/json/items.json');
+        $this->items = json_decode(file_get_contents($file), true) ?? [];
+    } catch (\Throwable $e) {
+        Log::warning('Failed to load items: ' . $e->getMessage());
+        $this->items = [];
+    }
+});
+?>
+```
+
+---
+
+### useEffect with Dependency → on()
+
+**React:**
+
+```jsx
+useEffect(() => {
+    recalculate();
+}, [selectedItem]);
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state, on};
+
+state(['selectedItem' => null, 'total' => 0]);
+
+on(['selectedItem' => function () {
+    $this->total = computeTotal($this->selectedItem);
+}]);
+?>
+```
+
+> For property-watching within the component itself, define an `updated` function:
+
+```php
+$updatedSelectedItem = fn() => $this->total = computeTotal($this->selectedItem);
+```
+
+---
+
+### useMemo → computed()
+
+**React:**
+
+```jsx
+const total = useMemo(() => {
+    return items.reduce((sum, item) => sum + item.price, 0);
+}, [items]);
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state, computed};
+
+state(['items' => []]);
+
+$total = computed(fn() => collect($this->items)->sum('price'));
+?>
+
+{{-- In template --}}
+<p>Total: {{ $this->total }}</p>
+```
+
+---
+
+## Event Handling
+
+### onClick → wire:click
+
+**React:**
+
+```jsx
+<button onClick={() => deleteItem(item.id)}>Delete</button>
+```
+
+**Blade:**
+
+```blade
+<button wire:click="deleteItem({{ $item['id'] }})">Delete</button>
+```
+
+---
+
+### onClick with stopPropagation → wire:click.stop
+
+**React:**
+
+```jsx
+<button onClick={(e) => { e.stopPropagation(); handleClick(); }}>Click</button>
+```
+
+**Blade:**
+
+```blade
+<button wire:click.stop="handleClick">Click</button>
+```
+
+---
+
+### Form onSubmit + controlled inputs → wire:submit + wire:model
+
+**React:**
+
+```jsx
+<form onSubmit={handleSubmit}>
+    <input value={email} onChange={(e) => setEmail(e.target.value)} />
+    <button type="submit">Submit</button>
+</form>
+```
+
+**Blade:**
+
+```blade
+<form wire:submit="handleSubmit">
+    <input wire:model="email" type="email" />
+    <button type="submit">Submit</button>
+</form>
+```
+
+Declare the action:
+
+```php
+<?php
+use function Livewire\Volt\{state};
+
+state(['email' => '']);
+
+$handleSubmit = function () {
+    // validate and process
+    $this->validate(['email' => 'required|email']);
+    // ...
+};
+?>
+```
+
+---
+
+## Data Fetching
+
+### Client fetch() → PHP mount()
+
+**React:**
+
+```jsx
+const [products, setProducts] = useState([]);
+
+useEffect(() => {
+    fetch('/api/products').then(res => res.json()).then(setProducts);
+}, []);
+```
+
+**Volt Inline:**
+
+```php
+<?php
+use function Livewire\Volt\{state, mount};
+use Illuminate\Support\Facades\Log;
+
+state(['products' => []]);
+
+mount(function () {
+    try {
+        // Option 1: JSON file (prototyping)
+        $path = public_path('media/json/products.json');
+        $this->products = json_decode(file_get_contents($path), true) ?? [];
+
+        // Option 2: Database (production)
+        // $this->products = \App\Models\Product::all()->toArray();
+    } catch (\Throwable $e) {
+        Log::error('Products load failed: ' . $e->getMessage());
+        $this->products = [];
+    }
+});
+?>
+```
+
+---
+
+## Routing & Navigation
+
+### React Router → Laravel Web Routes
+
+**React:**
+
+```jsx
+<Route path="/profile/:id" element={<ProfilePage />} />
+```
+
+**Laravel `routes/web.php`:**
+
+```php
+use App\Livewire\Pages\Profile;
+
+Route::get('/profile/{id}', Profile::class)->name('profile.show');
+```
+
+### Route Params in Volt Component
+
+```php
+<?php
+use function Livewire\Volt\{state, mount};
+
+state(['userId' => null, 'user' => null]);
+
+mount(function (int $id) {
+    $this->userId = $id;
+    $this->user   = \App\Models\User::findOrFail($id)->toArray();
+});
+?>
+```
+
+---
+
+## Common Patterns
+
+### Conditional Rendering
+
+**React:**
+
+```jsx
+{isLoading ? <Spinner /> : <Content />}
+{items.length > 0 && <List />}
+```
+
+**Blade:**
+
+```blade
+@if($isLoading)
+    <x-spinner />
+@else
+    <x-content />
+@endif
+
+@if(count($items) > 0)
+    <x-list :items="$items" />
+@endif
+```
+
+---
+
+### Loops with Key
+
+**React:**
+
+```jsx
+{products.map(product => (
+    <ProductCard key={product.id} product={product} />
+))}
+```
+
+**Blade:**
+
+```blade
+@foreach($products as $product)
+    <div wire:key="product-{{ $product['id'] }}">
+        <x-product-card :product="$product" />
+    </div>
+@endforeach
+```
+
+---
+
+### Client-Only Toggle (React State → Alpine.js)
+
+For UI-only state (dropdowns, modals, tabs) that never needs to reach the server, use Alpine.js instead of Livewire to avoid unnecessary round trips.
+
+**React:**
+
+```jsx
+const [isOpen, setIsOpen] = useState(false);
+
+return (
+    <div>
+        <button onClick={() => setIsOpen(!isOpen)}>Toggle</button>
+        {isOpen && <div>Content</div>}
+    </div>
+);
+```
+
+**Alpine.js in Blade:**
+
+```blade
+<div x-data="{ isOpen: false }">
+    <button @click="isOpen = !isOpen">Toggle</button>
+    <div x-show="isOpen" x-transition>Content</div>
+</div>
+```
+
+---
+
+### Two-Way Binding
+
+**React:**
+
+```jsx
+<input value={search} onChange={e => setSearch(e.target.value)} />
+```
+
+**Blade:**
+
+```blade
+{{-- Debounced to avoid a request on every keystroke --}}
+<input wire:model.live.debounce.300ms="search" type="text" />
+```
+
+---
+
+### Named Slots
+
+**React:**
+
+```jsx
+<Layout header={<Header />}>
+    <Content />
+</Layout>
+```
+
+**Blade:**
+
+```blade
+<x-layouts.app>
+    <x-slot:header>
+        <x-header />
+    </x-slot:header>
+
+    <x-content />
+</x-layouts.app>
+```
+
+---
+
+## When to Use Livewire vs Alpine.js
+
+| Scenario | Use |
+|----------|-----|
+| Form submission / validation | Livewire |
+| Loading data from DB or file | Livewire `mount()` |
+| CRUD actions | Livewire |
+| UI toggles (open/close, tabs) | Alpine.js |
+| Animations, transitions | Alpine.js |
+| Reading from parent Livewire state | Alpine.js `$wire` bridge |
+
+---
+
+## Best Practices
+
+1. **Type-hint `mount()` arguments** — `mount(function (int $id, string $slug))`
+2. **Use `wire:key`** on all looped elements to help Livewire diff correctly
+3. **Debounce `wire:model.live`** for search/filter inputs to reduce round trips
+4. **Use Blade comments `{{-- --}}`** instead of HTML comments inside Blade files
+5. **Use `computed()`** for derived values instead of recalculating in multiple places
+6. **Keep server logic out of Alpine.js** — Alpine is view layer only
+7. **Responsive classes** — Tailwind mobile-first: `text-sm md:text-base lg:text-lg`
+8. **Accessibility** — include `aria-` attributes and semantic HTML tags
+
+---
+
+## Migration Checklist
+
+- [ ] Identify if component needs server state (use Livewire) or UI-only state (use Alpine.js)
+- [ ] Replace `useState` with `state([])` at the top of the `<?php ?>` block
+- [ ] Convert `useEffect(fn, [])` to `mount(function () { ... })`
+- [ ] Convert `useEffect(fn, [dep])` to a property watcher via `$updatedProperty` or `on()`
+- [ ] Replace `useMemo` with `computed(fn)` and reference as `$this->property`
+- [ ] Replace `onClick` handlers with `wire:click="methodName(...)"`
+- [ ] Replace controlled inputs with `wire:model` (add `.live.debounce.300ms` for search)
+- [ ] Replace `fetch()` with PHP data loading in `mount()`
+- [ ] Replace `className` with `class`
+- [ ] Replace `{condition && <X />}` with `@if` / `@endif`
+- [ ] Replace `.map()` with `@foreach` and add `wire:key`
+- [ ] Replace React Router `<Link>` with `<a href="{{ route('name') }}">`
+- [ ] Wrap route param loading in `mount(function ($param))`
+- [ ] Add `layout('...')` for page-level components
+- [ ] Test with Livewire dev tools in browser
+- [ ] Verify Alpine.js interactions do not conflict with `wire:model`
+
+---
+
+## Full Example
+
+### React Component
+
+```jsx
+function SearchableList({ category }) {
+    const [items, setItems] = useState([]);
+    const [search, setSearch] = useState('');
+
+    useEffect(() => {
+        fetch(`/api/items?category=${category}`)
+            .then(r => r.json())
+            .then(setItems);
+    }, [category]);
+
+    const filtered = useMemo(() =>
+        items.filter(i => i.name.toLowerCase().includes(search.toLowerCase())),
+        [items, search]
+    );
+
+    return (
+        <div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." />
+            <ul>
+                {filtered.map(item => (
+                    <li key={item.id}>{item.name}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+```
+
+### Volt Inline Component
+
+```php
+<?php
+use function Livewire\Volt\{state, mount, computed};
+use Illuminate\Support\Facades\Log;
+
+state([
+    'category' => '',
+    'items'    => [],
+    'search'   => '',
+]);
+
+mount(function (string $category) {
+    $this->category = $category;
+
+    try {
+        $path = public_path('media/json/items.json');
+        $all  = json_decode(file_get_contents($path), true) ?? [];
+
+        $this->items = collect($all)
+            ->where('category', $category)
+            ->values()
+            ->toArray();
+    } catch (\Throwable $e) {
+        Log::error('Items load failed: ' . $e->getMessage());
+        $this->items = [];
+    }
+});
+
+$filtered = computed(fn() =>
+    collect($this->items)
+        ->filter(fn($i) => str_contains(strtolower($i['name']), strtolower($this->search)))
+        ->values()
+        ->toArray()
+);
+?>
+
+<div>
+    <input
+        wire:model.live.debounce.300ms="search"
+        type="text"
+        placeholder="Search..."
+        class="border rounded px-3 py-2 w-full"
+    />
+
+    <ul class="mt-4 space-y-2">
+        @foreach($this->filtered as $item)
+            <li wire:key="item-{{ $item['id'] }}" class="p-2 border rounded">
+                {{ $item['name'] }}
+            </li>
+        @endforeach
+    </ul>
+</div>
+```
+
+---
+
+## Resources
+
+- [Livewire Volt Docs](https://livewire.laravel.com/docs/volt)
+- [Livewire Component Docs](https://livewire.laravel.com/docs/components)
+- [Alpine.js Docs](https://alpinejs.dev/start-here)
+- [Blade Components](https://laravel.com/docs/blade#components)
+- [Tailwind CSS 4 Docs](https://tailwindcss.com/docs)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Laravel 12, Livewire 4.x, Livewire Volt 1.x, Alpine.js 3.x, Tailwind CSS 4.x

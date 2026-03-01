@@ -1,0 +1,578 @@
+---
+alwaysApply: true
+---
+
+# React to Inertia.js with Svelte Conversion Guide
+
+## Overview
+
+This guide covers converting a React SPA to a **Laravel + Inertia.js + Svelte** stack. Svelte uses `.svelte` files and a compiler-based approach — there is no virtual DOM. Reactivity is built into the language with `$state`, `$derived`, and `$effect` runes (Svelte 5). The Laravel server side is identical to other Inertia adapters.
+
+## Tech Stack
+
+- **Laravel**: 12.x
+- **Inertia.js**: 2.x (`inertiajs/inertia-laravel`)
+- **Inertia Svelte adapter**: `@inertiajs/svelte` 2.x
+- **Svelte**: 5.x (runes: `$state`, `$derived`, `$effect`, `$props`)
+- **Tailwind CSS**: 4.x
+- **Vite**: 6.x
+
+> Svelte 5 uses **runes** (the new compiler-aware primitives). Svelte 4 syntax (`let count = 0`, `$:`) is still supported but runes are preferred.
+
+---
+
+## File Structure
+
+### React SPA (Before)
+
+```
+src/
+├── components/
+│   └── ProductCard.jsx
+├── pages/
+│   ├── Home.jsx
+│   └── Products/
+│       ├── Index.jsx
+│       └── Show.jsx
+└── main.jsx
+```
+
+### Laravel + Inertia + Svelte (After)
+
+```
+resources/
+└── js/
+    ├── Pages/              ← Inertia page components (.svelte)
+    │   ├── Home.svelte
+    │   └── Products/
+    │       ├── Index.svelte
+    │       └── Show.svelte
+    ├── Components/
+    │   └── ProductCard.svelte
+    ├── Layouts/
+    │   └── AppLayout.svelte
+    └── app.js              ← Inertia + Svelte bootstrap
+```
+
+---
+
+## Component Conversion Patterns
+
+### 1. React Function Component → Svelte Component
+
+**React:**
+
+```jsx
+function Counter({ initialCount = 0 }) {
+    const [count, setCount] = useState(initialCount);
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(count + 1)}>Increment</button>
+        </div>
+    );
+}
+```
+
+**Svelte 5 (runes):**
+
+```svelte
+<!-- Counter.svelte -->
+<script>
+    // $props() replaces function arguments / React props
+    let { initialCount = 0 } = $props();
+
+    // $state() replaces useState()
+    let count = $state(initialCount);
+</script>
+
+<div>
+    <p>Count: {count}</p>
+    <!-- onclick (lowercase) replaces onClick -->
+    <button onclick={() => count++}>Increment</button>
+</div>
+```
+
+---
+
+### 2. Inertia Page Component (Receives Laravel Props)
+
+**React:**
+
+```jsx
+export default function ProductsIndex({ products }) {
+    return (
+        <div>
+            {products.map(p => <ProductCard key={p.id} product={p} />)}
+        </div>
+    );
+}
+```
+
+**Svelte:**
+
+```svelte
+<!-- resources/js/Pages/Products/Index.svelte -->
+<script>
+    import ProductCard from '@/Components/ProductCard.svelte';
+
+    // Props from Laravel controller arrive via $props()
+    let { products } = $props();
+</script>
+
+<div>
+    {#each products as product (product.id)}
+        <ProductCard {product} />
+    {/each}
+</div>
+```
+
+Laravel controller:
+
+```php
+public function index(): \Inertia\Response
+{
+    return Inertia::render('Products/Index', [
+        'products' => Product::all(),
+    ]);
+}
+```
+
+---
+
+## State Management Mapping
+
+| React | Svelte 5 (runes) |
+|-------|-----------------|
+| `useState(value)` | `let x = $state(value)` |
+| `useState([])` | `let arr = $state([])` |
+| `useState({})` | `let obj = $state({})` |
+| `useMemo(fn, [deps])` | `let x = $derived(expression)` |
+| `useEffect(fn, [])` | `$effect(() => { ... })` (runs after mount) |
+| `useEffect(fn, [dep])` | `$effect(() => { dep; ... })` (auto-tracks) |
+| `useCallback(fn, [])` | Plain function (no memoization needed) |
+| `useRef(null)` | `let el = $state(null)` + `bind:this={el}` |
+
+### $state — Reactive Variables
+
+```js
+// React
+const [count, setCount] = useState(0);
+setCount(count + 1);
+
+// Svelte 5
+let count = $state(0);
+count++; // direct mutation triggers reactivity
+```
+
+> Svelte 5 allows direct mutation of `$state` variables. No setter function needed.
+
+### $derived — Computed Values
+
+```js
+// React
+const total = useMemo(() => items.reduce((s, i) => s + i.price, 0), [items]);
+
+// Svelte 5
+let items = $state([]);
+let total = $derived(items.reduce((s, i) => s + i.price, 0));
+```
+
+### $effect — Side Effects
+
+```js
+// React
+useEffect(() => {
+    document.title = `Count: ${count}`;
+}, [count]);
+
+// Svelte 5 — automatically tracks any $state read inside
+$effect(() => {
+    document.title = `Count: ${count}`;
+});
+```
+
+> `$effect` runs after the DOM updates. It auto-tracks reactive dependencies — no dependency array needed.
+
+---
+
+## Event Handling
+
+| React JSX | Svelte |
+|-----------|--------|
+| `onClick={fn}` | `onclick={fn}` |
+| `onClick={() => fn(id)}` | `onclick={() => fn(id)}` |
+| `onClick={e => e.stopPropagation()}` | `onclick:stopPropagation={fn}` or `onclick={(e) => { e.stopPropagation(); fn(); }}` |
+| `onChange={e => setVal(e.target.value)}` | `bind:value={val}` |
+| `onSubmit={handleSubmit}` | `onsubmit:prevent={handleSubmit}` |
+| `onKeyDown={fn}` | `onkeydown={fn}` |
+
+### Controlled Inputs → bind:value
+
+**React:**
+
+```jsx
+<input value={name} onChange={e => setName(e.target.value)} />
+```
+
+**Svelte:**
+
+```svelte
+<input bind:value={name} />
+<!-- bind:value is two-way: reads and writes $state variable directly -->
+```
+
+---
+
+## Data Fetching
+
+### Page Data — From Laravel Controller
+
+```svelte
+<script>
+    // Data arrives as Svelte props from Inertia — no fetch needed
+    let { products } = $props();
+</script>
+```
+
+### Mutations — Inertia useForm
+
+**React:**
+
+```jsx
+const { data, setData, post, processing, errors } = useForm({ name: '' });
+```
+
+**Svelte:**
+
+```svelte
+<script>
+    import { useForm } from '@inertiajs/svelte';
+
+    const form = useForm({ name: '' });
+
+    function submit(e) {
+        e.preventDefault();
+        form.post(route('products.store'));
+    }
+</script>
+
+<form onsubmit={submit}>
+    <input bind:value={$form.name} type="text" />
+    {#if $form.errors.name}
+        <p>{$form.errors.name}</p>
+    {/if}
+    <button disabled={$form.processing}>Save</button>
+</form>
+```
+
+> In Svelte, `useForm` returns a Svelte store. Access its values with `$form.name`, `$form.errors`, etc.
+
+---
+
+## Routing & Navigation
+
+### React Router Link → Inertia Link
+
+**React:**
+
+```jsx
+import { Link } from 'react-router-dom';
+<Link to="/products">Products</Link>
+```
+
+**Svelte:**
+
+```svelte
+<script>
+    import { Link } from '@inertiajs/svelte';
+</script>
+
+<Link href="/products">Products</Link>
+<!-- With named route (Ziggy) -->
+<Link href={route('products.index')}>Products</Link>
+```
+
+### Programmatic Navigation
+
+**React:**
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+const navigate = useNavigate();
+navigate('/products');
+```
+
+**Svelte:**
+
+```svelte
+<script>
+    import { router } from '@inertiajs/svelte';
+
+    const goToProducts = () => {
+        router.visit(route('products.index'));
+    };
+</script>
+```
+
+---
+
+## Layouts
+
+### Persistent Layout in Svelte
+
+```svelte
+<!-- resources/js/Layouts/AppLayout.svelte -->
+<script>
+    let { children } = $props();
+</script>
+
+<nav><!-- Navbar --></nav>
+<main>
+    <!-- {@render children()} renders the page content -->
+    {@render children()}
+</main>
+```
+
+```svelte
+<!-- resources/js/Pages/Home.svelte -->
+<script>
+    import AppLayout from '@/Layouts/AppLayout.svelte';
+    import { defineOptions } from '@inertiajs/svelte';
+
+    // Persistent layout — Navbar won't remount on navigation
+    defineOptions({ layout: AppLayout });
+</script>
+
+<div>Home content</div>
+```
+
+---
+
+## Shared Data (Global Props)
+
+```php
+// app/Http/Middleware/HandleInertiaRequests.php
+public function share(Request $request): array
+{
+    return [
+        ...parent::share($request),
+        'auth'  => ['user' => $request->user()],
+        'flash' => ['success' => session('success')],
+    ];
+}
+```
+
+```svelte
+<script>
+    import { page } from '@inertiajs/svelte';
+    // $page is a Svelte store — use $ prefix to subscribe
+</script>
+
+{#if $page.props.flash.success}
+    <div class="alert">{$page.props.flash.success}</div>
+{/if}
+```
+
+---
+
+## Common Patterns
+
+### Conditional Rendering
+
+**React:**
+
+```jsx
+{isLoading ? <Spinner /> : <Content />}
+{items.length > 0 && <List />}
+```
+
+**Svelte:**
+
+```svelte
+{#if isLoading}
+    <Spinner />
+{:else}
+    <Content />
+{/if}
+
+{#if items.length > 0}
+    <List {items} />
+{/if}
+```
+
+### Loops
+
+**React:**
+
+```jsx
+{products.map(p => <ProductCard key={p.id} product={p} />)}
+```
+
+**Svelte:**
+
+```svelte
+{#each products as product (product.id)}
+    <ProductCard {product} />
+{/each}
+<!-- (product.id) is the keyed identifier — equivalent to React's key prop -->
+```
+
+### Props Shorthand
+
+```svelte
+<!-- When prop name matches variable name, use shorthand -->
+<ProductCard {product} />
+<!-- Same as: <ProductCard product={product} /> -->
+```
+
+### Snippets (replaces React children/slots)
+
+**Svelte 5 — `{@render}`:**
+
+```svelte
+<!-- Card.svelte -->
+<script>
+    let { children, title } = $props();
+</script>
+
+<div class="card">
+    <h2>{title}</h2>
+    {@render children()}
+</div>
+```
+
+```svelte
+<!-- Usage -->
+<Card title="Hello">
+    <p>Body content</p>
+</Card>
+```
+
+---
+
+## Best Practices
+
+1. **Use runes (`$state`, `$derived`, `$effect`)** — avoid legacy Svelte 4 `let` + `$:` syntax in new code
+2. **Direct mutation of `$state`** is fine — no setter function needed
+3. **`$derived` over `$effect`** for computed values — `$effect` should only be for side effects (DOM, timers, logging)
+4. **`bind:value` over manual `oninput`** for all form inputs
+5. **`onsubmit:prevent`** or `onsubmit={(e) => { e.preventDefault(); ... }}` on forms
+6. **`$page` store** for global shared data — always use `$` prefix to subscribe
+7. **`{#each arr as item (item.id)}`** — always provide a key for lists that can change
+8. **Keep components small** — Svelte components with less logic compile to less JS
+
+---
+
+## Migration Checklist
+
+- [ ] Install Svelte 5: `npm install svelte@latest`
+- [ ] Install Inertia Svelte adapter: `npm install @inertiajs/svelte`
+- [ ] Replace `app.js` with Inertia Svelte bootstrap
+- [ ] Rename page files from `.jsx` to `.svelte`
+- [ ] Move JSX to `<template>`-style Svelte markup (no template tag, just markup directly)
+- [ ] Replace `useState` with `let x = $state(value)`
+- [ ] Replace `useMemo` with `let x = $derived(expr)`
+- [ ] Replace `useEffect` with `$effect(() => { ... })`
+- [ ] Replace `onClick={fn}` with `onclick={fn}` (lowercase)
+- [ ] Replace controlled inputs with `bind:value`
+- [ ] Replace `onSubmit` + `e.preventDefault()` with `onsubmit:prevent` or manual call
+- [ ] Replace React props pattern with `let { propName } = $props()`
+- [ ] Replace callback props with plain functions from `$props()`
+- [ ] Replace `{condition && <X />}` with `{#if condition}<X />{/if}`
+- [ ] Replace `.map()` with `{#each arr as item (item.id)}`
+- [ ] Replace `children` with `{@render children()}`
+- [ ] Add persistent layout via `defineOptions({ layout })`
+- [ ] Replace `usePage().props` with `$page.props` from the `page` store
+- [ ] Replace `useForm` React version with Svelte store-based `useForm`
+- [ ] Test all `$form.errors` display in forms
+- [ ] Verify flash messages via `$page.props.flash`
+
+---
+
+## Full Example
+
+### React Component (Before)
+
+```jsx
+function ProductShow({ productId }) {
+    const [product, setProduct] = useState(null);
+
+    useEffect(() => {
+        fetch(`/api/products/${productId}`).then(r => r.json()).then(setProduct);
+    }, [productId]);
+
+    if (!product) return null;
+
+    const [qty, setQty] = useState(1);
+    const total = useMemo(() => product.price * qty, [product.price, qty]);
+
+    return (
+        <div>
+            <h1>{product.name}</h1>
+            <input type="number" value={qty} onChange={e => setQty(+e.target.value)} min="1" />
+            <p>Total: ${total}</p>
+        </div>
+    );
+}
+```
+
+### Svelte + Inertia (After)
+
+```php
+// app/Http/Controllers/ProductController.php
+public function show(Product $product): \Inertia\Response
+{
+    return Inertia::render('Products/Show', ['product' => $product]);
+}
+```
+
+```svelte
+<!-- resources/js/Pages/Products/Show.svelte -->
+<script>
+    import AppLayout from '@/Layouts/AppLayout.svelte';
+    import { defineOptions } from '@inertiajs/svelte';
+
+    defineOptions({ layout: AppLayout });
+
+    // Product arrives from Laravel — no fetch needed
+    let { product } = $props();
+
+    // Local state
+    let qty = $state(1);
+
+    // Derived value — auto-updates when product.price or qty change
+    let total = $derived(product.price * qty);
+</script>
+
+<div>
+    <h1 class="text-2xl font-bold">{product.name}</h1>
+
+    <input
+        type="number"
+        bind:value={qty}
+        min="1"
+        class="border rounded px-3 py-2 w-24 mt-2"
+    />
+
+    <p class="mt-2 text-lg">Total: ${total.toFixed(2)}</p>
+</div>
+```
+
+---
+
+## Resources
+
+- [Inertia.js with Svelte](https://inertiajs.com/client-side-setup)
+- [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
+- [Svelte 5 $state](https://svelte.dev/docs/svelte/$state)
+- [Svelte 5 $derived](https://svelte.dev/docs/svelte/$derived)
+- [Svelte 5 $effect](https://svelte.dev/docs/svelte/$effect)
+- [Svelte Template Syntax](https://svelte.dev/docs/svelte/template-syntax)
+- [Ziggy](https://github.com/tighten/ziggy)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/svelte 2.x, Svelte 5.x, Tailwind CSS 4.x

@@ -41,6 +41,9 @@
         "laravel/framework": "^12.0",
         "intervention/image": "^3.11"
     },
+    "suggest": {
+        "livewire/livewire": "For Livewire traits (WithNotifications)"
+    },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
     },

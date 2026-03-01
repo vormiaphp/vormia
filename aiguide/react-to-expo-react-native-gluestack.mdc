@@ -1,0 +1,728 @@
+---
+alwaysApply: true
+---
+
+# React (Web) to Expo React Native + GlueStack UI Conversion Guide
+
+## Overview
+
+This guide covers converting a React web application to a **React Native app using Expo + GlueStack UI v2**. GlueStack UI is a universal component library that works on both web and React Native — it provides styled, accessible components (Button, Input, Box, Text, Card, etc.) that replace both HTML elements and raw React Native primitives. This is the "component library" path rather than writing StyleSheets by hand.
+
+Read `react-to-expo-react-native.mdc` first for the foundational React → React Native conversion rules. This guide focuses specifically on how GlueStack UI replaces manual StyleSheet work.
+
+## Tech Stack
+
+- **Expo**: SDK 52+
+- **React Native**: 0.76+
+- **Expo Router**: v4.x
+- **GlueStack UI**: v2.x (`@gluestack-ui/themed`)
+- **NativeWind**: v4.x (GlueStack v2 uses NativeWind/Tailwind under the hood)
+- **React**: 19.x
+- **TypeScript**: 5.x
+
+---
+
+## Why GlueStack UI
+
+| Raw React Native | GlueStack UI |
+|-----------------|--------------|
+| Write `StyleSheet.create()` for everything | Pre-built styled components |
+| `View`, `Text`, `Pressable`, `TextInput` manually styled | `Box`, `Text`, `Button`, `Input`, `Card`, etc. |
+| No built-in dark mode | Built-in theme with light/dark modes |
+| No design system | Consistent token-based spacing, colors, typography |
+| Reinvent forms, modals, alerts every project | Ready-made `Modal`, `Alert`, `Toast`, `Select`, etc. |
+
+---
+
+## Installation
+
+```bash
+# 1. Create Expo app
+npx create-expo-app@latest MyApp
+cd MyApp
+
+# 2. Install GlueStack UI
+npx gluestack-ui init
+
+# 3. Install NativeWind (GlueStack v2 dependency)
+npm install nativewind tailwindcss
+```
+
+Wrap the app in `GluestackUIProvider`:
+
+```tsx
+// app/_layout.tsx
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { config } from '@gluestack-ui/config';
+import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+    return (
+        <GluestackUIProvider config={config}>
+            <Stack />
+        </GluestackUIProvider>
+    );
+}
+```
+
+---
+
+## Core Component Mapping
+
+### Layout: div → Box / VStack / HStack
+
+**React Web:**
+
+```tsx
+// Vertical stack
+<div className="flex flex-col gap-4 p-4 bg-white">
+    <h1>Title</h1>
+    <p>Content</p>
+</div>
+
+// Horizontal row
+<div className="flex flex-row items-center gap-2">
+    <img src={icon} />
+    <span>Label</span>
+</div>
+```
+
+**GlueStack:**
+
+```tsx
+import { Box, VStack, HStack, Text, Heading } from '@gluestack-ui/themed';
+
+// Vertical stack
+<VStack space="md" p="$4" bg="$white">
+    <Heading>Title</Heading>
+    <Text>Content</Text>
+</VStack>
+
+// Horizontal row
+<HStack space="sm" alignItems="center">
+    <Image source={{ uri: icon }} style={{ width: 24, height: 24 }} />
+    <Text>Label</Text>
+</HStack>
+```
+
+> `VStack` = vertical flex column. `HStack` = horizontal flex row. `Box` = generic `View` with style props.
+
+---
+
+### Typography: h1–h6, p, span → Heading / Text
+
+**React Web:**
+
+```tsx
+<h1 className="text-3xl font-bold text-gray-900">Product Title</h1>
+<h2 className="text-xl font-semibold">Subtitle</h2>
+<p className="text-base text-gray-600">Description text</p>
+<span className="text-sm text-red-500">Error message</span>
+```
+
+**GlueStack:**
+
+```tsx
+import { Heading, Text } from '@gluestack-ui/themed';
+
+<Heading size="3xl">Product Title</Heading>
+<Heading size="xl">Subtitle</Heading>
+<Text size="md" color="$coolGray600">Description text</Text>
+<Text size="sm" color="$error500">Error message</Text>
+```
+
+GlueStack `size` tokens: `"2xs"` | `"xs"` | `"sm"` | `"md"` | `"lg"` | `"xl"` | `"2xl"` | `"3xl"` | `"4xl"` | `"5xl"` | `"6xl"`
+
+---
+
+### Button: `<button>` → `<Button>`
+
+**React Web:**
+
+```tsx
+<button
+    onClick={handleSubmit}
+    disabled={loading}
+    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+>
+    {loading ? 'Saving...' : 'Submit'}
+</button>
+
+// Danger button
+<button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded">
+    Delete
+</button>
+```
+
+**GlueStack:**
+
+```tsx
+import { Button, ButtonText, ButtonSpinner } from '@gluestack-ui/themed';
+
+<Button onPress={handleSubmit} isDisabled={loading} action="primary">
+    {loading ? <ButtonSpinner /> : <ButtonText>Submit</ButtonText>}
+</Button>
+
+// Danger button
+<Button onPress={handleDelete} action="negative">
+    <ButtonText>Delete</ButtonText>
+</Button>
+```
+
+Button `action` values: `"primary"` | `"secondary"` | `"positive"` | `"negative"` | `"default"`
+Button `variant` values: `"solid"` | `"outline"` | `"link"`
+
+---
+
+### Input: `<input>` → `<Input>` + `<InputField>`
+
+**React Web:**
+
+```tsx
+<input
+    type="text"
+    value={name}
+    onChange={e => setName(e.target.value)}
+    placeholder="Enter product name"
+    className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500"
+/>
+```
+
+**GlueStack:**
+
+```tsx
+import { Input, InputField } from '@gluestack-ui/themed';
+
+<Input variant="outline" size="md" isInvalid={!!errors.name}>
+    <InputField
+        value={name}
+        onChangeText={setName}
+        placeholder="Enter product name"
+        autoCapitalize="none"
+    />
+</Input>
+```
+
+> `Input` is the container (handles border, focus ring, error state). `InputField` is the actual text input.
+
+---
+
+### Textarea
+
+**React Web:**
+
+```tsx
+<textarea
+    value={description}
+    onChange={e => setDescription(e.target.value)}
+    rows={4}
+    className="border rounded p-3 w-full"
+/>
+```
+
+**GlueStack:**
+
+```tsx
+import { Textarea, TextareaInput } from '@gluestack-ui/themed';
+
+<Textarea size="md" isInvalid={!!errors.description}>
+    <TextareaInput
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Enter description..."
+        numberOfLines={4}
+    />
+</Textarea>
+```
+
+---
+
+### Card / Panel → Card
+
+**React Web:**
+
+```tsx
+<div className="border rounded-xl shadow-sm p-4 bg-white">
+    <h3 className="font-bold">{product.name}</h3>
+    <p className="text-gray-500">${product.price}</p>
+</div>
+```
+
+**GlueStack:**
+
+```tsx
+import { Card, Heading, Text } from '@gluestack-ui/themed';
+
+<Card size="md" variant="elevated" p="$4">
+    <Heading size="md">{product.name}</Heading>
+    <Text color="$coolGray500" mt="$1">${product.price.toFixed(2)}</Text>
+</Card>
+```
+
+---
+
+### Image
+
+**React Web:**
+
+```tsx
+<img src={product.imageUrl} alt="Product" className="w-full h-48 object-cover rounded-lg" />
+```
+
+**GlueStack:**
+
+```tsx
+import { Image } from '@gluestack-ui/themed';
+
+<Image
+    source={{ uri: product.imageUrl }}
+    size="full"
+    h={192}
+    borderRadius="$lg"
+    alt="Product"
+    resizeMode="cover"
+/>
+```
+
+---
+
+### Divider / Separator
+
+**React Web:**
+
+```tsx
+<hr className="my-4 border-gray-200" />
+```
+
+**GlueStack:**
+
+```tsx
+import { Divider } from '@gluestack-ui/themed';
+
+<Divider my="$4" />
+```
+
+---
+
+## Form Handling with Validation
+
+**React Web:**
+
+```tsx
+<div>
+    <label className="text-sm font-medium text-gray-700">Name</label>
+    <input type="text" value={name} onChange={...} className="..." />
+    {errors.name && <p className="text-red-500 text-sm">{errors.name[0]}</p>}
+</div>
+```
+
+**GlueStack:**
+
+```tsx
+import {
+    FormControl,
+    FormControlLabel,
+    FormControlLabelText,
+    FormControlError,
+    FormControlErrorText,
+    Input,
+    InputField,
+} from '@gluestack-ui/themed';
+
+<FormControl isInvalid={!!errors.name} isRequired>
+    <FormControlLabel>
+        <FormControlLabelText>Name</FormControlLabelText>
+    </FormControlLabel>
+
+    <Input>
+        <InputField
+            value={name}
+            onChangeText={setName}
+            placeholder="Product name"
+        />
+    </Input>
+
+    {errors.name && (
+        <FormControlError>
+            <FormControlErrorText>{errors.name[0]}</FormControlErrorText>
+        </FormControlError>
+    )}
+</FormControl>
+```
+
+---
+
+## Modal
+
+**React Web:**
+
+```tsx
+{isOpen && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h2>Confirm Delete</h2>
+            <p>Are you sure?</p>
+            <div className="flex gap-2 mt-4">
+                <button onClick={onClose}>Cancel</button>
+                <button onClick={onConfirm}>Delete</button>
+            </div>
+        </div>
+    </div>
+)}
+```
+
+**GlueStack:**
+
+```tsx
+import {
+    Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter,
+    Heading, Text, Button, ButtonText,
+} from '@gluestack-ui/themed';
+
+<Modal isOpen={isOpen} onClose={onClose}>
+    <ModalBackdrop />
+    <ModalContent>
+        <ModalHeader>
+            <Heading size="lg">Confirm Delete</Heading>
+        </ModalHeader>
+        <ModalBody>
+            <Text>Are you sure you want to delete this item?</Text>
+        </ModalBody>
+        <ModalFooter>
+            <Button variant="outline" onPress={onClose} mr="$2">
+                <ButtonText>Cancel</ButtonText>
+            </Button>
+            <Button action="negative" onPress={onConfirm}>
+                <ButtonText>Delete</ButtonText>
+            </Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+```
+
+---
+
+## Alert / Toast
+
+**GlueStack Alert:**
+
+```tsx
+import { Alert, AlertIcon, AlertText, InfoIcon } from '@gluestack-ui/themed';
+
+<Alert action="info">
+    <AlertIcon as={InfoIcon} mr="$2" />
+    <AlertText>Your changes have been saved.</AlertText>
+</Alert>
+```
+
+`action` values: `"info"` | `"success"` | `"warning"` | `"error"` | `"muted"`
+
+**GlueStack Toast (programmatic):**
+
+```tsx
+import { useToast, Toast, ToastTitle, ToastDescription } from '@gluestack-ui/themed';
+
+const toast = useToast();
+
+const showSuccess = () => {
+    toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+            <Toast action="success" id={id}>
+                <ToastTitle>Saved!</ToastTitle>
+                <ToastDescription>Your product was created.</ToastDescription>
+            </Toast>
+        ),
+    });
+};
+```
+
+---
+
+## Select / Dropdown
+
+**React Web:**
+
+```tsx
+<select value={category} onChange={e => setCategory(e.target.value)}>
+    <option value="electronics">Electronics</option>
+    <option value="clothing">Clothing</option>
+</select>
+```
+
+**GlueStack:**
+
+```tsx
+import {
+    Select, SelectTrigger, SelectInput, SelectPortal,
+    SelectBackdrop, SelectContent, SelectItem,
+} from '@gluestack-ui/themed';
+
+<Select selectedValue={category} onValueChange={setCategory}>
+    <SelectTrigger>
+        <SelectInput placeholder="Select category" />
+    </SelectTrigger>
+    <SelectPortal>
+        <SelectBackdrop />
+        <SelectContent>
+            <SelectItem label="Electronics" value="electronics" />
+            <SelectItem label="Clothing" value="clothing" />
+        </SelectContent>
+    </SelectPortal>
+</Select>
+```
+
+---
+
+## Spinner / Loading
+
+**React Web:**
+
+```tsx
+{loading && <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full" />}
+```
+
+**GlueStack:**
+
+```tsx
+import { Spinner } from '@gluestack-ui/themed';
+
+{loading && <Spinner size="large" color="$primary500" />}
+```
+
+---
+
+## Badge / Chip
+
+**React Web:**
+
+```tsx
+<span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+```
+
+**GlueStack:**
+
+```tsx
+import { Badge, BadgeText } from '@gluestack-ui/themed';
+
+<Badge action="success" variant="solid">
+    <BadgeText>Active</BadgeText>
+</Badge>
+```
+
+`action`: `"success"` | `"error"` | `"warning"` | `"info"` | `"muted"`
+
+---
+
+## Spacing & Sizing Tokens
+
+GlueStack uses `$` prefix for design tokens:
+
+| Tailwind | GlueStack Token |
+|----------|----------------|
+| `p-1` (4px) | `p="$1"` |
+| `p-2` (8px) | `p="$2"` |
+| `p-4` (16px) | `p="$4"` |
+| `p-6` (24px) | `p="$6"` |
+| `mt-2` | `mt="$2"` |
+| `mb-4` | `mb="$4"` |
+| `gap-3` | `space="sm"` (on VStack/HStack) |
+| `rounded` | `borderRadius="$sm"` |
+| `rounded-xl` | `borderRadius="$xl"` |
+| `rounded-full` | `borderRadius="$full"` |
+| `bg-white` | `bg="$white"` |
+| `text-blue-600` | `color="$primary600"` |
+
+---
+
+## Dark Mode
+
+GlueStack handles dark mode via the provider config:
+
+```tsx
+import { GluestackUIProvider, config } from '@gluestack-ui/themed';
+import { useColorScheme } from 'react-native';
+
+export default function RootLayout() {
+    const colorScheme = useColorScheme();
+
+    return (
+        <GluestackUIProvider config={config} colorMode={colorScheme ?? 'light'}>
+            <Stack />
+        </GluestackUIProvider>
+    );
+}
+```
+
+---
+
+## Best Practices
+
+1. **Use `FormControl`** for all form fields — it handles label, error, required state in one wrapper
+2. **Use `VStack`/`HStack`** instead of `Box` with manual `flexDirection` — more readable
+3. **Use `ButtonSpinner`** inside `Button` for loading states — built-in alignment
+4. **Use Toast** for mutation success/error feedback — replaces browser `alert()`
+5. **Use `$` token system** for spacing/colors — avoids magic numbers and stays consistent with the theme
+6. **Use `isInvalid`/`isDisabled`/`isRequired`** props on `Input` and `FormControl` — drives accessible state automatically
+7. **Wrap root in `GluestackUIProvider`** — components will not render without it
+8. **Use `Modal` with `ModalBackdrop`** — the backdrop handles dismiss on press automatically
+9. **Use `Select` not native `Picker`** — GlueStack Select looks consistent on both iOS and Android
+10. **Keep custom styles minimal** — if you're writing `StyleSheet.create`, check if GlueStack has a component first
+
+---
+
+## Migration Checklist
+
+- [ ] Install GlueStack UI: `npx gluestack-ui init`
+- [ ] Wrap root layout with `GluestackUIProvider`
+- [ ] Replace `div` (column) → `VStack` or `Box`
+- [ ] Replace `div` (row) → `HStack`
+- [ ] Replace `h1..h6` → `Heading size="..."`
+- [ ] Replace `p` / `span` → `Text size="..."`
+- [ ] Replace `<button>` → `<Button><ButtonText>`
+- [ ] Replace `<input type="text">` → `<Input><InputField>`
+- [ ] Replace `<textarea>` → `<Textarea><TextareaInput>`
+- [ ] Replace `<select>` → `<Select>` with portal/content/items
+- [ ] Replace form field wrappers → `<FormControl>` with label + error
+- [ ] Replace custom modal divs → `<Modal>` with backdrop/content/header/footer
+- [ ] Replace custom spinner → `<Spinner>`
+- [ ] Replace custom badges → `<Badge><BadgeText>`
+- [ ] Replace `alert()` / toast library → GlueStack `useToast`
+- [ ] Replace `<hr>` → `<Divider>`
+- [ ] Replace padding/margin inline styles → `$` token props (`p="$4"`, `mt="$2"`)
+- [ ] Replace hardcoded colors → `$` color tokens (`color="$primary600"`)
+- [ ] Add `colorMode` to `GluestackUIProvider` for dark mode support
+- [ ] Test all components on both iOS and Android
+
+---
+
+## Full Example
+
+### React Web (Before)
+
+```tsx
+export default function CreateProductForm() {
+    const [name, setName] = useState('');
+    const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // ... submit
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <h1 className="text-2xl font-bold">New Product</h1>
+            <div>
+                <label className="text-sm font-medium">Name</label>
+                <input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="border rounded px-3 py-2 w-full"
+                />
+                {errors.name && <p className="text-red-500 text-sm">{errors.name[0]}</p>}
+            </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+            >
+                {loading ? 'Saving...' : 'Create Product'}
+            </button>
+        </form>
+    );
+}
+```
+
+### Expo + GlueStack UI (After)
+
+```tsx
+// app/products/create.tsx
+import { useState } from 'react';
+import { router } from 'expo-router';
+import {
+    VStack, Heading, FormControl, FormControlLabel, FormControlLabelText,
+    FormControlError, FormControlErrorText, Input, InputField,
+    Button, ButtonText, ButtonSpinner, useToast, Toast, ToastTitle,
+} from '@gluestack-ui/themed';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import client from '@/api/client';
+
+export default function CreateProductScreen() {
+    const [name, setName] = useState('');
+    const [errors, setErrors] = useState<Record<string, string[]>>({});
+    const [loading, setLoading] = useState(false);
+    const toast = useToast();
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        setErrors({});
+        try {
+            await client.post('/products', { name });
+            toast.show({
+                render: ({ id }) => (
+                    <Toast action="success" id={id}>
+                        <ToastTitle>Product created!</ToastTitle>
+                    </Toast>
+                ),
+            });
+            router.back();
+        } catch (err: any) {
+            if (err.response?.status === 422) {
+                setErrors(err.response.data.errors ?? {});
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <VStack space="lg" p="$4">
+                <Heading size="2xl">New Product</Heading>
+
+                <FormControl isInvalid={!!errors.name} isRequired>
+                    <FormControlLabel>
+                        <FormControlLabelText>Name</FormControlLabelText>
+                    </FormControlLabel>
+                    <Input>
+                        <InputField
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Product name"
+                            autoCapitalize="none"
+                        />
+                    </Input>
+                    {errors.name && (
+                        <FormControlError>
+                            <FormControlErrorText>{errors.name[0]}</FormControlErrorText>
+                        </FormControlError>
+                    )}
+                </FormControl>
+
+                <Button onPress={handleSubmit} isDisabled={loading}>
+                    {loading ? <ButtonSpinner mr="$2" /> : null}
+                    <ButtonText>{loading ? 'Saving...' : 'Create Product'}</ButtonText>
+                </Button>
+            </VStack>
+        </SafeAreaView>
+    );
+}
+```
+
+---
+
+## Resources
+
+- [GlueStack UI v2 Docs](https://gluestack.io/ui/docs/overview/introduction)
+- [GlueStack Components](https://gluestack.io/ui/docs/components/overview)
+- [GlueStack Tokens](https://gluestack.io/ui/docs/theme/tokens)
+- [Expo Docs](https://docs.expo.dev)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [NativeWind](https://www.nativewind.dev)
+
+---
+
+**Last Updated**: March 2026
+**Framework Versions**: Expo SDK 52, React Native 0.76, GlueStack UI v2.x, Expo Router 4.x, React 19.x
