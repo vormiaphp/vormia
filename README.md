@@ -53,7 +53,11 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v4.4.0 🎉
+## What's New in v5.0.0 🎉
+
+### ✨ Highlights
+
+- **Laravel 12 Support** (as of March 1, 2026): Full compatibility with the latest Laravel 12 framework
 
 ### ✨ New Features
 
@@ -93,7 +97,7 @@ The package will automatically check for required dependencies during installati
 - **MCP/AI Guide**: Consolidated into `CURSOR_CODEX_MCP_GUIDE.md`
 - **Troubleshooting**: Added new troubleshooting sections for CSS/JS assets and dependencies
 
-[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.3.1)
+[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.5.2)
 
 ## Key Improvements
 
