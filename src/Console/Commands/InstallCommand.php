@@ -510,7 +510,7 @@ class InstallCommand extends Command
         $this->line('   4. In CreateNewUser (or your registration flow): attach default role after creating user');
 
         $this->newLine();
-        $this->comment('📖 For help: php artisan vormia:help');
+        $this->comment('📖 For help see docs/INSTALLATION.md');
         $this->newLine();
 
         $this->info('✨ Happy coding with Vormia!');
