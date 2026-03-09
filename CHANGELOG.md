@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.2] - 2025-03-09
+
+### Added
+
+- **vormia:uninstall**: New Artisan command to fully remove Vormia from an application
+  - Removes Vormia config, stubs, and public assets
+  - Cleans Vormia entries from `bootstrap/app.php` and `bootstrap/providers.php`
+  - Strips `VORMIA_*` from `.env` and `.env.example`
+  - Reverts Vormia CSS/JS in `resources/css/app.css` and `resources/js/app.js`
+  - Drops all Vormia database tables (`vrm_*`)
+  - Uninstalls Vormia-related npm packages (jquery, flatpickr, select2, sweetalert2)
+  - Clears caches via `optimize:clear`
+  - Use `--force` to skip confirmation prompt
+
 ## [5.0.1] - 2025-03-09
 
 ### Changed
