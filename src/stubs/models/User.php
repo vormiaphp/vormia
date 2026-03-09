@@ -3,8 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Traits\Vrm\Model\HasSlugs;
-use App\Traits\Vrm\Model\HasUserMeta;
+use Vormia\Vormia\Traits\Model\HasSlugs;
+use Vormia\Vormia\Traits\Model\HasUserMeta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -77,7 +77,7 @@ class User extends Authenticatable
 
     public function meta()
     {
-        return $this->hasMany(\App\Models\Vrm\UserMeta::class, 'user_id');
+        return $this->hasMany(\Vormia\Vormia\Models\UserMeta::class, 'user_id');
     }
 
     public function getMeta($key, $default = null)
@@ -137,7 +137,7 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(
-            \App\Models\Vrm\Role::class,
+            \Vormia\Vormia\Models\Role::class,
             config('vormia.table_prefix') . 'role_user',
         );
     }

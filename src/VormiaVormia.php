@@ -95,7 +95,6 @@ class VormiaVormia
         $stubs = [
             'jobs' => $this->appPath('Jobs'),
             'facades' => $this->appPath('Facades'),
-            'providers' => $this->appPath('Providers'),
             'services' => $this->appPath('Services'),
         ];
 
@@ -203,7 +202,6 @@ class VormiaVormia
         $stubs = [
             'jobs' => $this->appPath('Jobs'),
             'facades' => $this->appPath('Facades'),
-            'providers' => $this->appPath('Providers'),
             'services' => $this->appPath('Services'),
         ];
 
@@ -348,7 +346,6 @@ class VormiaVormia
             $this->appPath('Facades/Vrm'),
             $this->appPath('Jobs/Vrm'),
             $this->appPath('Jobs/V1'),
-            $this->appPath('Providers/Vrm'),
             $this->appPath('Services/Vrm'),
             $this->appPath('Notifications'),
             $this->configPath('vormia.php'),

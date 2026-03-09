@@ -58,11 +58,7 @@ class InstallCommand extends Command
             return 1;
         }
 
-        // Step 3: Update bootstrap/app.php
-        $this->step('Updating bootstrap/providers.php...');
-        $this->updateBootstrapApp();
-
-        // Step 4: Update .env files
+        // Step 3: Update .env files
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
@@ -120,78 +116,6 @@ class InstallCommand extends Command
     private function step($message)
     {
         $this->info("📦 {$message}");
-    }
-
-    /**
-     * Update bootstrap/app.php with middleware and providers
-     */
-    private function updateBootstrapApp()
-    {
-        $bootstrapPath = base_path('bootstrap/app.php');
-
-        if (!File::exists($bootstrapPath)) {
-            $this->error('❌ bootstrap/app.php not found.');
-            return;
-        }
-
-        $content = File::get($bootstrapPath);
-
-        // Add middleware aliases
-        $middlewareAliases = "
-            'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class,
-            'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class,
-            'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class,
-            'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class,
-            'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class,";
-
-        // Add providers
-        $providers = "
-        App\\Providers\\Vrm\\NotificationServiceProvider::class,
-        App\\Providers\\Vrm\\TokenServiceProvider::class,
-        App\\Providers\\Vrm\\MediaForgeServiceProvider::class,
-        App\\Providers\\Vrm\\UtilitiesServiceProvider::class,
-        App\\Providers\\Vrm\\GlobalDataServiceProvider::class,";
-
-        // Pattern to find middleware aliases section
-        if (preg_match('/(->withMiddleware\\(function\\s*\\([^)]*\\)\\s*\\{[^}]*alias\\(\\s*\\[[^]]*)/s', $content, $matches)) {
-            $content = str_replace($matches[1], $matches[1] . $middlewareAliases, $content);
-        }
-
-        // Pattern to find providers section  
-        if (preg_match('/(Application::configure[^}]*providers:\\s*\\[[^]]*)/s', $content, $matches)) {
-            $content = str_replace($matches[1], $matches[1] . $providers, $content);
-        }
-
-        File::put($bootstrapPath, $content);
-        $this->info('✅ bootstrap/app.php updated successfully.');
-
-        // --- Manual fallback instructions ---
-        $finalContent = File::get($bootstrapPath);
-        $missing = [];
-        if (strpos($finalContent, "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class") === false) $missing[] = "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class";
-        if (strpos($finalContent, "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class") === false) $missing[] = "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class";
-        if (strpos($finalContent, "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class") === false) $missing[] = "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class";
-        if (strpos($finalContent, "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class") === false) $missing[] = "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class";
-        if (strpos($finalContent, "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class") === false) $missing[] = "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class";
-        $providersList = [
-            'App\\Providers\\Vrm\\NotificationServiceProvider::class',
-            'App\\Providers\\Vrm\\TokenServiceProvider::class',
-            'App\\Providers\\Vrm\\MediaForgeServiceProvider::class',
-            'App\\Providers\\Vrm\\UtilitiesServiceProvider::class',
-            'App\\Providers\\Vrm\\GlobalDataServiceProvider::class',
-        ];
-        $missingProviders = array_filter($providersList, fn($p) => strpos($finalContent, $p) === false);
-        if ($missing || $missingProviders) {
-            $this->warn('Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:');
-            if ($missing) {
-                $this->line("\nAdd these to your middleware aliases array (\$middleware->alias([...]):");
-                foreach ($missing as $m) $this->line('    ' . $m . ',');
-            }
-            if ($missingProviders) {
-                $this->line("\nAdd these to your providers array:");
-                foreach ($missingProviders as $p) $this->line('    ' . $p . ',');
-            }
-        }
     }
 
     /**
@@ -486,15 +410,6 @@ class InstallCommand extends Command
     }
 
     /**
-     * Install API support with Sanctum
-     */
-    private function installApiSupport()
-    {
-        // Deprecated: User must now install Sanctum manually.
-        $this->warn('Automatic Sanctum installation is no longer supported. Please run: php artisan install:api');
-    }
-
-    /**
      * Display completion message
      */
     private function displayCompletionMessage()
@@ -504,10 +419,14 @@ class InstallCommand extends Command
         $this->newLine();
 
         $this->comment('📋 Next steps (see docs/INSTALLATION.md for details):');
-        $this->line('   1. Add HasVormiaRoles trait and is_active to your User model');
+        $this->line('   1. Add the Vormia\Vormia\Traits\HasVormiaRoles trait and is_active to your User model');
+        $this->line('      use Vormia\Vormia\Traits\HasVormiaRoles;');
         $this->line('   2. Run: php artisan migrate');
         $this->line('   3. Add HasApiTokens to User for API auth');
         $this->line('   4. In CreateNewUser (or your registration flow): attach default role after creating user');
+        $this->newLine();
+        $this->comment('   Middleware (role, permission, module, authority, api-auth) and providers are');
+        $this->comment('   auto-registered by the package. No manual bootstrap/app.php changes needed.');
 
         $this->newLine();
         $this->comment('📖 For help see docs/INSTALLATION.md');

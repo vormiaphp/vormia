@@ -165,7 +165,7 @@ This will automatically install Vormia with all files and configurations, includ
 
 **Automatically Installed:**
 
-- ✅ All Vormia files and directories (models, services, middleware, providers, traits)
+- ✅ All Vormia files and directories (models, services, middleware, traits are auto-loaded from the package)
 - ✅ All notification stubs copied to `app/Notifications`
 - ✅ All jobs in `stubs/jobs/Vrm` copied to `app/Jobs/Vrm`
 - ✅ All jobs in `stubs/jobs/V1` copied to `app/Jobs/V1`
@@ -179,42 +179,14 @@ This will automatically install Vormia with all files and configurations, includ
 - ✅ **CORS configuration** published via `php artisan config:publish cors`
 - ✅ **npm packages** installed: jquery, flatpickr, select2, sweetalert2
 
-**Manual Step Required:**
+**Manual Steps Required:**
 
 - ⚠️ **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
+- ⚠️ **Add the `Vormia\Vormia\Traits\HasVormiaRoles` trait and `is_active` field to your User model.**
 
-2. If you see a message like:
+Middleware (`role`, `permission`, `module`, `authority`, `api-auth`) and service providers are auto-registered by the package -- no manual `bootstrap/app.php` changes needed.
 
-```
-Some middleware aliases or providers could not be added automatically. Please add them manually to bootstrap/app.php:
-Add these to your middleware aliases array:
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
-        $middleware->alias([
-            'role' => \App\Http\Middleware\Vrm\CheckRole::class,
-            'module' => \App\Http\Middleware\Vrm\CheckModule::class,
-            'permission' => \App\Http\Middleware\Vrm\CheckPermission::class,
-            'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class,
-            'authority' => \App\Http\Middleware\Vrm\CheckAuthority::class,
-        ]);
-    })
-```
-
-then open `bootstrap/app.php` and add the above lines to the appropriate arrays.
-
-```
-Add these to your providers array bootstrap/providers.php:
-
-    App\Providers\Vrm\NotificationServiceProvider::class,
-    App\Providers\Vrm\TokenServiceProvider::class,
-    App\Providers\Vrm\MediaForgeServiceProvider::class,
-    App\Providers\Vrm\UtilitiesServiceProvider::class,
-    App\Providers\Vrm\GlobalDataServiceProvider::class,
-```
-
-open `bootstrap/providers.php` and add the above lines to the appropriate arrays.
-
-3. Configure your `.env` file as needed.
+2. Configure your `.env` file as needed.
 
 4. Run migrations:
 
@@ -341,7 +313,6 @@ php artisan vormia:uninstall
 
 - ✅ All Vormia files and directories
 - ✅ Configuration files
-- ✅ bootstrap/app.php middleware and providers
 - ✅ Environment variables
 - ✅ CSS and JS plugin files (`resources/css/plugins`, `resources/js/plugins`, `resources/js/helpers`)
 - ✅ npm packages (jquery, flatpickr, select2, sweetalert2)
@@ -375,7 +346,7 @@ php artisan migrate
 **Solution**: Ensure your models use the correct traits:
 
 ```php
-use App\Traits\Vrm\Model\HasUserMeta;
+use Vormia\Vormia\Traits\Model\HasUserMeta;
 
 class User extends Authenticatable
 {
@@ -390,7 +361,7 @@ class User extends Authenticatable
 
 1. Sanctum is automatically installed during `php artisan vormia:install`
 2. Add `HasApiTokens` trait to User model
-3. Check middleware alias: `'api-auth' => \App\Http\Middleware\Vrm\ApiAuthenticate::class`
+3. The `api-auth` middleware is auto-registered by the package (`Vormia\Vormia\Http\Middleware\ApiAuthenticate`)
 
 ##### **Utilities Service Not Working**
 

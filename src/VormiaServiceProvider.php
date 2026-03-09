@@ -4,9 +4,11 @@ namespace VormiaPHP\Vormia;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 use Vormia\Console\Commands\InstallCommand;
 use Illuminate\Support\Facades\Blade;
 use Vormia\Vormia\Http\Middleware\ApiAuthenticate;
+use Vormia\Vormia\Models\SlugRegistry;
 use Vormia\Vormia\Services\NotificationService;
 use Vormia\Vormia\Services\TokenService;
 
@@ -21,6 +23,8 @@ class VormiaServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TokenService::class, fn () => new TokenService());
+
+        $this->app->singleton('notification', fn () => new NotificationService());
     }
 
     public function boot(): void
@@ -35,6 +39,7 @@ class VormiaServiceProvider extends ServiceProvider
         }
 
         $this->registerMiddleware();
+        $this->registerRouteBindings();
         $this->registerRoutes();
         $this->registerPublishing();
     }
@@ -49,10 +54,17 @@ class VormiaServiceProvider extends ServiceProvider
         $router->aliasMiddleware('module', \Vormia\Vormia\Http\Middleware\CheckModule::class);
     }
 
+    protected function registerRouteBindings(): void
+    {
+        Route::bind('anySlug', function ($value) {
+            return SlugRegistry::findBySlug($value);
+        });
+    }
+
     protected function registerRoutes(): void
     {
         $this->app->booted(function () {
-            \Illuminate\Support\Facades\Route::prefix('api')
+            Route::prefix('api')
                 ->middleware('api')
                 ->group(__DIR__ . '/../routes/api.php');
         });
