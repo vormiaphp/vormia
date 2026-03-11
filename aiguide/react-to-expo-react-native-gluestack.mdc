@@ -12,8 +12,8 @@ Read `react-to-expo-react-native.mdc` first for the foundational React → React
 
 ## Tech Stack
 
-- **Expo**: SDK 52+
-- **React Native**: 0.76+
+- **Expo**: SDK 55+
+- **React Native**: 0.83+ (New Architecture required)
 - **Expo Router**: v4.x
 - **GlueStack UI**: v2.x (`@gluestack-ui/themed`)
 - **NativeWind**: v4.x (GlueStack v2 uses NativeWind/Tailwind under the hood)
@@ -725,4 +725,4 @@ export default function CreateProductScreen() {
 ---
 
 **Last Updated**: March 2026
-**Framework Versions**: Expo SDK 52, React Native 0.76, GlueStack UI v2.x, Expo Router 4.x, React 19.x
+**Framework Versions**: Expo SDK 55, React Native 0.83, GlueStack UI v2.x, Expo Router 4.x, React 19.x

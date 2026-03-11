@@ -10,12 +10,14 @@ This guide covers converting a React web application to a **React Native app usi
 
 ## Tech Stack
 
-- **Expo**: SDK 52+ (managed workflow)
-- **React Native**: 0.76+ (via Expo)
+- **Expo**: SDK 55+ (managed workflow)
+- **React Native**: 0.83+ (via Expo, New Architecture required)
 - **Expo Router**: v4.x (file-based navigation — replaces React Router)
 - **React**: 19.x
 - **TypeScript**: 5.x
 - **NativeWind**: v4.x (Tailwind-style classes for React Native, optional)
+
+> **SDK 55 breaking change**: Legacy Architecture support has been dropped. All apps must use React Native's New Architecture. The `newArchEnabled` config option no longer exists in `app.json`.
 
 ---
 
@@ -506,6 +508,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 6. **`SafeAreaView`** on every screen root to handle notch/status bar
 7. **`expo-secure-store`** for tokens — never `AsyncStorage` for sensitive data
 8. **Test on real device** — simulator does not replicate performance, touch accuracy, or permissions
+11. **Use development builds** over Expo Go — Expo Go is being phased out and doesn't support all native modules
 9. **`Pressable` over `TouchableOpacity`** for new code — more flexible press state control
 10. **`useLocalSearchParams`** for route params — `useParams()` from React Router does not exist in Expo Router
 
@@ -513,8 +516,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 ## Migration Checklist
 
-- [ ] Create Expo app: `npx create-expo-app@latest MyApp`
+- [ ] Create Expo app: `npx create-expo-app@latest MyApp` (SDK 55 default template uses `/src` folder structure)
 - [ ] Enable TypeScript: project is TypeScript by default
+- [ ] Verify New Architecture is active (required in SDK 55 — legacy architecture no longer supported)
+- [ ] Use development builds instead of Expo Go for testing (Expo Go is being phased out)
 - [ ] Replace all `div` → `View`, `p`/`span`/`h1..h6` → `Text`
 - [ ] Replace `button` → `Pressable` + `Text`
 - [ ] Replace `input[type=text]` → `TextInput` with `onChangeText`
@@ -531,7 +536,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 - [ ] Replace spinner `div` → `ActivityIndicator`
 - [ ] Wrap list with `FlatList` (not `ScrollView + map`)
 - [ ] Add `EXPO_PUBLIC_API_URL` to `.env`
-- [ ] Test on iOS and Android (real devices or Expo Go)
+- [ ] Test on iOS and Android (real devices or development builds)
 
 ---
 
@@ -638,4 +643,4 @@ const styles = StyleSheet.create({
 ---
 
 **Last Updated**: March 2026
-**Framework Versions**: Expo SDK 52, React Native 0.76, Expo Router 4.x, React 19.x
+**Framework Versions**: Expo SDK 55, React Native 0.83, Expo Router 4.x, React 19.x

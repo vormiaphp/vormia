@@ -496,13 +496,24 @@ useMutation({
 
 ### Route Params
 
+In Next.js 15, `params` is now a **Promise** and must be awaited:
+
 ```tsx
 // app/products/[id]/page.tsx
-export default function ProductDetail({ params }: { params: { id: string } }) {
-    const { data: product } = useProduct(parseInt(params.id));
+export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <ProductDetailClient id={parseInt(id)} />;
+}
+
+// Client component that uses TanStack Query
+'use client';
+function ProductDetailClient({ id }: { id: number }) {
+    const { data: product } = useProduct(id);
     return <h1>{product?.name}</h1>;
 }
 ```
+
+> **Next.js 15 breaking change**: `params`, `searchParams`, `headers`, `cookies`, and `draftMode` are all async now. If you access them synchronously, it still works in development but will warn — and will break in production builds.
 
 ### Navigation
 
@@ -535,8 +546,10 @@ router.replace('/login'); // no history entry
 // Server Component — can fetch directly (no TanStack Query needed)
 // app/products/page.tsx (server component, no 'use client')
 async function getProducts() {
+    // Next.js 15: fetch is NOT cached by default (changed from v14)
+    // Add revalidate or cache option explicitly when you want caching
     const res = await fetch(`${process.env.API_URL}/api/products`, {
-        next: { revalidate: 60 }, // cache for 60 seconds
+        next: { revalidate: 60 },
     });
     return res.json();
 }

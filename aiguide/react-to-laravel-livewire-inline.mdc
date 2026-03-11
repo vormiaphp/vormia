@@ -2,19 +2,22 @@
 alwaysApply: true
 ---
 
-# React to Laravel Blade + Livewire Volt (Inline/Non-Class) Conversion Guide
+# React to Laravel Blade + Livewire 4 (Single-File Components) Conversion Guide
 
 ## Overview
 
-This guide covers converting React function components (non-class) to Laravel Blade templates with **Livewire Volt inline components** — the functional composition API (not the `new class extends Component` class style). Inline Volt components are written using free functions like `state()`, `computed()`, `on()`, and `mount()` imported from `Livewire\Volt\Volt`.
+This guide covers converting React function components to Laravel Blade templates with **Livewire 4 single-file components** — the native view-first format where an anonymous PHP class and Blade markup live in one `.blade.php` file. This is the default and recommended approach in Livewire 4, replacing the older Volt functional API.
+
+Each single-file component uses an anonymous class extending `Livewire\Component` at the top, followed by the Blade template, with optional scoped `<style>` and `<script>` blocks.
 
 ## Tech Stack
 
 - **Laravel**: 12.x
-- **Livewire**: 4.x
-- **Livewire Volt**: 1.x (inline/functional style)
+- **Livewire**: 4.x (native single-file components)
 - **Alpine.js**: 3.x (client-only interactions)
 - **Tailwind CSS**: 4.x
+
+> **Note on Volt**: The Volt functional API (`state()`, `computed()`, `mount()` as free functions) still works but is superseded by Livewire 4's built-in single-file format. New projects should use the native format shown in this guide.
 
 ---
 
@@ -34,28 +37,29 @@ src/
 └── App.jsx
 ```
 
-### Laravel Blade + Volt (After)
+### Laravel Blade + Livewire 4 (After)
 
 ```
 resources/views/
-├── livewire/
-│   ├── counter.blade.php
-│   ├── user-card.blade.php
-│   ├── search-bar.blade.php
-│   └── pages/
-│       ├── home.blade.php
-│       └── profile.blade.php
 ├── components/
+│   ├── ⚡counter.blade.php
+│   ├── ⚡user-card.blade.php
+│   ├── ⚡search-bar.blade.php
 │   └── layouts/
 │       └── app.blade.php
+├── pages/
+│   ├── ⚡home.blade.php
+│   └── ⚡profile.blade.php
 └── partials/
 ```
+
+> The `⚡` prefix marks Livewire single-file components, making them instantly recognizable in the file tree. Standard Blade components (no server state) remain without the prefix.
 
 ---
 
 ## Component Conversion Patterns
 
-### 1. Basic Function Component → Volt Inline Component
+### 1. Basic Function Component → Livewire Single-File Component
 
 **React:**
 
@@ -72,15 +76,20 @@ function Counter() {
 }
 ```
 
-**Volt Inline (functional style):**
+**Livewire 4 Single-File Component:**
 
 ```php
-<?php
-use function Livewire\Volt\{state, computed};
+<?php // resources/views/components/⚡counter.blade.php
+use Livewire\Component;
 
-state(['count' => 0]);
+new class extends Component {
+    public int $count = 0;
 
-$increment = fn() => $this->count++;
+    public function increment(): void
+    {
+        $this->count++;
+    }
+};
 ?>
 
 <div>
@@ -89,11 +98,11 @@ $increment = fn() => $this->count++;
 </div>
 ```
 
-> Key difference from class-style: use `state()` instead of declaring public properties. Actions are declared as arrow functions assigned to variables.
+> The anonymous class extends `Component` directly. Public properties are your state, and public methods are your actions. No extra package needed.
 
 ---
 
-### 2. Props → Volt `state()` with External Values
+### 2. Props → Public Properties via `mount()`
 
 **React:**
 
@@ -108,14 +117,23 @@ function UserCard({ name, email }) {
 }
 ```
 
-**Volt Inline:**
+**Livewire 4 Single-File Component:**
 
 ```php
-<?php
-use function Livewire\Volt\{state};
+<?php // resources/views/components/⚡user-card.blade.php
+use Livewire\Component;
 
-// Props passed from parent livewire component or route
-state(['name' => '', 'email' => '']);
+new class extends Component {
+    public string $name = '';
+    public string $email = '';
+
+    // mount() receives props passed from the parent
+    public function mount(string $name, string $email): void
+    {
+        $this->name = $name;
+        $this->email = $email;
+    }
+};
 ?>
 
 <div>
@@ -127,7 +145,7 @@ state(['name' => '', 'email' => '']);
 **Blade component for pure display (no server state needed):**
 
 ```php
-{{-- resources/views/components/user-card.blade.php --}}
+{{-- resources/views/components/user-card.blade.php (no ⚡ prefix — plain Blade) --}}
 @props(['name', 'email'])
 
 <div>
@@ -157,23 +175,48 @@ function HomePage() {
 }
 ```
 
-**Volt Inline:**
+**Livewire 4 (via `Route::livewire` and config):**
+
+Layouts are configured in `config/livewire.php` using the `component_layout` key and the `layouts::` namespace:
 
 ```php
-<?php
-use function Livewire\Volt\{layout};
+// config/livewire.php
+'component_layout' => 'layouts::app',
+```
 
-layout('components.layouts.app');
+The page component itself only contains its own content:
+
+```php
+<?php // resources/views/pages/⚡home.blade.php
+use Livewire\Component;
+
+new class extends Component {
+    //
+};
 ?>
 
 <main>Home content</main>
+```
+
+You can also override the layout per-component using the `#[Layout]` attribute:
+
+```php
+<?php
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts::admin')]
+new class extends Component {
+    //
+};
+?>
 ```
 
 ---
 
 ## State Management
 
-### useState → state()
+### useState → Public Properties
 
 **React:**
 
@@ -183,19 +226,21 @@ const [items, setItems] = useState([]);
 const [name, setName] = useState('');
 ```
 
-**Volt Inline:**
+**Livewire 4:**
 
 ```php
 <?php
-use function Livewire\Volt\{state};
+use Livewire\Component;
 
-state([
-    'isOpen' => false,
-    'items'  => [],
-    'name'   => '',
-]);
+new class extends Component {
+    public bool $isOpen = false;
+    public array $items = [];
+    public string $name = '';
+};
 ?>
 ```
+
+> Public properties on the component class **are** your reactive state. No special `state()` function needed.
 
 ---
 
@@ -209,30 +254,33 @@ useEffect(() => {
 }, []);
 ```
 
-**Volt Inline:**
+**Livewire 4:**
 
 ```php
 <?php
-use function Livewire\Volt\{state, mount};
+use Livewire\Component;
 use Illuminate\Support\Facades\Log;
 
-state(['items' => []]);
+new class extends Component {
+    public array $items = [];
 
-mount(function () {
-    try {
-        $file = public_path('media/json/items.json');
-        $this->items = json_decode(file_get_contents($file), true) ?? [];
-    } catch (\Throwable $e) {
-        Log::warning('Failed to load items: ' . $e->getMessage());
-        $this->items = [];
+    public function mount(): void
+    {
+        try {
+            $file = public_path('media/json/items.json');
+            $this->items = json_decode(file_get_contents($file), true) ?? [];
+        } catch (\Throwable $e) {
+            Log::warning('Failed to load items: ' . $e->getMessage());
+            $this->items = [];
+        }
     }
-});
+};
 ?>
 ```
 
 ---
 
-### useEffect with Dependency → on()
+### useEffect with Dependency → updated() Lifecycle Hook
 
 **React:**
 
@@ -242,29 +290,49 @@ useEffect(() => {
 }, [selectedItem]);
 ```
 
-**Volt Inline:**
+**Livewire 4 — using `updated()` lifecycle hook:**
 
 ```php
 <?php
-use function Livewire\Volt\{state, on};
+use Livewire\Component;
 
-state(['selectedItem' => null, 'total' => 0]);
+new class extends Component {
+    public ?string $selectedItem = null;
+    public int $total = 0;
 
-on(['selectedItem' => function () {
-    $this->total = computeTotal($this->selectedItem);
-}]);
+    // Called automatically when $selectedItem changes
+    public function updatedSelectedItem(): void
+    {
+        $this->total = computeTotal($this->selectedItem);
+    }
+};
 ?>
 ```
 
-> For property-watching within the component itself, define an `updated` function:
+**Livewire 4 — using PHP 8.4 property hooks (cleaner alternative):**
 
 ```php
-$updatedSelectedItem = fn() => $this->total = computeTotal($this->selectedItem);
+<?php
+use Livewire\Component;
+
+new class extends Component {
+    public int $total = 0;
+
+    public ?string $selectedItem = null {
+        set(?string $value) {
+            $this->selectedItem = $value;
+            $this->total = computeTotal($value);
+        }
+    }
+};
+?>
 ```
+
+> PHP 8.4 property hooks let you define native getters/setters directly on properties, replacing the magic `updated*` lifecycle methods.
 
 ---
 
-### useMemo → computed()
+### useMemo → Computed Properties
 
 **React:**
 
@@ -274,18 +342,25 @@ const total = useMemo(() => {
 }, [items]);
 ```
 
-**Volt Inline:**
+**Livewire 4:**
 
 ```php
 <?php
-use function Livewire\Volt\{state, computed};
+use Livewire\Attributes\Computed;
+use Livewire\Component;
 
-state(['items' => []]);
+new class extends Component {
+    public array $items = [];
 
-$total = computed(fn() => collect($this->items)->sum('price'));
+    #[Computed]
+    public function total(): float
+    {
+        return collect($this->items)->sum('price');
+    }
+};
 ?>
 
-{{-- In template --}}
+{{-- In template — access computed properties via $this->methodName --}}
 <p>Total: {{ $this->total }}</p>
 ```
 
@@ -305,6 +380,19 @@ $total = computed(fn() => collect($this->items)->sum('price'));
 
 ```blade
 <button wire:click="deleteItem({{ $item['id'] }})">Delete</button>
+```
+
+New in Livewire 4 — `wire:click` supports additional modifiers:
+
+```blade
+{{-- Fire multiple actions in parallel --}}
+<button wire:click.async="save">Save</button>
+
+{{-- Keep scroll position after action completes --}}
+<button wire:click.preserve-scroll="loadMore">Load More</button>
+
+{{-- Skip re-rendering (for fire-and-forget actions) --}}
+<button wire:click.renderless="trackClick">Track</button>
 ```
 
 ---
@@ -345,21 +433,25 @@ $total = computed(fn() => collect($this->items)->sum('price'));
 </form>
 ```
 
-Declare the action:
+Declare the action in the component class:
 
 ```php
 <?php
-use function Livewire\Volt\{state};
+use Livewire\Component;
 
-state(['email' => '']);
+new class extends Component {
+    public string $email = '';
 
-$handleSubmit = function () {
-    // validate and process
-    $this->validate(['email' => 'required|email']);
-    // ...
+    public function handleSubmit(): void
+    {
+        $this->validate(['email' => 'required|email']);
+        // process the submission...
+    }
 };
 ?>
 ```
+
+> **wire:model behavior in v4**: By default, `wire:model` only syncs state when an action fires (like `wire:click` or `wire:submit`), not as the user types. Use `wire:model.live` for real-time syncing. Modifiers like `.blur` and `.change` now control when client-side state syncs, not just network timing.
 
 ---
 
@@ -377,28 +469,31 @@ useEffect(() => {
 }, []);
 ```
 
-**Volt Inline:**
+**Livewire 4:**
 
 ```php
 <?php
-use function Livewire\Volt\{state, mount};
+use Livewire\Component;
 use Illuminate\Support\Facades\Log;
 
-state(['products' => []]);
+new class extends Component {
+    public array $products = [];
 
-mount(function () {
-    try {
-        // Option 1: JSON file (prototyping)
-        $path = public_path('media/json/products.json');
-        $this->products = json_decode(file_get_contents($path), true) ?? [];
+    public function mount(): void
+    {
+        try {
+            // Option 1: JSON file (prototyping)
+            $path = public_path('media/json/products.json');
+            $this->products = json_decode(file_get_contents($path), true) ?? [];
 
-        // Option 2: Database (production)
-        // $this->products = \App\Models\Product::all()->toArray();
-    } catch (\Throwable $e) {
-        Log::error('Products load failed: ' . $e->getMessage());
-        $this->products = [];
+            // Option 2: Database (production)
+            // $this->products = \App\Models\Product::all()->toArray();
+        } catch (\Throwable $e) {
+            Log::error('Products load failed: ' . $e->getMessage());
+            $this->products = [];
+        }
     }
-});
+};
 ?>
 ```
 
@@ -414,7 +509,34 @@ mount(function () {
 <Route path="/profile/:id" element={<ProfilePage />} />
 ```
 
-**Laravel `routes/web.php`:**
+**Livewire 4 `routes/web.php` — using `Route::livewire()` (preferred):**
+
+```php
+// Basic route — resolves to a Livewire component by dot-notation path
+Route::livewire('dashboard', 'front.dashboard')->name('dashboard');
+
+// Route with parameters
+Route::livewire('/profile/{id}', 'pages.profile')->name('profile.show');
+
+// With middleware
+Route::livewire('/settings', 'account.settings')
+    ->middleware(['auth', 'verified'])
+    ->name('settings');
+
+// Using namespaces (pages:: resolves to a configured component directory)
+Route::livewire('/admin', 'pages::admin-dashboard')->name('admin.dashboard');
+
+// Grouping routes with shared middleware
+Route::middleware(['auth'])->group(function () {
+    Route::livewire('dashboard', 'front.dashboard')->name('dashboard');
+    Route::livewire('/orders', 'front.orders')->name('orders');
+    Route::livewire('/orders/{id}', 'front.order-detail')->name('orders.show');
+});
+```
+
+The second argument is a dot-notation path to the component's Blade file. For example, `'front.dashboard'` resolves to `resources/views/livewire/front/⚡dashboard.blade.php`.
+
+**Class-based routing (still works):**
 
 ```php
 use App\Livewire\Pages\Profile;
@@ -422,18 +544,24 @@ use App\Livewire\Pages\Profile;
 Route::get('/profile/{id}', Profile::class)->name('profile.show');
 ```
 
-### Route Params in Volt Component
+> **Livewire 4 namespaces**: `pages::` resolves to page components, `layouts::` resolves to layouts. You can also define custom namespaces in `config/livewire.php` under `component_namespaces` for modular apps.
+
+### Route Params in the Component
 
 ```php
 <?php
-use function Livewire\Volt\{state, mount};
+use Livewire\Component;
 
-state(['userId' => null, 'user' => null]);
+new class extends Component {
+    public ?int $userId = null;
+    public ?array $user = null;
 
-mount(function (int $id) {
-    $this->userId = $id;
-    $this->user   = \App\Models\User::findOrFail($id)->toArray();
-});
+    public function mount(int $id): void
+    {
+        $this->userId = $id;
+        $this->user = \App\Models\User::findOrFail($id)->toArray();
+    }
+};
 ?>
 ```
 
@@ -557,6 +685,225 @@ return (
 
 ---
 
+## Livewire 4 New Features
+
+### Islands — Independent Rendering Regions
+
+Islands let you wrap expensive sections of a component so they render independently, without re-rendering the entire page. This is similar to React's `<Suspense>` and lazy loading patterns.
+
+**React (Suspense + lazy):**
+
+```jsx
+<Suspense fallback={<Spinner />}>
+    <ExpensiveChart data={data} />
+</Suspense>
+```
+
+**Livewire 4 Islands:**
+
+```blade
+{{-- Basic island: only this section re-renders on its own --}}
+@island
+    <livewire:expensive-chart :data="$data" />
+@endisland
+
+{{-- Lazy island: loads after initial page render (intersection observer) --}}
+@island(lazy: true)
+    <livewire:revenue-dashboard />
+    @placeholder
+        <div class="animate-pulse h-64 bg-gray-200 rounded"></div>
+    @endplaceholder
+@endisland
+
+{{-- Deferred island: loads immediately after page render --}}
+@island(defer: true)
+    <livewire:notifications-panel />
+@endisland
+
+{{-- Named island: trigger updates from elsewhere with wire:island --}}
+@island(name: 'cart-total')
+    <livewire:cart-summary />
+@endisland
+
+<button wire:island="cart-total" wire:click="addToCart">Add to Cart</button>
+```
+
+> Islands dramatically improve performance. In benchmarks, a page rendering 29,000 Blade components dropped from 1.6 seconds to 131 milliseconds.
+
+---
+
+### Scoped Styles & Scripts
+
+Component CSS and JavaScript now live directly inside the single-file component. They are automatically scoped and served as native cached files.
+
+**React (CSS-in-JS or module CSS):**
+
+```jsx
+import styles from './Counter.module.css';
+
+function Counter() {
+    return <div className={styles.wrapper}>...</div>;
+}
+```
+
+**Livewire 4 (scoped in the same file):**
+
+```php
+<?php // resources/views/components/⚡counter.blade.php
+use Livewire\Component;
+
+new class extends Component {
+    public int $count = 0;
+
+    public function increment(): void
+    {
+        $this->count++;
+    }
+};
+?>
+
+<div class="counter-wrapper">
+    <p>{{ $count }}</p>
+    <button wire:click="increment">+</button>
+</div>
+
+<style>
+.counter-wrapper {
+    padding: 1rem;
+    border: 2px solid #3b82f6;
+    border-radius: 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('livewire:init', () => {
+    console.log('Counter component loaded');
+});
+</script>
+```
+
+> Styles are scoped to the component automatically — no class name collisions.
+
+---
+
+### Loading States — `data-loading` Attribute
+
+Livewire 4 automatically adds a `data-loading` attribute to any element that triggers a network request, replacing complex `wire:loading` configurations.
+
+**React (loading state pattern):**
+
+```jsx
+const [saving, setSaving] = useState(false);
+
+async function handleSave() {
+    setSaving(true);
+    await save();
+    setSaving(false);
+}
+
+return (
+    <button onClick={handleSave} disabled={saving} className={saving ? 'opacity-50' : ''}>
+        {saving ? 'Saving...' : 'Save'}
+    </button>
+);
+```
+
+**Livewire 4 (zero-JS loading states with Tailwind):**
+
+```blade
+{{-- Automatic opacity change during request --}}
+<button wire:click="save" class="data-loading:opacity-50">
+    Save Changes
+</button>
+
+{{-- Show a spinner only during loading --}}
+<svg class="not-data-loading:hidden animate-spin h-5 w-5">...</svg>
+
+{{-- Style children, parents, and siblings --}}
+<div class="has-data-loading:bg-gray-100">
+    <button wire:click="save">Save</button>
+</div>
+```
+
+> `wire:loading` still works, but `data-loading` is the simpler approach using Tailwind variants: `data-loading:`, `not-data-loading:`, `in-data-loading:`, `has-data-loading:`, `peer-data-loading:`.
+
+---
+
+### Slots — Livewire Components Accept Slots
+
+Livewire components now accept slots just like Blade components, bridging the gap between the two.
+
+**React (children prop):**
+
+```jsx
+function Card({ title, children }) {
+    return (
+        <div className="card">
+            <h2>{title}</h2>
+            <div>{children}</div>
+        </div>
+    );
+}
+
+<Card title="Welcome">
+    <p>Hello world</p>
+</Card>
+```
+
+**Livewire 4 (slots):**
+
+```php
+<?php // resources/views/components/⚡card.blade.php
+use Livewire\Component;
+
+new class extends Component {
+    public string $title = '';
+};
+?>
+
+<div class="card">
+    <h2>{{ $title }}</h2>
+    <div>{{ $slot }}</div>
+</div>
+```
+
+```blade
+{{-- Usage --}}
+<livewire:card title="Welcome">
+    <p>Hello world</p>
+</livewire:card>
+```
+
+---
+
+### `wire:ref` — Targeting Child Components
+
+`wire:ref` lets you reference and interact with child components directly, similar to React's `useRef` for component instances.
+
+**React:**
+
+```jsx
+const formRef = useRef();
+// formRef.current.reset();
+```
+
+**Livewire 4:**
+
+```blade
+<livewire:contact-form wire:ref="contactForm" />
+<button wire:click="$refs.contactForm.resetForm()">Reset Form</button>
+```
+
+---
+
+### Blaze Compiler — Automatic Performance
+
+The Blaze compiler is a build-time optimization layer that pre-renders static portions of your Blade templates through "code folding." It makes Blade components render up to **20x faster** with zero code changes from you.
+
+This runs automatically in Livewire 4 — no configuration needed. Static HTML that never changes is compiled once and served directly, while dynamic portions are still evaluated at runtime.
+
+---
+
 ## When to Use Livewire vs Alpine.js
 
 | Scenario | Use |
@@ -572,24 +919,30 @@ return (
 
 ## Best Practices
 
-1. **Type-hint `mount()` arguments** — `mount(function (int $id, string $slug))`
-2. **Use `wire:key`** on all looped elements to help Livewire diff correctly
+1. **Type-hint `mount()` arguments** — `public function mount(int $id, string $slug): void`
+2. **Use `wire:key`** on all looped elements to help Livewire diff correctly (v4 defaults `smart_wire_keys` to `true`, but explicit keys remain best practice)
 3. **Debounce `wire:model.live`** for search/filter inputs to reduce round trips
 4. **Use Blade comments `{{-- --}}`** instead of HTML comments inside Blade files
-5. **Use `computed()`** for derived values instead of recalculating in multiple places
+5. **Use `#[Computed]`** for derived values instead of recalculating in multiple places
 6. **Keep server logic out of Alpine.js** — Alpine is view layer only
 7. **Responsive classes** — Tailwind mobile-first: `text-sm md:text-base lg:text-lg`
 8. **Accessibility** — include `aria-` attributes and semantic HTML tags
+9. **Use `data-loading:` Tailwind variants** for loading states instead of complex `wire:loading` setups
+10. **Use Islands for expensive sections** — wrap heavy components in `@island(lazy: true)` to avoid blocking initial render
+11. **Leverage scoped styles** — keep component CSS inside the `<style>` block rather than global stylesheets
+12. **Use PHP 8.4 property hooks** — replace `updated*` lifecycle methods with native getters/setters where possible
+13. **Use `Route::livewire()`** for page components instead of `Route::get()`
 
 ---
 
 ## Migration Checklist
 
 - [ ] Identify if component needs server state (use Livewire) or UI-only state (use Alpine.js)
-- [ ] Replace `useState` with `state([])` at the top of the `<?php ?>` block
-- [ ] Convert `useEffect(fn, [])` to `mount(function () { ... })`
-- [ ] Convert `useEffect(fn, [dep])` to a property watcher via `$updatedProperty` or `on()`
-- [ ] Replace `useMemo` with `computed(fn)` and reference as `$this->property`
+- [ ] Create single-file component with `new class extends Component {}` in a `⚡name.blade.php` file
+- [ ] Replace `useState` with typed public properties on the component class
+- [ ] Convert `useEffect(fn, [])` to `public function mount(): void { ... }`
+- [ ] Convert `useEffect(fn, [dep])` to `updatedPropertyName()` method or PHP 8.4 property hooks
+- [ ] Replace `useMemo` with `#[Computed]` methods, reference as `$this->methodName`
 - [ ] Replace `onClick` handlers with `wire:click="methodName(...)"`
 - [ ] Replace controlled inputs with `wire:model` (add `.live.debounce.300ms` for search)
 - [ ] Replace `fetch()` with PHP data loading in `mount()`
@@ -597,8 +950,12 @@ return (
 - [ ] Replace `{condition && <X />}` with `@if` / `@endif`
 - [ ] Replace `.map()` with `@foreach` and add `wire:key`
 - [ ] Replace React Router `<Link>` with `<a href="{{ route('name') }}">`
-- [ ] Wrap route param loading in `mount(function ($param))`
-- [ ] Add `layout('...')` for page-level components
+- [ ] Wrap route param loading in `mount(int $id)` with type-hinted parameters
+- [ ] Configure layout in `config/livewire.php` or use `#[Layout('layouts::app')]`
+- [ ] Register routes with `Route::livewire()` for page components
+- [ ] Wrap expensive sections in `@island(lazy: true)` for performance
+- [ ] Replace loading state logic with `data-loading:` Tailwind variants
+- [ ] Move component-specific CSS into `<style>` blocks for automatic scoping
 - [ ] Test with Livewire dev tools in browser
 - [ ] Verify Alpine.js interactions do not conflict with `wire:model`
 
@@ -637,42 +994,49 @@ function SearchableList({ category }) {
 }
 ```
 
-### Volt Inline Component
+### Livewire 4 Single-File Component
 
 ```php
-<?php
-use function Livewire\Volt\{state, mount, computed};
+<?php // resources/views/components/⚡searchable-list.blade.php
+use Livewire\Attributes\Computed;
+use Livewire\Component;
 use Illuminate\Support\Facades\Log;
 
-state([
-    'category' => '',
-    'items'    => [],
-    'search'   => '',
-]);
+new class extends Component {
+    public string $category = '';
+    public array $items = [];
+    public string $search = '';
 
-mount(function (string $category) {
-    $this->category = $category;
+    public function mount(string $category): void
+    {
+        $this->category = $category;
 
-    try {
-        $path = public_path('media/json/items.json');
-        $all  = json_decode(file_get_contents($path), true) ?? [];
+        try {
+            $path = public_path('media/json/items.json');
+            $all = json_decode(file_get_contents($path), true) ?? [];
 
-        $this->items = collect($all)
-            ->where('category', $category)
+            $this->items = collect($all)
+                ->where('category', $category)
+                ->values()
+                ->toArray();
+        } catch (\Throwable $e) {
+            Log::error('Items load failed: ' . $e->getMessage());
+            $this->items = [];
+        }
+    }
+
+    #[Computed]
+    public function filtered(): array
+    {
+        return collect($this->items)
+            ->filter(fn($i) => str_contains(
+                strtolower($i['name']),
+                strtolower($this->search)
+            ))
             ->values()
             ->toArray();
-    } catch (\Throwable $e) {
-        Log::error('Items load failed: ' . $e->getMessage());
-        $this->items = [];
     }
-});
-
-$filtered = computed(fn() =>
-    collect($this->items)
-        ->filter(fn($i) => str_contains(strtolower($i['name']), strtolower($this->search)))
-        ->values()
-        ->toArray()
-);
+};
 ?>
 
 <div>
@@ -691,19 +1055,30 @@ $filtered = computed(fn() =>
         @endforeach
     </ul>
 </div>
+
+<style>
+input:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+</style>
 ```
 
 ---
 
 ## Resources
 
-- [Livewire Volt Docs](https://livewire.laravel.com/docs/volt)
-- [Livewire Component Docs](https://livewire.laravel.com/docs/components)
+- [Livewire 4 Docs — Components](https://livewire.laravel.com/docs/4.x/components)
+- [Livewire 4 Docs — Islands](https://livewire.laravel.com/docs/4.x/islands)
+- [Livewire 4 Docs — Loading States](https://livewire.laravel.com/docs/4.x/loading-states)
+- [Livewire 4 Docs — Lifecycle Hooks](https://livewire.laravel.com/docs/4.x/lifecycle-hooks)
+- [Livewire 4 Upgrade Guide](https://livewire.laravel.com/docs/4.x/upgrading)
 - [Alpine.js Docs](https://alpinejs.dev/start-here)
 - [Blade Components](https://laravel.com/docs/blade#components)
 - [Tailwind CSS 4 Docs](https://tailwindcss.com/docs)
+- [PHP 8.4 Property Hooks](https://www.php.net/manual/en/language.oop5.property-hooks.php)
 
 ---
 
 **Last Updated**: March 2026
-**Framework Versions**: Laravel 12, Livewire 4.x, Livewire Volt 1.x, Alpine.js 3.x, Tailwind CSS 4.x
+**Framework Versions**: Laravel 12, Livewire 4.x, Alpine.js 3.x, Tailwind CSS 4.x

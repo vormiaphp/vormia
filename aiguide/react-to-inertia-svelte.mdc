@@ -199,13 +199,15 @@ $effect(() => {
 
 ## Event Handling
 
+> **Svelte 5 removed inline event modifiers** (the Svelte 4 `on:event|modifier` syntax). You must call `e.stopPropagation()`, `e.preventDefault()`, etc. directly inside the handler function.
+
 | React JSX | Svelte |
 |-----------|--------|
 | `onClick={fn}` | `onclick={fn}` |
 | `onClick={() => fn(id)}` | `onclick={() => fn(id)}` |
-| `onClick={e => e.stopPropagation()}` | `onclick:stopPropagation={fn}` or `onclick={(e) => { e.stopPropagation(); fn(); }}` |
+| `onClick={e => e.stopPropagation()}` | `onclick={(e) => { e.stopPropagation(); fn(); }}` |
 | `onChange={e => setVal(e.target.value)}` | `bind:value={val}` |
-| `onSubmit={handleSubmit}` | `onsubmit:prevent={handleSubmit}` |
+| `onSubmit={handleSubmit}` | `onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}` |
 | `onKeyDown={fn}` | `onkeydown={fn}` |
 
 ### Controlled Inputs → bind:value
@@ -458,7 +460,7 @@ public function share(Request $request): array
 2. **Direct mutation of `$state`** is fine — no setter function needed
 3. **`$derived` over `$effect`** for computed values — `$effect` should only be for side effects (DOM, timers, logging)
 4. **`bind:value` over manual `oninput`** for all form inputs
-5. **`onsubmit:prevent`** or `onsubmit={(e) => { e.preventDefault(); ... }}` on forms
+5. **`onsubmit={(e) => { e.preventDefault(); ... }}`** on forms — Svelte 5 has no inline event modifiers
 6. **`$page` store** for global shared data — always use `$` prefix to subscribe
 7. **`{#each arr as item (item.id)}`** — always provide a key for lists that can change
 8. **Keep components small** — Svelte components with less logic compile to less JS
@@ -477,7 +479,7 @@ public function share(Request $request): array
 - [ ] Replace `useEffect` with `$effect(() => { ... })`
 - [ ] Replace `onClick={fn}` with `onclick={fn}` (lowercase)
 - [ ] Replace controlled inputs with `bind:value`
-- [ ] Replace `onSubmit` + `e.preventDefault()` with `onsubmit:prevent` or manual call
+- [ ] Replace `onSubmit` + `e.preventDefault()` with `onsubmit={(e) => { e.preventDefault(); ... }}`
 - [ ] Replace React props pattern with `let { propName } = $props()`
 - [ ] Replace callback props with plain functions from `$props()`
 - [ ] Replace `{condition && <X />}` with `{#if condition}<X />{/if}`
