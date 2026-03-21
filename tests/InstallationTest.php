@@ -139,4 +139,24 @@ class InstallationTest extends TestCase
         $this->assertStringContainsString("'vormia-migrations'", $source);
         $this->assertStringContainsString("'vormia-stubs'", $source);
     }
+
+    /**
+     * VormiaVormia::copyResourceFiles copies from stubs/pkg into the host app's resources/.
+     */
+    public function test_pkg_stub_assets_exist_for_installer(): void
+    {
+        $base = dirname(__DIR__) . '/src/stubs/pkg';
+        $required = [
+            'js/plugins/jquery.js',
+            'js/plugins/select2.js',
+            'js/plugins/flatpickr.js',
+            'js/helpers/livewire-hooks.js',
+            'css/plugins/style.min.css',
+        ];
+        foreach ($required as $relative) {
+            $path = $base . '/' . $relative;
+            $this->assertFileExists($path, "Missing pkg stub required by vormia:install: {$relative}");
+            $this->assertNotSame('', trim((string) file_get_contents($path)), "Empty pkg stub: {$relative}");
+        }
+    }
 }

@@ -64,6 +64,9 @@ class UninstallCommand extends Command
         $this->step('Reverting JS imports in resources/js/app.js...');
         $this->cleanupAppJs();
 
+        $this->step('Removing Vormia asset directories (plugins/helpers under resources/js and css)...');
+        $this->cleanupVormiaAssetDirectories();
+
         $this->step('Removing Vormia stubs from resources/stubs/vormia (if present)...');
         $this->cleanupStubs();
 
@@ -255,6 +258,27 @@ class UninstallCommand extends Command
 
         File::put($appJsPath, $cleaned);
         $this->info('   ✅ resources/js/app.js cleaned.');
+    }
+
+    /**
+     * Remove directories created by VormiaVormia::copyResourceFiles (pkg/js, pkg/css).
+     */
+    private function cleanupVormiaAssetDirectories(): void
+    {
+        $paths = [
+            resource_path('js/plugins'),
+            resource_path('js/helpers'),
+            resource_path('css/plugins'),
+        ];
+
+        foreach ($paths as $dir) {
+            if (! File::isDirectory($dir)) {
+                continue;
+            }
+
+            File::deleteDirectory($dir);
+            $this->info("   ✅ Removed {$dir}");
+        }
     }
 
     private function cleanupStubs(): void
