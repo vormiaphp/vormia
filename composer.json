@@ -49,7 +49,7 @@
     },
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^12.0",
+        "laravel/framework": "^12.0|^13.0",
         "intervention/image": "^3.11"
     },
     "suggest": {
