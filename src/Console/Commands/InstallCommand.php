@@ -3,9 +3,11 @@
 namespace Vormia\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Schema;
+use Vormia\Console\Support\TwoFactorMigrationNormalizer;
 use VormiaPHP\Vormia\VormiaVormia;
 
 class InstallCommand extends Command
@@ -48,6 +50,11 @@ class InstallCommand extends Command
             '--tag' => 'vormia-config',
             '--force' => true
         ]);
+
+        // Patch Laravel / Fortify two-factor migrations so they skip columns that already exist
+        // (must run before VormiaVormia::install(), which calls migrate).
+        $this->step('Normalizing two-factor user migrations (skip if columns exist)...');
+        (new TwoFactorMigrationNormalizer)->patchApplicationMigrations(fn (string $msg) => $this->line($msg));
 
         // Step 2: Install Vormia kit
         $this->step('Installing Vormia kit...');
@@ -375,21 +382,142 @@ class InstallCommand extends Command
 
     /**
      * Install Laravel Sanctum
+     *
+     * `php artisan install:api` can publish a migration that adds two-factor columns to
+     * `users`. If Fortify, Breeze, or an earlier migration already added those columns,
+     * the follow-up migrate fails with "Duplicate column name 'two_factor_secret'".
+     * In that case we install Sanctum only (composer + vendor:publish).
      */
     private function installSanctum(): void
     {
-        $this->line('   Running: php artisan install:api');
-        $result = Process::path(base_path())->run('php artisan install:api');
+        if (class_exists(\Laravel\Sanctum\Sanctum::class)) {
+            $this->info('✅ Laravel Sanctum is already installed. Skipping install:api.');
+
+            return;
+        }
+
+        if ($this->usersTableAlreadyHasTwoFactorColumns()) {
+            $this->warn('⚠️  Your users table already has two-factor columns (e.g. from Fortify or Breeze).');
+            $this->line('   Skipping install:api to avoid duplicate migrations; installing Sanctum via composer.');
+            $this->installSanctumWithoutApiInstaller();
+
+            return;
+        }
+
+        (new TwoFactorMigrationNormalizer)->patchApplicationMigrations(fn (string $msg) => $this->line($msg));
+
+        $this->line('   Running: php artisan install:api --no-interaction');
+        $result = Process::path(base_path())->run('php artisan install:api --no-interaction');
+        $combinedOutput = trim($result->output() . "\n" . $result->errorOutput());
 
         if ($result->successful()) {
             $this->info('✅ Sanctum installed successfully.');
+
+            return;
+        }
+
+        if ($this->outputLooksLikeDuplicateTwoFactorMigration($combinedOutput)) {
+            $this->warn('⚠️  install:api failed due to duplicate two-factor columns on users.');
+            $this->line('   Patching two-factor migration(s) to skip existing columns, then re-running migrate.');
+            (new TwoFactorMigrationNormalizer)->patchApplicationMigrations(fn (string $msg) => $this->line($msg));
+            Artisan::call('migrate', ['--force' => true]);
+            $this->info('✅ Migrations re-run after patch.');
+
+            if (! class_exists(\Laravel\Sanctum\Sanctum::class)) {
+                $this->line('   Installing Sanctum via composer (install:api did not complete).');
+                $this->installSanctumWithoutApiInstaller();
+            } else {
+                $this->info('✅ Laravel Sanctum is present after migrate.');
+            }
+
+            return;
+        }
+
+        $this->warn('⚠️  Failed to install Sanctum automatically.');
+        $this->line('   Please install manually: php artisan install:api');
+        $this->line('   Or: composer require laravel/sanctum && php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"');
+        if ($combinedOutput !== '') {
+            $this->line('   Error: ' . $combinedOutput);
+        }
+    }
+
+    /**
+     * True when users.two_factor_secret already exists (2FA migration ran earlier).
+     */
+    private function usersTableAlreadyHasTwoFactorColumns(): bool
+    {
+        try {
+            return Schema::hasTable('users')
+                && Schema::hasColumn('users', 'two_factor_secret');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Detect duplicate column / 2FA migration failure from install:api migrate step.
+     */
+    private function outputLooksLikeDuplicateTwoFactorMigration(string $output): bool
+    {
+        $lower = strtolower($output);
+
+        return str_contains($lower, 'duplicate column')
+            && str_contains($lower, 'two_factor');
+    }
+
+    /**
+     * Install Sanctum without `install:api` (no duplicate users-table 2FA migration).
+     */
+    private function installSanctumWithoutApiInstaller(): void
+    {
+        $this->line('   Running: composer require laravel/sanctum --no-interaction');
+        $require = Process::path(base_path())->run('composer require laravel/sanctum --no-interaction');
+
+        if (! $require->successful()) {
+            $this->warn('⚠️  composer require laravel/sanctum failed.');
+            $err = trim($require->errorOutput());
+            if ($err !== '') {
+                $this->line('   ' . $err);
+            }
+            $this->line('   Install manually: composer require laravel/sanctum');
+
+            return;
+        }
+
+        $this->info('✅ laravel/sanctum added.');
+
+        if (! $this->sanctumPersonalAccessTokensMigrationExists()) {
+            Artisan::call('vendor:publish', [
+                '--provider' => 'Laravel\\Sanctum\\SanctumServiceProvider',
+            ]);
+            $this->info('✅ Sanctum migration/config published.');
         } else {
-            $this->warn('⚠️  Failed to install Sanctum automatically.');
-            $this->line('   Please install it manually by running: php artisan install:api');
-            if ($result->errorOutput()) {
-                $this->line('   Error: ' . $result->errorOutput());
+            $this->info('✅ personal_access_tokens migration already present; skipping duplicate publish.');
+        }
+
+        $this->newLine();
+        $this->comment('   If routes/api.php is not registered yet, add it per Laravel Sanctum docs, or run');
+        $this->line('   php artisan install:api --no-interaction');
+        $this->line('   after removing any duplicate migration that adds two_factor_* columns to users.');
+    }
+
+    /**
+     * Whether a published Sanctum personal_access_tokens migration already exists.
+     */
+    private function sanctumPersonalAccessTokensMigrationExists(): bool
+    {
+        $dir = database_path('migrations');
+        if (! is_dir($dir)) {
+            return false;
+        }
+
+        foreach (glob($dir.'/*.php') ?: [] as $path) {
+            if (preg_match('/\d{4}_\d{2}_\d{2}_\d{6}_create_personal_access_tokens_table\.php$/', basename($path))) {
+                return true;
             }
         }
+
+        return false;
     }
 
     /**

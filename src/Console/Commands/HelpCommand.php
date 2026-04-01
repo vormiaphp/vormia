@@ -16,6 +16,7 @@ class HelpCommand extends Command
         $this->newLine();
 
         $this->line('  - vormia:install');
+        $this->line('  - vormia:fix-two-factor-migrations');
         $this->line('  - vormia:update');
         $this->line('  - vormia:uninstall');
 
