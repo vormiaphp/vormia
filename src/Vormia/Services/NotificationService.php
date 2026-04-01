@@ -133,7 +133,11 @@ class NotificationService
                 'border' => 'border-yellow-100',
                 'text' => 'text-yellow-800',
             ],
-            self::TYPE_INFO,
+            self::TYPE_INFO => [
+                'bg' => 'bg-blue-100',
+                'border' => 'border-blue-100',
+                'text' => 'text-blue-700',
+            ],
             default => [
                 'bg' => 'bg-blue-100',
                 'border' => 'border-blue-100',
