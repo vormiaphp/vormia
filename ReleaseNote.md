@@ -5,21 +5,23 @@ This document contains human-friendly release notes for tagged versions of this 
 ## v5.1.3
 
 ### Summary
-- Patch release: `vormia:install` no longer fails when Laravel Sanctum’s `install:api` step tries to add two-factor columns that already exist on `users` (e.g. Fortify or Breeze).
+- Patch release: `vormia:install` is resilient when two-factor columns already exist on `users` (Fortify, Breeze, or an earlier migration) and when `php artisan install:api` would otherwise publish a duplicate two-factor migration.
 
 ### Changes
-- `InstallCommand::installSanctum()` skips `php artisan install:api` when `users.two_factor_secret` already exists, and installs Sanctum with `composer require laravel/sanctum` plus `vendor:publish` for `SanctumServiceProvider` only.
-- If `install:api` still fails with a duplicate `two_factor_*` column error, the installer patches migrations (see below), re-runs `migrate`, then completes Sanctum setup as needed.
-- `install:api` is invoked with `--no-interaction` for consistent non-interactive runs.
-- **`TwoFactorMigrationNormalizer`**: before `migrate` during install, and again before `install:api`, Vormia scans `database/migrations` for files whose names include `two_factor` and `user`, and replaces unsafe Fortify-style migrations with an idempotent version that uses `Schema::hasColumn` for `two_factor_secret`, `two_factor_recovery_codes`, and `two_factor_confirmed_at`.
+- **`TwoFactorMigrationNormalizer`** (`src/Console/Support/TwoFactorMigrationNormalizer.php`): runs automatically during `vormia:install`—before the kit’s `migrate`, and again before `install:api`. It finds migrations in `database/migrations` whose names include `two_factor` and `user`, and replaces unconditional `Schema::table('users')` adds with idempotent `Schema::hasColumn` checks for `two_factor_secret`, `two_factor_recovery_codes`, and `two_factor_confirmed_at`.
+- **`installSanctum()`**: skips `php artisan install:api` when `users.two_factor_secret` already exists; installs Sanctum via `composer require laravel/sanctum` and publishes `SanctumServiceProvider` (including `personal_access_tokens` migration when missing).
+- On duplicate `two_factor_*` column errors from `install:api`, the installer re-runs the normalizer, runs `migrate --force`, then finishes Sanctum setup if Sanctum is still missing.
+- `install:api` is invoked with `--no-interaction` for predictable scripted installs.
+- No separate Artisan command for two-factor patching—behavior is integrated into `vormia:install` only.
 
 ### Upgrade / Install
 ```bash
 composer require vormiaphp/vormia:^5.1
 ```
 
-### Manual fix (older installs)
-If a duplicate two-factor migration still exists, edit or delete that file under `database/migrations/`, or run `php artisan migrate` again after re-running `vormia:install` so the normalizer can patch the migration.
+### Manual fix (older installs or failed installs)
+1. Upgrade the package, then run `php artisan vormia:install` again so the normalizer can rewrite unsafe migrations before `migrate` runs.
+2. If a bad migration file remains, delete or hand-edit it under `database/migrations/`, then run `php artisan migrate`.
 
 ## v5.1.2
 
