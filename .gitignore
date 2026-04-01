@@ -31,9 +31,6 @@ Homestead.json
 .Spotlight-V100
 .Trashes
 
-# User model backups (created by installer)
-app/Models/User.php.backup.*
-
 # Misc
 node_modules/
 npm-debug.log
@@ -45,6 +42,3 @@ workspace.xml
 *.key
 *.crt
 *.csr
-
-/references
-/example
