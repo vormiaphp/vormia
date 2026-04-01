@@ -2,6 +2,7 @@
 
 namespace Vormia\Vormia\Traits;
 
+use Illuminate\Support\Collection;
 use Vormia\Vormia\Models\Role;
 
 /**
@@ -54,15 +55,15 @@ trait HasVormiaRoles
         return in_array($module, $modules);
     }
 
-    public function permissions()
+    public function permissions(): Collection
     {
         return $this->roles->flatMap(function ($role) {
             return $role->permissions;
-        })->unique('name');
+        })->unique('name')->values();
     }
 
     public function hasPermission(string $permission): bool
     {
-        return $this->permissions()->where('name', $permission)->exists();
+        return $this->permissions()->contains('name', $permission);
     }
 }

@@ -43,7 +43,8 @@
                 "VormiaPHP\\Vormia\\VormiaServiceProvider"
             ],
             "aliases": {
-                "Vormia": "VormiaPHP\\Vormia\\Facades\\Vormia"
+                "Vormia": "VormiaPHP\\Vormia\\Facades\\Vormia",
+                "MediaForge": "VormiaPHP\\Vormia\\Facades\\MediaForge"
             }
         }
     },

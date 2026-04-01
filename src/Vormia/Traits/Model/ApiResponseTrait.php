@@ -19,7 +19,7 @@ trait ApiResponseTrait
 
         if (config('app.debug')) {
             $response['debug'] = [
-                'execution_time' => microtime(true) - LARAVEL_START,
+                'execution_time' => defined('LARAVEL_START') ? microtime(true) - \LARAVEL_START : null,
                 'memory_usage' => memory_get_usage(),
             ];
         }
@@ -44,7 +44,7 @@ trait ApiResponseTrait
 
         if (config('app.debug')) {
             $response['debug'] = [
-                'execution_time' => microtime(true) - LARAVEL_START,
+                'execution_time' => defined('LARAVEL_START') ? microtime(true) - \LARAVEL_START : null,
                 'memory_usage' => memory_get_usage(),
                 'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
             ];

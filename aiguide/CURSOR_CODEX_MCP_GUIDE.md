@@ -25,6 +25,16 @@ Primary provider and registrations:
 - API routes are registered under `/api` from `routes/api.php`
 - Middleware aliases include: `api-auth`, `role`, `permission`, `authority`, `module`
 
+## MediaForge Guidance
+
+MediaForge is implemented package-first and exposed via a package facade.
+
+- Service binding: `vrm.mediaforge` (container alias)
+- Facade: `VormiaPHP\Vormia\Facades\MediaForge`
+- Config: `config('vormia.mediaforge.*')` (driver, disk, base_dir, defaults)
+
+Avoid documenting or generating `App\Facades\Vrm\MediaForge` unless explicitly targeting legacy host-app wrappers.
+
 ## Safe Editing Rules
 
 - Prefer package namespaces over app-local stubs for new functionality.

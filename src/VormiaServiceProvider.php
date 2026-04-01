@@ -12,6 +12,7 @@ use Vormia\Console\Commands\UpdateCommand;
 use Illuminate\Support\Facades\Blade;
 use Vormia\Vormia\Http\Middleware\ApiAuthenticate;
 use Vormia\Vormia\Models\SlugRegistry;
+use Vormia\Vormia\Services\MediaForge\MediaForgeManager;
 use Vormia\Vormia\Services\NotificationService;
 use Vormia\Vormia\Services\TokenService;
 
@@ -28,6 +29,9 @@ class VormiaServiceProvider extends ServiceProvider
         $this->app->singleton(TokenService::class, fn () => new TokenService());
 
         $this->app->singleton('notification', fn () => new NotificationService());
+
+        $this->app->singleton(MediaForgeManager::class);
+        $this->app->alias(MediaForgeManager::class, 'vrm.mediaforge');
     }
 
     public function boot(): void

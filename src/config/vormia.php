@@ -48,6 +48,8 @@ return [
 
     'mediaforge' => [
         'driver' => env('VORMIA_MEDIAFORGE_DRIVER', 'auto'), // 'auto', 'imagick', 'gd'
+        'disk' => env('VORMIA_MEDIAFORGE_DISK', 'public'),
+        'base_dir' => env('VORMIA_MEDIAFORGE_BASE_DIR', 'uploads'),
         'default_quality' => env('VORMIA_MEDIAFORGE_DEFAULT_QUALITY', 85),
         'default_format' => env('VORMIA_MEDIAFORGE_DEFAULT_FORMAT', 'webp'),
         'auto_override' => env('VORMIA_MEDIAFORGE_AUTO_OVERRIDE', false),

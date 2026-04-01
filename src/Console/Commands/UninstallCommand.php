@@ -107,21 +107,8 @@ class UninstallCommand extends Command
         $bootstrapApp = base_path('bootstrap/app.php');
         $providersFile = base_path('bootstrap/providers.php');
 
-        $middlewareMarkers = [
-            "'role' => \\App\\Http\\Middleware\\Vrm\\CheckRole::class,",
-            "'module' => \\App\\Http\\Middleware\\Vrm\\CheckModule::class,",
-            "'permission' => \\App\\Http\\Middleware\\Vrm\\CheckPermission::class,",
-            "'api-auth' => \\App\\Http\\Middleware\\Vrm\\ApiAuthenticate::class,",
-            "'authority' => \\App\\Http\\Middleware\\Vrm\\CheckAuthority::class,",
-        ];
-
-        $providerMarkers = [
-            'App\\Providers\\Vrm\\NotificationServiceProvider::class,',
-            'App\\Providers\\Vrm\\TokenServiceProvider::class,',
-            'App\\Providers\\Vrm\\MediaForgeServiceProvider::class,',
-            'App\\Providers\\Vrm\\UtilitiesServiceProvider::class,',
-            'App\\Providers\\Vrm\\GlobalDataServiceProvider::class,',
-        ];
+        $middlewareMarkers = [];
+        $providerMarkers = [];
 
         if (File::exists($bootstrapApp)) {
             $original = File::get($bootstrapApp);
@@ -176,6 +163,8 @@ class UninstallCommand extends Command
             'VORMIA_SLUG_HISTORY_ENABLED=',
             '# VORMIA MEDIAFORGE CONFIG',
             'VORMIA_MEDIAFORGE_DRIVER=',
+            'VORMIA_MEDIAFORGE_DISK=',
+            'VORMIA_MEDIAFORGE_BASE_DIR=',
             'VORMIA_MEDIAFORGE_DEFAULT_QUALITY=',
             'VORMIA_MEDIAFORGE_DEFAULT_FORMAT=',
             'VORMIA_MEDIAFORGE_AUTO_OVERRIDE=',

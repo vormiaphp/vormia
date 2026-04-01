@@ -182,7 +182,7 @@ This will automatically install Vormia with all files and configurations, includ
 **Manual Steps Required:**
 
 - ⚠️ **You must add the `HasApiTokens` trait to your `User` model (`app/Models/User.php`) for API authentication.**
-- ⚠️ **Add the `Vormia\Vormia\Traits\HasVormiaRoles` trait and `is_active` field to your User model.**
+- ⚠️ **User model integration:** Add Vormia traits/methods to your `User` model (meta, slugs, roles/permissions). See “User Model Integration” below.
 
 Middleware (`role`, `permission`, `module`, `authority`, `api-auth`) and service providers are auto-registered by the package -- no manual `bootstrap/app.php` changes needed.
 
@@ -216,6 +216,119 @@ $description = $taxonomy->getMeta('description', 'Default description');
 $user->deleteMeta('preferences');
 ```
 
+### User Model Integration (Recommended)
+
+Vormia ships models/traits inside the package namespace (`Vormia\Vormia\...`). To enable user meta, slugs, and roles/permissions on your app’s `User` model, add the traits and methods below to `app/Models/User.php`.
+
+#### 1) Add traits
+
+```php
+use Vormia\Vormia\Traits\Model\HasSlugs;
+use Vormia\Vormia\Traits\Model\HasUserMeta;
+
+class User extends Authenticatable
+{
+    use HasSlugs, HasUserMeta;
+
+    // Keep HasApiTokens for API auth:
+    // use Laravel\Sanctum\HasApiTokens;
+}
+```
+
+#### 2) Add slug methods (if you want /users/{slug})
+
+```php
+public function getSluggableField()
+{
+    return 'name';
+}
+
+public function shouldAutoUpdateSlug()
+{
+    if (app()->environment('local', 'development')) {
+        return false;
+    }
+
+    return config('vormia.auto_update_slugs', false);
+}
+
+public function getRouteKeyName()
+{
+    return 'slug';
+}
+
+public function resolveRouteBinding($value, $field = null)
+{
+    if ($field === 'slug' || $field === null) {
+        return static::findBySlug($value);
+    }
+
+    return parent::resolveRouteBinding($value, $field);
+}
+```
+
+#### 3) Add roles + permissions helpers (explicit methods)
+
+```php
+use Illuminate\Support\Collection;
+use Vormia\Vormia\Models\Role;
+
+public function roles()
+{
+    return $this->belongsToMany(
+        Role::class,
+        config('vormia.table_prefix') . 'role_user',
+    );
+}
+
+public function hasRole(string $role): bool
+{
+    return $this->roles()->where('name', $role)->exists();
+}
+
+public function hasRoleId(int $roleId): bool
+{
+    return $this->roles()->where('id', $roleId)->exists();
+}
+
+public function isSuperAdmin(): bool
+{
+    return $this->roles()->where('slug', 'super-admin')->exists();
+}
+
+public function isAdminOrSuperAdmin(): bool
+{
+    return $this->roles()->whereIn('slug', ['super-admin', 'admin'])->exists();
+}
+
+public function isMember(): bool
+{
+    return $this->roles()->where('slug', 'member')->exists();
+}
+
+public function hasModule(string $module): bool
+{
+    $roles = $this->roles()->pluck('module')->toArray();
+    $modules = array_map(fn ($module) => explode(',', $module), $roles);
+    $modules = array_merge(...$modules);
+
+    return in_array($module, $modules);
+}
+
+public function permissions(): Collection
+{
+    return $this->roles
+        ->flatMap(fn ($role) => $role->permissions)
+        ->unique('name')
+        ->values();
+}
+
+public function hasPermission(string $permission): bool
+{
+    return $this->permissions()->contains('name', $permission);
+}
+```
+
 ### API Authentication
 
 Use the new `api-auth` middleware for protected API routes:
@@ -240,7 +353,7 @@ Route::get('/protected-endpoint', [Controller::class, 'method'])
 MediaForge provides comprehensive image processing with resize, conversion, and thumbnail generation:
 
 ```php
-use App\Facades\Vrm\MediaForge;
+use VormiaPHP\Vormia\Facades\MediaForge;
 
 // Basic upload with resize and convert
 $imageUrl = MediaForge::upload($request->file('image'))
@@ -293,6 +406,8 @@ $imageUrl = MediaForge::upload($file)
 
 ```env
 VORMIA_MEDIAFORGE_DRIVER=auto
+VORMIA_MEDIAFORGE_DISK=public
+VORMIA_MEDIAFORGE_BASE_DIR=uploads
 VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
 VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
 VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false

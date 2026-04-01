@@ -33,6 +33,8 @@ abstract class IntegrationTestCase extends Orchestra
             'database' => ':memory:',
             'prefix' => '',
         ]);
+        $app['config']->set('cache.default', 'array');
+        $app['config']->set('cache.stores.array', ['driver' => 'array']);
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('vormia.user_model', User::class);
     }
