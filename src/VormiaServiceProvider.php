@@ -5,7 +5,10 @@ namespace VormiaPHP\Vormia;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Vormia\Console\Commands\HelpCommand;
 use Vormia\Console\Commands\InstallCommand;
+use Vormia\Console\Commands\UninstallCommand;
+use Vormia\Console\Commands\UpdateCommand;
 use Illuminate\Support\Facades\Blade;
 use Vormia\Vormia\Http\Middleware\ApiAuthenticate;
 use Vormia\Vormia\Models\SlugRegistry;
@@ -34,7 +37,10 @@ class VormiaServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                HelpCommand::class,
                 InstallCommand::class,
+                UpdateCommand::class,
+                UninstallCommand::class,
             ]);
         }
 
