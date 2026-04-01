@@ -5,7 +5,6 @@ namespace VormiaPHP\Vormia;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
-use Vormia\Console\Commands\FixTwoFactorMigrationsCommand;
 use Vormia\Console\Commands\HelpCommand;
 use Vormia\Console\Commands\InstallCommand;
 use Vormia\Console\Commands\UninstallCommand;
@@ -42,7 +41,6 @@ class VormiaServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                FixTwoFactorMigrationsCommand::class,
                 HelpCommand::class,
                 InstallCommand::class,
                 UpdateCommand::class,
