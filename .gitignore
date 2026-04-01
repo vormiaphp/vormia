@@ -4,6 +4,7 @@
 /composer.phar
 
 # PHPUnit
+/.phpunit.cache/
 /phpunit.xml
 /phpunit.xml.dist
 /coverage/
