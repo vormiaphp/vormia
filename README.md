@@ -358,6 +358,8 @@ use VormiaPHP\Vormia\Facades\MediaForge;
 // Basic upload with resize and convert
 $imageUrl = MediaForge::upload($request->file('image'))
     ->useYearFolder(true)
+    // Use YYYY/MM/DD folders instead of YYYY
+    // ->useDateFolders(true)
     ->randomizeFileName(true)
     ->to('products')
     ->resize(606, 606, true, '#5a85b9')  // Resize with background fill color
@@ -405,6 +407,7 @@ $imageUrl = MediaForge::upload($file)
 **Configuration:**
 
 ```env
+VORMIA_MEDIAFORGE_STORAGE_RULE=laravel
 VORMIA_MEDIAFORGE_DRIVER=auto
 VORMIA_MEDIAFORGE_DISK=public
 VORMIA_MEDIAFORGE_BASE_DIR=uploads

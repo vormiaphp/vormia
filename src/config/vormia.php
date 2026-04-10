@@ -47,9 +47,16 @@ return [
     */
 
     'mediaforge' => [
+        // Storage rule:
+        // - laravel (default): store via Laravel filesystem disks
+        // - vormia: legacy behavior (write directly to webroot)
+        'storage_rule' => env('VORMIA_MEDIAFORGE_STORAGE_RULE', 'laravel'),
         'driver' => env('VORMIA_MEDIAFORGE_DRIVER', 'auto'), // 'auto', 'imagick', 'gd'
         'disk' => env('VORMIA_MEDIAFORGE_DISK', 'public'),
         'base_dir' => env('VORMIA_MEDIAFORGE_BASE_DIR', 'uploads'),
+        // Legacy (vormia) mode directories under public path.
+        'public_dir' => env('VORMIA_MEDIAFORGE_PUBLIC_DIR', 'media'),
+        'private_dir' => env('VORMIA_MEDIAFORGE_PRIVATE_DIR', 'media-private'),
         'default_quality' => env('VORMIA_MEDIAFORGE_DEFAULT_QUALITY', 85),
         'default_format' => env('VORMIA_MEDIAFORGE_DEFAULT_FORMAT', 'webp'),
         'auto_override' => env('VORMIA_MEDIAFORGE_AUTO_OVERRIDE', false),

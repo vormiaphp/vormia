@@ -3,6 +3,7 @@
 namespace Vormia\Vormia\Services\MediaForge;
 
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Intervention\Image\EncodedImage;
@@ -12,6 +13,7 @@ class MediaForgeJob
 {
     private string $targetSubdir = '';
     private bool $useYearFolder = false;
+    private bool $useDateFolders = false;
     private bool $randomizeFileName = false;
 
     private ?array $resize = null;
@@ -35,6 +37,12 @@ class MediaForgeJob
     public function useYearFolder(bool $on = true): self
     {
         $this->useYearFolder = $on;
+        return $this;
+    }
+
+    public function useDateFolders(bool $on = true): self
+    {
+        $this->useDateFolders = $on;
         return $this;
     }
 
@@ -91,8 +99,7 @@ class MediaForgeJob
         $diskName = (string) ($this->config['disk'] ?? 'public');
         $baseDir = trim((string) ($this->config['base_dir'] ?? 'uploads'), " \t\n\r\0\x0B/");
         $driver = (string) ($this->config['driver'] ?? 'auto');
-
-        $disk = $this->filesystems->disk($diskName);
+        $store = $this->store($diskName);
 
         $sourcePath = $this->sourcePath();
         $originalExt = $this->guessExtension($sourcePath);
@@ -101,10 +108,18 @@ class MediaForgeJob
             ? Str::lower(Str::random(12))
             : pathinfo($sourcePath, PATHINFO_FILENAME);
 
+        $dateSegment = null;
+        if ($this->useDateFolders) {
+            $dateSegment = now()->format('Y/m/d');
+        } elseif ($this->useYearFolder) {
+            $dateSegment = now()->format('Y');
+        }
+
         $dirParts = array_filter([
+            $this->storageBasePrefix(),
             $baseDir,
             $this->targetSubdir ?: null,
-            $this->useYearFolder ? now()->format('Y') : null,
+            $dateSegment,
         ]);
         $dir = implode('/', $dirParts);
 
@@ -115,7 +130,10 @@ class MediaForgeJob
 
         if (($this->convert['preserve_originals'] ?? (bool) ($this->config['preserve_originals'] ?? true)) === true) {
             $originalOut = $this->joinPath($dir, "{$baseName}.{$originalExt}");
-            $disk->put($this->maybeUniquePath($diskName, $originalOut, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false))), $this->sourceBytes());
+            $store->put(
+                $this->maybeUniquePath($store, $originalOut, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false))),
+                $this->sourceBytes()
+            );
         }
 
         if ($this->resize) {
@@ -142,15 +160,15 @@ class MediaForgeJob
         }
 
         $finalPath = $this->joinPath($dir, "{$finalName}.{$finalExt}");
-        $finalPath = $this->maybeUniquePath($diskName, $finalPath, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false)));
+        $finalPath = $this->maybeUniquePath($store, $finalPath, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false)));
 
         $encoded = $this->encode($working, $finalExt, $finalQuality);
-        $disk->put($finalPath, (string) $encoded);
+        $store->put($finalPath, (string) $encoded);
 
         if ($this->thumbnails) {
             $thumbSource = ($this->thumbnails['from_original'] ?? false) ? $originalImage : $working;
             $this->writeThumbnails(
-                diskName: $diskName,
+                store: $store,
                 dir: $dir,
                 baseName: $finalName,
                 ext: $finalExt,
@@ -160,11 +178,7 @@ class MediaForgeJob
             );
         }
 
-        try {
-            return $disk->url($finalPath);
-        } catch (\Throwable) {
-            return $finalPath;
-        }
+        return $store->urlOrPath($finalPath);
     }
 
     private function applyResize(ImageInterface $image, array $resize): ImageInterface
@@ -185,7 +199,7 @@ class MediaForgeJob
     }
 
     private function writeThumbnails(
-        string $diskName,
+        MediaStore $store,
         string $dir,
         string $baseName,
         string $ext,
@@ -193,8 +207,6 @@ class MediaForgeJob
         ImageInterface $source,
         array $options,
     ): void {
-        $disk = $this->filesystems->disk($diskName);
-
         $keepAspect = (bool) ($options['keep_aspect'] ?? true);
         $fill = $options['fill'] ?? null;
 
@@ -212,8 +224,8 @@ class MediaForgeJob
             }
 
             $thumbPath = $this->joinPath($dir, "{$baseName}_{$suffix}.{$ext}");
-            $thumbPath = $this->maybeUniquePath($diskName, $thumbPath, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false)));
-            $disk->put($thumbPath, (string) $this->encode($thumb, $ext, $quality));
+            $thumbPath = $this->maybeUniquePath($store, $thumbPath, (bool) ($this->convert['override'] ?? (bool) ($this->config['auto_override'] ?? false)));
+            $store->put($thumbPath, (string) $this->encode($thumb, $ext, $quality));
         }
     }
 
@@ -302,15 +314,13 @@ class MediaForgeJob
         return implode('/', $parts);
     }
 
-    private function maybeUniquePath(string $diskName, string $path, bool $override): string
+    private function maybeUniquePath(MediaStore $store, string $path, bool $override): string
     {
         if ($override) {
             return $path;
         }
 
-        $disk = $this->filesystems->disk($diskName);
-
-        if (! $disk->exists($path)) {
+        if (! $store->exists($path)) {
             return $path;
         }
 
@@ -322,9 +332,38 @@ class MediaForgeJob
         do {
             $attempt++;
             $candidate = $this->joinPath($dir, "{$filename}-" . Str::lower(Str::random(6)) . ".{$ext}");
-        } while ($disk->exists($candidate) && $attempt < 25);
+        } while ($store->exists($candidate) && $attempt < 25);
 
         return $candidate;
+    }
+
+    private function storageRule(): string
+    {
+        return strtolower(trim((string) ($this->config['storage_rule'] ?? 'laravel')));
+    }
+
+    /**
+     * Prefix under public webroot in legacy mode (e.g. 'media' or 'media-private').
+     */
+    private function storageBasePrefix(): ?string
+    {
+        if ($this->storageRule() !== 'vormia') {
+            return null;
+        }
+
+        return trim((string) ($this->config['public_dir'] ?? 'media'), " \t\n\r\0\x0B/");
+    }
+
+    private function store(string $diskName): MediaStore
+    {
+        if ($this->storageRule() !== 'vormia') {
+            return new LaravelDiskStore($this->filesystems, $diskName);
+        }
+
+        $publicRoot = public_path();
+        $appUrl = (string) (config('app.url') ?? '');
+
+        return new VormiaWebrootStore(new Filesystem(), $publicRoot, $appUrl);
     }
 }
 

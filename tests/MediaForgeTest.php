@@ -3,6 +3,7 @@
 namespace VormiaPHP\Vormia\Tests;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use VormiaPHP\Vormia\Facades\MediaForge;
@@ -46,6 +47,66 @@ class MediaForgeTest extends IntegrationTestCase
 
         $files = Storage::disk('public')->allFiles('uploads/products');
         $this->assertNotEmpty($files, 'Expected MediaForge to write files into uploads/products on public disk');
+    }
+
+    public function test_use_date_folders_writes_to_yyyy_mm_dd(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 4, 10, 12, 0, 0, 'UTC'));
+        Storage::fake('public');
+
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'laravel');
+        $this->app['config']->set('vormia.mediaforge.disk', 'public');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.driver', 'gd');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+        $this->app['config']->set('vormia.mediaforge.preserve_originals', false);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.png';
+        $encoded = ImageManager::gd()->create(16, 16)->fill('00ff00')->toPng();
+        file_put_contents($tmp, (string) $encoded);
+        $file = new UploadedFile($tmp, 'example.png', 'image/png', null, true);
+
+        MediaForge::upload($file)
+            ->useDateFolders(true)
+            ->to('products')
+            ->run();
+
+        $files = Storage::disk('public')->allFiles('uploads/products/2026/04/10');
+        $this->assertNotEmpty($files, 'Expected MediaForge to write files into uploads/products/YYYY/MM/DD on public disk');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_storage_rule_vormia_writes_to_public_webroot(): void
+    {
+        $tmpPublic = sys_get_temp_dir() . '/vormia-public-' . uniqid('', true);
+        mkdir($tmpPublic, 0755, true);
+        $this->app->usePublicPath($tmpPublic);
+
+        $this->app['config']->set('app.url', 'http://localhost');
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'vormia');
+        $this->app['config']->set('vormia.mediaforge.public_dir', 'media');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.driver', 'gd');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+        $this->app['config']->set('vormia.mediaforge.preserve_originals', false);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.png';
+        $encoded = ImageManager::gd()->create(8, 8)->fill('0000ff')->toPng();
+        file_put_contents($tmp, (string) $encoded);
+        $file = new UploadedFile($tmp, 'example.png', 'image/png', null, true);
+
+        $url = MediaForge::upload($file)
+            ->to('products')
+            ->run();
+
+        $this->assertStringContainsString('http://localhost/', $url);
+
+        $expectedDir = $tmpPublic . '/media/uploads/products';
+        $this->assertDirectoryExists($expectedDir);
+
+        $files = glob($expectedDir . '/*');
+        $this->assertNotEmpty($files, 'Expected MediaForge to write files into public/media/uploads/products in legacy mode');
     }
 }
 
