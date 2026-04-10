@@ -15,6 +15,24 @@ class MediaForgeManager
     ) {
     }
 
+    public function url(string $urlOrPath, ?string $disk = null): string
+    {
+        $cfg = (array) $this->config->get('vormia.mediaforge', []);
+
+        $disk = $disk ?? (string) ($cfg['disk'] ?? 'public');
+        $disk = strtolower(trim($disk));
+
+        $storageRule = (string) ($cfg['storage_rule'] ?? 'laravel');
+        $passthrough = (bool) ($cfg['url_passthrough'] ?? false);
+
+        return (new MediaPublicUrl($this->filesystems))->forUrlOrPath(
+            urlOrPath: $urlOrPath,
+            disk: $disk,
+            storageRule: $storageRule,
+            passthroughUrls: $passthrough,
+        );
+    }
+
     public function upload(mixed $input): MediaForgeJob
     {
         $cfg = (array) $this->config->get('vormia.mediaforge', []);

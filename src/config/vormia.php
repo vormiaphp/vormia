@@ -53,6 +53,9 @@ return [
         'storage_rule' => env('VORMIA_MEDIAFORGE_STORAGE_RULE', 'laravel'),
         'driver' => env('VORMIA_MEDIAFORGE_DRIVER', 'auto'), // 'auto', 'imagick', 'gd'
         'disk' => env('VORMIA_MEDIAFORGE_DISK', 'public'),
+        // If true, MediaForge::url() returns http(s) / data: inputs unchanged.
+        // If false, MediaForge::url() will try to extract S3-style keys and rebuild via the disk.
+        'url_passthrough' => env('VORMIA_MEDIAFORGE_URL_PASSTHROUGH', false),
         'base_dir' => env('VORMIA_MEDIAFORGE_BASE_DIR', 'uploads'),
         // Legacy (vormia) mode directories under public path.
         'public_dir' => env('VORMIA_MEDIAFORGE_PUBLIC_DIR', 'media'),
