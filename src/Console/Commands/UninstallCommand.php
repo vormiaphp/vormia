@@ -164,6 +164,7 @@ class UninstallCommand extends Command
             '# VORMIA MEDIAFORGE CONFIG',
             'VORMIA_MEDIAFORGE_DRIVER=',
             'VORMIA_MEDIAFORGE_DISK=',
+            'VORMIA_MEDIAFORGE_URL_PASSTHROUGH=',
             'VORMIA_MEDIAFORGE_BASE_DIR=',
             'VORMIA_MEDIAFORGE_DEFAULT_QUALITY=',
             'VORMIA_MEDIAFORGE_DEFAULT_FORMAT=',

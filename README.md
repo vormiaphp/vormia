@@ -410,6 +410,7 @@ $imageUrl = MediaForge::upload($file)
 VORMIA_MEDIAFORGE_STORAGE_RULE=laravel
 VORMIA_MEDIAFORGE_DRIVER=auto
 VORMIA_MEDIAFORGE_DISK=public
+VORMIA_MEDIAFORGE_URL_PASSTHROUGH=false
 VORMIA_MEDIAFORGE_BASE_DIR=uploads
 VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
 VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
@@ -418,6 +419,24 @@ VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true
 VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
 VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
+
+#### Display URL helper (`MediaForge::url`)
+
+`MediaForge::upload(...)->run()` may return either a **URL** or a **storage path/key** (see “URL-or-path” behavior above).\nTo reliably turn either a path/key **or** a URL into something you can put in an `<img src=\"\">`, use:
+
+```php
+use VormiaPHP\Vormia\Facades\MediaForge;
+
+$src = MediaForge::url($iconPathOrUrl);        // uses configured disk
+$src = MediaForge::url($iconPathOrUrl, 'S3');  // optional disk override (case-insensitive)
+```
+
+Behavior:
+- If `VORMIA_MEDIAFORGE_STORAGE_RULE=laravel`, it uses `Storage::disk($disk)->url($path)` and wraps relative results (like `/storage/...`) with `asset()` to make them absolute.
+- If `VORMIA_MEDIAFORGE_STORAGE_RULE=vormia`, it returns `asset($path)` for paths/keys.
+- If input is already a URL:
+  - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` returns it unchanged
+  - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=false` tries to extract S3-style keys and rebuild via the disk (otherwise returns the URL unchanged)
 
 #### S3 / Remote Disks (Return Value + Failure Handling)
 

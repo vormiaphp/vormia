@@ -142,6 +142,7 @@ class InstallCommand extends Command
         // MediaForge config
         $envContent_mediaforge = "\n# VORMIA MEDIAFORGE CONFIG\nVORMIA_MEDIAFORGE_DRIVER=auto\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DISK=public\n";
+        $envContent_mediaforge .= "VORMIA_MEDIAFORGE_URL_PASSTHROUGH=false\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_BASE_DIR=uploads\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp\n";
