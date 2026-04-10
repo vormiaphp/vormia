@@ -35,6 +35,13 @@ MediaForge is implemented package-first and exposed via a package facade.
 
 Avoid documenting or generating `App\Facades\Vrm\MediaForge` unless explicitly targeting legacy host-app wrappers.
 
+### MediaForge Return Value (S3 / Remote Disks)
+
+`MediaForge::upload(...)->run()` returns a **string** using “URL-or-path” behavior:
+
+- If the configured Laravel disk supports `url()`, return a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
+- If `url()` can’t be generated (or throws), return the **storage path/key** (for example `uploads/products/2026/abc.webp`).
+
 ## Safe Editing Rules
 
 - Prefer package namespaces over app-local stubs for new functionality.

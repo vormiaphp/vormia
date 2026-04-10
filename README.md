@@ -419,6 +419,29 @@ VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
 VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
 
+#### S3 / Remote Disks (Return Value + Failure Handling)
+
+`MediaForge::upload(...)->run()` returns a **string**:
+
+- If the configured Laravel disk supports `url()`, Vormia will return a **URL string** (commonly something like `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
+- If `url()` can’t be generated (or throws), Vormia will return the **storage path/key** (for example `uploads/products/2026/abc.webp`). This is the “URL-or-path” behavior.
+
+To handle upload failures, wrap the call in a `try/catch`:
+
+```php
+use Illuminate\Support\Facades\Log;
+use VormiaPHP\Vormia\Facades\MediaForge;
+
+try {
+    $urlOrPath = MediaForge::upload($request->file('image'))
+        ->to('products')
+        ->run();
+} catch (\Throwable $e) {
+    Log::error('MediaForge upload failed', ['error' => $e->getMessage()]);
+    throw $e; // or return a user-friendly response
+}
+```
+
 ## Uninstallation
 
 Run the uninstall command:

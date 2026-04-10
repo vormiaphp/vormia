@@ -35,3 +35,12 @@ Every guide follows the same sections:
 ## Related
 
 - [`../references/react-laravel.mdc`](../references/react-laravel.mdc) — original React → Blade/Livewire Volt (class-style) guide
+
+## Vormia MediaForge Note (S3 / Remote Disks)
+
+When host-app code uses `VormiaPHP\Vormia\Facades\MediaForge`, the `->run()` method returns a **string**:
+
+- If the configured Laravel disk supports `url()`, it returns a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
+- If `url()` can’t be generated (or throws), it returns the **storage path/key** (for example `uploads/products/2026/abc.webp`).
+
+For the canonical docs, see the “S3 / Remote Disks” section in [`../README.md`](../README.md).
