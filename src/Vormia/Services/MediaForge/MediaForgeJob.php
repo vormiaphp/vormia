@@ -96,6 +96,11 @@ class MediaForgeJob
      */
     public function run(): string
     {
+        return $this->runInfo()->urlOrPath;
+    }
+
+    public function runInfo(): MediaForgeResult
+    {
         $diskName = (string) ($this->config['disk'] ?? 'public');
         $baseDir = trim((string) ($this->config['base_dir'] ?? 'uploads'), " \t\n\r\0\x0B/");
         $driver = (string) ($this->config['driver'] ?? 'auto');
@@ -178,7 +183,20 @@ class MediaForgeJob
             );
         }
 
-        return $store->urlOrPath($finalPath);
+        $urlOrPath = $store->urlOrPath($finalPath);
+        $url = $this->looksLikeHttpUrl($urlOrPath) ? $urlOrPath : null;
+
+        return new MediaForgeResult(
+            disk: $diskName,
+            path: $finalPath,
+            url: $url,
+            urlOrPath: $urlOrPath,
+        );
+    }
+
+    private function looksLikeHttpUrl(string $value): bool
+    {
+        return (bool) preg_match('#^https?://#i', trim($value));
     }
 
     private function applyResize(ImageInterface $image, array $resize): ImageInterface

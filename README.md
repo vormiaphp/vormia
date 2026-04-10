@@ -421,6 +421,17 @@ VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 
 #### S3 / Remote Disks (Return Value + Failure Handling)
 
+To store MediaForge outputs on S3, set:
+
+```env
+# Use Laravel filesystem disks (required for S3)
+VORMIA_MEDIAFORGE_STORAGE_RULE=laravel
+
+# The Laravel disk name to use (must exist in config/filesystems.php)
+# Common choices: s3, spaces, r2, etc.
+VORMIA_MEDIAFORGE_DISK=s3
+```
+
 `MediaForge::upload(...)->run()` returns a **string**:
 
 - If the configured Laravel disk supports `url()`, Vormia will return a **URL string** (commonly something like `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).

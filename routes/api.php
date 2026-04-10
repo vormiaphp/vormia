@@ -3,11 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Vormia\Vormia\Http\Controllers\Api\AuthLoginController;
+use Vormia\Vormia\Http\Controllers\Api\MediaPreviewController;
 use Vormia\Vormia\Http\Controllers\Api\PermissionController;
 use Vormia\Vormia\Http\Controllers\Api\RoleController;
 use Vormia\Vormia\Http\Controllers\Api\UserRoleController;
 
 Route::prefix('vrm')->group(function () {
+    Route::get('/media/preview', [MediaPreviewController::class, 'show']);
+
     Route::prefix('roles')->controller(RoleController::class)->group(function () {
         Route::get('/', 'index');
         Route::post('/', 'store');

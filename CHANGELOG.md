@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.4] - 2026-04-10
+
+### Added
+
+- **MediaForge storage rule + date folders**: New options to control how MediaForge writes files
+  - Supports a `YYYY/MM/DD` folder structure via `useDateFolders()`
+  - Supports switching between Laravel filesystem disks and legacy webroot behavior via a storage rule
+
+### Changed
+
+- **Documentation**: Updated release notes for `v5.1.3` with improved two-factor migration guidance
+
 ## [5.0.2] - 2025-03-09
 
 ### Added

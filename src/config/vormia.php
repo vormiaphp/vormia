@@ -63,6 +63,13 @@ return [
         'preserve_originals' => env('VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS', true),
         'thumbnail_keep_aspect_ratio' => env('VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO', true),
         'thumbnail_from_original' => env('VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL', false),
+
+        // Preview URLs:
+        // - auto: use `url()` (public) unless caller requests private
+        // - public: always prefer `url()`
+        // - private: prefer `temporaryUrl()` (signed) when supported
+        'preview_mode' => env('VORMIA_MEDIAFORGE_PREVIEW_MODE', 'auto'),
+        'preview_expires_minutes' => env('VORMIA_MEDIAFORGE_PREVIEW_EXPIRES_MINUTES', 10),
     ],
 
 ];
