@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.2.0] - 2026-04-10
+
+### Added
+
+- **MediaForge URL helpers**: New utilities for turning MediaForge outputs into browser-friendly URLs
+  - `MediaForge::url($urlOrPath, $disk = null)` to normalize a MediaForge `run()` return value (URL-or-path) into a usable URL when possible
+  - `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, array $options = [])` to generate previewable URLs, including signed temporary URLs when supported by the disk
+- **MediaForge proxy preview route** (optional): When `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, Vormia exposes `GET /api/vrm/media/preview?disk=...&path=...` to stream files for previewing from disks that don’t support `url()`/`temporaryUrl()` reliably
+- **MediaForge URL passthrough config**: `VORMIA_MEDIAFORGE_URL_PASSTHROUGH` controls whether `MediaForge::url()` returns existing `http(s)`/`data:` inputs unchanged
+
+### Changed
+
+- **Documentation**: Expanded MediaForge docs around “URL-or-path” return values, S3/remote disks, and failure handling
+
 ## [5.1.4] - 2026-04-10
 
 ### Added

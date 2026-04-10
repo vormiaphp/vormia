@@ -42,6 +42,19 @@ Avoid documenting or generating `App\Facades\Vrm\MediaForge` unless explicitly t
 - If the configured Laravel disk supports `url()`, return a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
 - If `url()` can’t be generated (or throws), return the **storage path/key** (for example `uploads/products/2026/abc.webp`).
 
+### MediaForge URL Helpers (v5.2.0+)
+
+Prefer these helpers in examples and generated code when you need a stable URL:
+
+- `MediaForge::url($urlOrPath, $disk = null)` — normalize a URL-or-path return value into something usable in `<img src="...">` where possible.
+  - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` will return `http(s)` / `data:` inputs unchanged.
+- `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, array $options = [])` — generate preview URLs, including signed temporary URLs when supported by the disk.
+  - Defaults are configured via `VORMIA_MEDIAFORGE_PREVIEW_MODE` (`auto|public|private|proxy`) and `VORMIA_MEDIAFORGE_PREVIEW_EXPIRES_MINUTES`.
+
+### MediaForge Proxy Preview Route (only when enabled)
+
+If `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, the package route `GET /api/vrm/media/preview?disk=...&path=...` will stream a file for previewing. If proxy mode is not enabled, the controller returns `404`.
+
 ## Safe Editing Rules
 
 - Prefer package namespaces over app-local stubs for new functionality.

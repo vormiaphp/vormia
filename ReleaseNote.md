@@ -2,6 +2,28 @@
 
 This document contains human-friendly release notes for tagged versions of this package.
 
+## v5.2.0
+
+### Summary
+- Feature release focused on **MediaForge URL handling** for local disks and S3/remote disks: normalize “URL-or-path” return values, generate previewable URLs (including signed URLs when supported), and optionally enable a proxy preview endpoint.
+
+### Changes
+- **`MediaForge::url()`**: helper to turn either a URL **or** a storage path/key into something safe to use in `<img src="...">` when possible.
+  - Controlled by `VORMIA_MEDIAFORGE_STORAGE_RULE`, `VORMIA_MEDIAFORGE_DISK`, and `VORMIA_MEDIAFORGE_URL_PASSTHROUGH`.
+- **`MediaForge::previewUrl()`**: helper to generate a browser-previewable URL for a MediaForge output.
+  - Uses `temporaryUrl()` when available and configured to prefer private previews.
+  - Defaults are controlled via:
+    - `VORMIA_MEDIAFORGE_PREVIEW_MODE` (`auto|public|private|proxy`)
+    - `VORMIA_MEDIAFORGE_PREVIEW_EXPIRES_MINUTES`
+- **Proxy preview endpoint (optional)**: when `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, Vormia enables:
+  - `GET /api/vrm/media/preview?disk={disk}&path={path}`
+  - Streams the file from the configured disk for previewing (returns `404` if proxy mode is not enabled).
+
+### Upgrade / Install
+```bash
+composer require vormiaphp/vormia:^5.2
+```
+
 ## v5.1.3
 
 ### Summary

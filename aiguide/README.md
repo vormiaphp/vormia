@@ -43,4 +43,9 @@ When host-app code uses `VormiaPHP\Vormia\Facades\MediaForge`, the `->run()` met
 - If the configured Laravel disk supports `url()`, it returns a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
 - If `url()` can’t be generated (or throws), it returns the **storage path/key** (for example `uploads/products/2026/abc.webp`).
 
+In `v5.2.0+`, prefer these helpers when converting UI code:
+
+- `MediaForge::url($urlOrPath, $disk = null)` — normalize URL-or-path values for `<img src="...">`
+- `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, $options = [])` — generate preview URLs (signed when supported). If configured with `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, the host app can also use the proxy endpoint `GET /api/vrm/media/preview?disk=...&path=...`.
+
 For the canonical docs, see the “S3 / Remote Disks” section in [`../README.md`](../README.md).

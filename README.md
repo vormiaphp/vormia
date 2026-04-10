@@ -27,7 +27,7 @@ See also: [references/react-laravel.mdc](references/react-laravel.mdc) for the o
 A comprehensive Laravel development package that streamlines media handling, notifications, and role management with a modular, maintainable approach.
 
 **Installation:** See [docs/INSTALLATION.md](docs/INSTALLATION.md) for setup with Laravel 12 and Livewire 4.
-**MCP/AI Guide:** See [CURSOR_CODEX_MCP_GUIDE.md](CURSOR_CODEX_MCP_GUIDE.md) for Cursor IDE and Codex agent conventions.
+**MCP/AI Guide:** See [aiguide/CURSOR_CODEX_MCP_GUIDE.md](aiguide/CURSOR_CODEX_MCP_GUIDE.md) for Cursor IDE and Codex agent conventions.
 
 VormiaPHP offers robust tools for handling media, managing notifications, and implementing essential features like user roles and permissions. The package is designed with a modular structure, separating concerns through dedicated namespaces for models, services, middleware, and traits.
 
@@ -53,49 +53,30 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v5.0.0 🎉
+## What's New in v5.2.0 🎉
 
 ### ✨ Highlights
 
-- **Laravel 12 Support** (as of March 1, 2026): Full compatibility with the latest Laravel 12 framework
+- **MediaForge URL handling for local + S3/remote disks**: First-class helpers for “URL-or-path” outputs, preview URLs, and an optional proxy preview route.
 
 ### ✨ New Features
 
-- **Automated Installation Process**: Complete automation of installation including dependencies and assets
-- **NPM Package Management**: Automatic installation and removal of npm packages (jquery, flatpickr, select2, sweetalert2)
-- **CSS/JS Asset Integration**: Automatic copying of CSS/JS plugin files and integration into app.css/app.js
-- **Dependency Auto-Installation**: Automatic installation of intervention/image, Laravel Sanctum, and CORS configuration
-- **Enhanced Uninstallation**: Comprehensive cleanup including npm packages and dependencies
-- **MediaForge Enhancements**:
-  - Background fill color support for resize operations (exact dimensions with colored background)
-  - Advanced thumbnail controls (aspect ratio, source image selection, fill color)
-  - Consistent file naming patterns for all processed images
-  - Configurable thumbnail defaults via environment variables
+- **`MediaForge::url($urlOrPath, $disk = null)`**: Normalize a MediaForge `run()` return value into a usable URL when possible (works with Laravel disks and legacy webroot mode).
+- **`MediaForge::previewUrl(...)`**: Generate previewable URLs, including signed temporary URLs when supported by the configured disk.
+- **Preview proxy mode**: Set `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy` to enable a streaming preview endpoint at `GET /api/vrm/media/preview?disk=...&path=...`.
+- **URL passthrough option**: `VORMIA_MEDIAFORGE_URL_PASSTHROUGH` controls whether `MediaForge::url()` returns existing `http(s)`/`data:` inputs unchanged.
 
 ### 🔧 Improvements
 
-- **Streamlined Installation**: Removed `--api` flag - API support is now always included by default
-- **Frontend Integration**: Seamless integration of Vormia CSS/JS assets into Laravel projects
-- **Better Error Handling**: Graceful handling of missing npm or Composer dependencies during installation
-- **MediaForge Reliability**:
-  - Fixed resize operations to always save in correct directory
-  - Fixed background fill implementation (image now visible with proper background)
-  - Improved file path handling and naming consistency
+- **Remote disk friendliness**: Clearer patterns for displaying MediaForge outputs across local/public disks and private buckets.
 
 ### 🐛 Bug Fixes
 
-- **Installation Consistency**: Fixed inconsistencies in installation process
-- **Documentation Updates**: Updated all documentation to reflect new automated installation process
-- **MediaForge Fixes**:
-  - Fixed resize with `override=false` saving to wrong directory
-  - Fixed background fill color hiding the image
-  - Fixed file naming to return correct paths after operations
+- **Documentation correctness**: Updated examples and troubleshooting to reflect current MediaForge behavior (URL-or-path) and best practices.
 
 ### 📚 Documentation
 
-- **Updated README**: Comprehensive installation and uninstallation documentation
-- **MCP/AI Guide**: Consolidated into `CURSOR_CODEX_MCP_GUIDE.md`
-- **Troubleshooting**: Added new troubleshooting sections for CSS/JS assets and dependencies
+- **Updated README + guides**: Added MediaForge URL helper docs (`MediaForge::url`) and proxy preview route guidance.
 
 [View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.5.2)
 
@@ -347,6 +328,25 @@ Or apply to individual routes:
 Route::get('/protected-endpoint', [Controller::class, 'method'])
     ->middleware('api-auth');
 ```
+
+#### MediaForge preview route (required for proxy mode)
+
+If you set `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, MediaForge will generate preview URLs that rely on a proxy endpoint. Make sure this route exists in your app’s `routes/api.php`:
+
+```php
+use Illuminate\Support\Facades\Route;
+use Vormia\Vormia\Http\Controllers\Api\MediaPreviewController;
+
+Route::prefix('vrm')->group(function () {
+    Route::get('/media/preview', [MediaPreviewController::class, 'show']);
+});
+```
+
+With the `vrm` prefix (as shipped by Vormia), the final endpoint is:
+
+- **`/api/vrm/media/preview`**
+
+If this route is missing (or `VORMIA_MEDIAFORGE_PREVIEW_MODE` is not `proxy`), the controller will return `404`.
 
 ### MediaForge Image Processing
 
