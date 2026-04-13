@@ -35,6 +35,17 @@ MediaForge is implemented package-first and exposed via a package facade.
 
 Avoid documenting or generating `App\Facades\Vrm\MediaForge` unless explicitly targeting legacy host-app wrappers.
 
+### MediaForge File Upload (no processing)
+
+When the input might be a **non-image** (PDFs, docs, zips, etc.), do **not** decode it with Intervention.
+
+Prefer one of these patterns:
+
+- `MediaForge::uploadFile($file)->to('documents')->run()` — explicit “raw file upload”
+- `MediaForge::upload($file)->isFile()->to('documents')->run()` — fluent flag on the normal upload pipeline
+
+`isFile()` disables all image operations (`resize()`, `convert()`, `thumbnail()`), even if the uploaded file is an image.
+
 ### MediaForge Return Value (S3 / Remote Disks)
 
 `MediaForge::upload(...)->run()` returns a **string** using “URL-or-path” behavior:

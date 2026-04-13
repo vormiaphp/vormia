@@ -45,6 +45,17 @@ class MediaForgeManager
         );
     }
 
+    public function uploadFile(mixed $input): MediaFileForgeJob
+    {
+        $cfg = (array) $this->config->get('vormia.mediaforge', []);
+
+        return new MediaFileForgeJob(
+            input: $input,
+            config: $cfg,
+            filesystems: $this->filesystems,
+        );
+    }
+
     /**
      * Build a browser-previewable URL from a MediaForge `run()` return value.
      *

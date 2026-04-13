@@ -10,13 +10,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasApiTokens, HasSlugs, HasUserMeta, SoftDeletes;
+    // If you install Laravel Fortify and enable 2FA, you can uncomment:
+    // use Laravel\Fortify\TwoFactorAuthenticatable;
+    // ...and add TwoFactorAuthenticatable below.
+    use HasFactory, Notifiable, HasApiTokens, HasSlugs, HasUserMeta, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

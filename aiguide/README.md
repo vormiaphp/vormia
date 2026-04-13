@@ -43,6 +43,15 @@ When host-app code uses `VormiaPHP\Vormia\Facades\MediaForge`, the `->run()` met
 - If the configured Laravel disk supports `url()`, it returns a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
 - If `url()` can’t be generated (or throws), it returns the **storage path/key** (for example `uploads/products/2026/abc.webp`).
 
+## MediaForge File Upload (no processing)
+
+If the uploaded file might be a **non-image** (PDFs, docs, zips, etc.), use either:
+
+- `MediaForge::uploadFile($file)->to('documents')->run()` (explicit raw file upload), or
+- `MediaForge::upload($file)->isFile()->to('documents')->run()` (fluent flag)
+
+`isFile()` disables all image operations (`resize()`, `convert()`, `thumbnail()`), even if the file is an image.
+
 In `v5.2.0+`, prefer these helpers when converting UI code:
 
 - `MediaForge::url($urlOrPath, $disk = null)` — normalize URL-or-path values for `<img src="...">`

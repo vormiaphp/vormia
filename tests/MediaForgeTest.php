@@ -77,6 +77,103 @@ class MediaForgeTest extends IntegrationTestCase
         Carbon::setTestNow();
     }
 
+    public function test_upload_file_stores_pdf_without_image_processing(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 4, 10, 12, 0, 0, 'UTC'));
+        Storage::fake('public');
+
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'laravel');
+        $this->app['config']->set('vormia.mediaforge.disk', 'public');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.pdf';
+        file_put_contents($tmp, "%PDF-1.4\n% Vormia test\n");
+
+        $file = new UploadedFile($tmp, 'example.pdf', 'application/pdf', null, true);
+
+        $urlOrPath = MediaForge::uploadFile($file)
+            ->useYearFolder(true)
+            ->randomizeFileName(true)
+            ->to('docs')
+            ->run();
+
+        $this->assertNotSame('', trim((string) $urlOrPath));
+
+        $files = Storage::disk('public')->allFiles('uploads/docs/2026');
+        $this->assertNotEmpty($files, 'Expected MediaForge::uploadFile() to write into uploads/docs/YYYY on public disk');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_upload_is_file_stores_pdf_without_image_processing(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 4, 10, 12, 0, 0, 'UTC'));
+        Storage::fake('public');
+
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'laravel');
+        $this->app['config']->set('vormia.mediaforge.disk', 'public');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.pdf';
+        file_put_contents($tmp, "%PDF-1.4\n% Vormia test\n");
+
+        $file = new UploadedFile($tmp, 'example.pdf', 'application/pdf', null, true);
+
+        $urlOrPath = MediaForge::upload($file)
+            ->isFile()
+            ->useYearFolder(true)
+            ->randomizeFileName(true)
+            ->to('docs')
+            ->run();
+
+        $this->assertNotSame('', trim((string) $urlOrPath));
+
+        $files = Storage::disk('public')->allFiles('uploads/docs/2026');
+        $this->assertNotEmpty($files, 'Expected MediaForge::upload(...)->isFile() to write into uploads/docs/YYYY on public disk');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_upload_is_file_treats_png_as_raw_file_keeps_extension(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 4, 10, 12, 0, 0, 'UTC'));
+        Storage::fake('public');
+
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'laravel');
+        $this->app['config']->set('vormia.mediaforge.disk', 'public');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.png';
+        $encoded = ImageManager::gd()->create(10, 10)->fill('00ff00')->toPng();
+        file_put_contents($tmp, (string) $encoded);
+
+        $file = new UploadedFile($tmp, 'example.png', 'image/png', null, true);
+
+        MediaForge::upload($file)
+            ->isFile()
+            ->useYearFolder(true)
+            ->randomizeFileName(true)
+            ->to('raw-images')
+            ->run();
+
+        $files = Storage::disk('public')->allFiles('uploads/raw-images/2026');
+        $this->assertNotEmpty($files);
+
+        $hasPng = false;
+        foreach ($files as $path) {
+            if (str_ends_with(strtolower($path), '.png')) {
+                $hasPng = true;
+                break;
+            }
+        }
+        $this->assertTrue($hasPng, 'Expected raw upload to keep .png extension when isFile() is used');
+
+        Carbon::setTestNow();
+    }
+
     public function test_storage_rule_vormia_writes_to_public_webroot(): void
     {
         $tmpPublic = sys_get_temp_dir() . '/vormia-public-' . uniqid('', true);

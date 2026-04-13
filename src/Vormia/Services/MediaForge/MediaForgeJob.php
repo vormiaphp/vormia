@@ -15,6 +15,7 @@ class MediaForgeJob
     private bool $useYearFolder = false;
     private bool $useDateFolders = false;
     private bool $randomizeFileName = false;
+    private bool $asFile = false;
 
     private ?array $resize = null;
     private ?array $convert = null;
@@ -49,6 +50,15 @@ class MediaForgeJob
     public function randomizeFileName(bool $on = true): self
     {
         $this->randomizeFileName = $on;
+        return $this;
+    }
+
+    /**
+     * Treat the input as a raw file and skip all image processing/decoding.
+     */
+    public function isFile(bool $on = true): self
+    {
+        $this->asFile = $on;
         return $this;
     }
 
@@ -127,6 +137,27 @@ class MediaForgeJob
             $dateSegment,
         ]);
         $dir = implode('/', $dirParts);
+
+        if ($this->asFile) {
+            $finalPath = $this->joinPath($dir, "{$baseName}.{$originalExt}");
+            $finalPath = $this->maybeUniquePath(
+                $store,
+                $finalPath,
+                (bool) ($this->config['auto_override'] ?? false),
+            );
+
+            $store->put($finalPath, $this->sourceBytes());
+
+            $urlOrPath = $store->urlOrPath($finalPath);
+            $url = $this->looksLikeHttpUrl($urlOrPath) ? $urlOrPath : null;
+
+            return new MediaForgeResult(
+                disk: $diskName,
+                path: $finalPath,
+                url: $url,
+                urlOrPath: $urlOrPath,
+            );
+        }
 
         $manager = $this->engine->manager($driver);
         $originalImage = $manager->read($this->input);

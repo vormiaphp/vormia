@@ -398,6 +398,35 @@ $imageUrl = MediaForge::upload($file)
     ->run();
 ```
 
+### MediaForge File Upload (no processing)
+
+If you want to upload **any file type** (PDFs, docs, zips, etc.) without image decoding/resizing/conversion, use `uploadFile()`:
+
+```php
+use VormiaPHP\Vormia\Facades\MediaForge;
+
+$urlOrPath = MediaForge::uploadFile($request->file('document'))
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('documents')
+    ->run();
+```
+
+You can also use the fluent flag on the normal upload pipeline:
+
+```php
+use VormiaPHP\Vormia\Facades\MediaForge;
+
+$urlOrPath = MediaForge::upload($request->file('document'))
+    ->isFile()
+    ->useYearFolder(true)
+    ->randomizeFileName(true)
+    ->to('documents')
+    ->run();
+```
+
+Note: `isFile()` disables all image operations (`resize()`, `convert()`, `thumbnail()`), even if the uploaded file is an image.
+
 **File Naming:**
 
 - Resize: `{baseName}-{width}-{height}.{extension}` (e.g., `abc123-606-606.jpg`)
