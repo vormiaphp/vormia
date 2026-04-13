@@ -99,9 +99,17 @@ class MediaForgeTest extends IntegrationTestCase
             ->run();
 
         $this->assertNotSame('', trim((string) $urlOrPath));
+        $this->assertTrue(
+            str_ends_with(strtolower(trim((string) $urlOrPath)), '.pdf'),
+            'Expected MediaForge::uploadFile() to return a URL/path ending with .pdf'
+        );
 
         $files = Storage::disk('public')->allFiles('uploads/docs/2026');
         $this->assertNotEmpty($files, 'Expected MediaForge::uploadFile() to write into uploads/docs/YYYY on public disk');
+        $this->assertTrue(
+            collect($files)->contains(fn (string $p) => str_ends_with(strtolower($p), '.pdf')),
+            'Expected stored file to have .pdf extension'
+        );
 
         Carbon::setTestNow();
     }
@@ -129,9 +137,60 @@ class MediaForgeTest extends IntegrationTestCase
             ->run();
 
         $this->assertNotSame('', trim((string) $urlOrPath));
+        $this->assertTrue(
+            str_ends_with(strtolower(trim((string) $urlOrPath)), '.pdf'),
+            'Expected MediaForge::upload(...)->isFile() to return a URL/path ending with .pdf'
+        );
 
         $files = Storage::disk('public')->allFiles('uploads/docs/2026');
         $this->assertNotEmpty($files, 'Expected MediaForge::upload(...)->isFile() to write into uploads/docs/YYYY on public disk');
+        $this->assertTrue(
+            collect($files)->contains(fn (string $p) => str_ends_with(strtolower($p), '.pdf')),
+            'Expected stored file to have .pdf extension'
+        );
+
+        Carbon::setTestNow();
+    }
+
+    public function test_upload_file_preserves_office_extension(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 4, 10, 12, 0, 0, 'UTC'));
+        Storage::fake('public');
+
+        $this->app['config']->set('vormia.mediaforge.storage_rule', 'laravel');
+        $this->app['config']->set('vormia.mediaforge.disk', 'public');
+        $this->app['config']->set('vormia.mediaforge.base_dir', 'uploads');
+        $this->app['config']->set('vormia.mediaforge.auto_override', true);
+
+        $tmp = sys_get_temp_dir() . '/vormia-mediaforge-' . uniqid('', true) . '.docx';
+        file_put_contents($tmp, "PK\x03\x04 Vormia test docx");
+
+        $file = new UploadedFile(
+            $tmp,
+            'example.docx',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            null,
+            true
+        );
+
+        $urlOrPath = MediaForge::uploadFile($file)
+            ->useYearFolder(true)
+            ->randomizeFileName(true)
+            ->to('docs')
+            ->run();
+
+        $this->assertNotSame('', trim((string) $urlOrPath));
+        $this->assertTrue(
+            str_ends_with(strtolower(trim((string) $urlOrPath)), '.docx'),
+            'Expected MediaForge::uploadFile() to return a URL/path ending with .docx'
+        );
+
+        $files = Storage::disk('public')->allFiles('uploads/docs/2026');
+        $this->assertNotEmpty($files);
+        $this->assertTrue(
+            collect($files)->contains(fn (string $p) => str_ends_with(strtolower($p), '.docx')),
+            'Expected stored file to have .docx extension'
+        );
 
         Carbon::setTestNow();
     }

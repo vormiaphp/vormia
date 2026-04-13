@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.0] - 2026-04-13
+
+### Added
+
+- **Non-image file uploads in MediaForge**: Added `uploadFile()` for uploading raw files (PDFs, docs, zips, etc.) without image processing
+- **MediaForge upload raw-file mode**: Enhanced `upload()` with an `isFile()` flag to treat uploads as raw files and skip image operations
+
+### Changed
+
+- **Documentation**: Updated MediaForge docs with examples and guidance for non-image uploads
+- **Tests**: Added coverage for uploading non-image files and verifying storage behavior
+
 ## [5.2.0] - 2026-04-10
 
 ### Added

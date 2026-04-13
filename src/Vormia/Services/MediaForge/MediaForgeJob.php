@@ -117,7 +117,7 @@ class MediaForgeJob
         $store = $this->store($diskName);
 
         $sourcePath = $this->sourcePath();
-        $originalExt = $this->guessExtension($sourcePath);
+        $originalExt = $this->resolveInputExtension($sourcePath);
 
         $baseName = $this->randomizeFileName
             ? Str::lower(Str::random(12))
@@ -351,6 +351,41 @@ class MediaForgeJob
         }
 
         return $this->normalizeFormat($ext);
+    }
+
+    /**
+     * Resolve the effective extension for this input.
+     *
+     * Resolution order:
+     * - For UploadedFile: prefer client original extension, then MIME-based guess.
+     * - Otherwise: infer from source path.
+     */
+    private function resolveInputExtension(string $sourcePath): string
+    {
+        if ($this->input instanceof UploadedFile) {
+            $ext = strtolower(trim((string) $this->input->getClientOriginalExtension()));
+            $ext = trim($ext, '.');
+
+            if ($ext !== '') {
+                return $this->normalizeFormat($ext);
+            }
+
+            $guessed = '';
+            if (method_exists($this->input, 'extension')) {
+                $guessed = (string) $this->input->extension();
+            } elseif (method_exists($this->input, 'guessExtension')) {
+                $guessed = (string) $this->input->guessExtension();
+            }
+
+            $guessed = strtolower(trim($guessed));
+            $guessed = trim($guessed, '.');
+
+            if ($guessed !== '') {
+                return $this->normalizeFormat($guessed);
+            }
+        }
+
+        return $this->guessExtension($sourcePath);
     }
 
     private function joinPath(string ...$parts): string
