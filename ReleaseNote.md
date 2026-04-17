@@ -2,6 +2,36 @@
 
 This document contains human-friendly release notes for tagged versions of this package.
 
+## v5.4.0
+
+### Summary
+- MediaForge now returns **storage paths/keys by default**, and provides a fluent URL builder that can generate either **public** URLs or **signed temporary** URLs for private buckets (S3, R2, Spaces, etc.).
+
+### Breaking Changes
+- **MediaForge upload return value**: `MediaForge::upload(...)->run()` and `MediaForge::uploadFile(...)->run()` now return a **path/key** (e.g. `uploads/products/2026/04/17/abc.webp`) instead of sometimes returning a URL.
+  - **Upgrade**: If your app previously stored the return value as a URL, update it to store the returned **path** and build URLs at render time.
+
+### Changes
+- **Fluent URL builder**: `MediaForge::url($pathOrUrl, $disk = null)` now returns a builder (string-castable):
+  - Public: `MediaForge::url($path)->public()`
+  - Private/signed: `MediaForge::url($path)->private()` (uses `temporaryUrl()` when supported)
+  - Expiry helpers: `->seconds()`, `->minutes()`, `->hours()`, `->days()`, `->years()`, or `->expiresAt(...)`
+- **Preview URL defaults**:
+  - New env: `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` (seconds)
+    - Missing key: defaults to **86400** (24h)
+    - Present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to **3600** (1h)
+- **Installer env updates** (`php artisan vormia:install`):
+  - Adds `VORMIA_MEDIAFORGE_STORAGE_RULE=vormia`
+  - Adds `VORMIA_MEDIAFORGE_PREVIEW_PERIOD=86400`
+- **Compatibility**:
+  - `MediaForge::previewUrl(...)` remains available as a compatibility helper (internally uses the builder).
+
+### Upgrade / Install
+```bash
+composer require vormiaphp/vormia:^5.4
+php artisan vormia:install
+```
+
 ## v5.2.0
 
 ### Summary

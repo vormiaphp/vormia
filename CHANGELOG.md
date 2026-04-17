@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-04-17
+
+### Added
+- **MediaForge fluent URL builder**: `MediaForge::url($pathOrUrl, $disk = null)` now returns a builder that can generate:
+  - Public URLs via `->public()`
+  - Signed temporary URLs via `->private()` (prefers `temporaryUrl()` when supported)
+  - Flexible expiry helpers: `->seconds()`, `->minutes()`, `->hours()`, `->days()`, `->years()`, and `->expiresAt(...)`
+- **Signed URL default lifetime**: `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` (seconds)
+  - Missing key: defaults to `86400` (24h)
+  - Present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to `3600` (1h)
+
+### Changed
+- **Breaking: MediaForge upload return value**: `MediaForge::upload(...)->run()` and `MediaForge::uploadFile(...)->run()` now return a **storage path/key** by default (instead of sometimes returning a URL).
+- **Installer env block** (`vormia:install`): now includes
+  - `VORMIA_MEDIAFORGE_STORAGE_RULE=vormia`
+  - `VORMIA_MEDIAFORGE_PREVIEW_PERIOD=86400`
+- **MediaForge preview helper**: `MediaForge::previewUrl(...)` remains as a compatibility wrapper, implemented via the URL builder.
+
 ## [5.3.0] - 2026-04-13
 
 ### Added
