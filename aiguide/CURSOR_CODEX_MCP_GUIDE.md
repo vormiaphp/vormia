@@ -48,19 +48,23 @@ Prefer one of these patterns:
 
 ### MediaForge Return Value (S3 / Remote Disks)
 
-`MediaForge::upload(...)->run()` returns a **string** using “URL-or-path” behavior:
+`MediaForge::upload(...)->run()` returns a **string storage path/key** (for example `uploads/products/2026/abc.webp`).
 
-- If the configured Laravel disk supports `url()`, return a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
-- If `url()` can’t be generated (or throws), return the **storage path/key** (for example `uploads/products/2026/abc.webp`).
+- This is intentional for S3/private buckets: `Storage::disk('s3')->url($path)` may produce an **AccessDenied** URL, while `temporaryUrl()` produces a working signed URL.
 
 ### MediaForge URL Helpers (v5.2.0+)
 
 Prefer these helpers in examples and generated code when you need a stable URL:
 
-- `MediaForge::url($urlOrPath, $disk = null)` — normalize a URL-or-path return value into something usable in `<img src="...">` where possible.
-  - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` will return `http(s)` / `data:` inputs unchanged.
-- `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, array $options = [])` — generate preview URLs, including signed temporary URLs when supported by the disk.
-  - Defaults are configured via `VORMIA_MEDIAFORGE_PREVIEW_MODE` (`auto|public|private|proxy`) and `VORMIA_MEDIAFORGE_PREVIEW_EXPIRES_MINUTES`.
+- `MediaForge::url($urlOrPath, $disk = null)` — returns a **fluent URL builder** (string-castable) that can emit:
+  - Public URLs: `MediaForge::url($pathOrUrl)->public()`
+  - Signed/temporary URLs: `MediaForge::url($pathOrUrl)->private()` (uses `temporaryUrl()` when supported)
+    - Default lifetime comes from `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` (seconds)
+      - Missing key: defaults to `86400` (24h)
+      - Present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to `3600` (1h)
+    - You can override with `->seconds()`, `->minutes()`, `->hours()`, `->days()`, etc.
+  - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` returns `http(s)` / `data:` inputs unchanged.
+- `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, array $options = [])` — compatibility helper for signed URLs (internally uses the URL builder).
 
 ### MediaForge Proxy Preview Route (only when enabled)
 

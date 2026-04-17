@@ -252,10 +252,13 @@ class MediaForgeTest extends IntegrationTestCase
         file_put_contents($tmp, (string) $encoded);
         $file = new UploadedFile($tmp, 'example.png', 'image/png', null, true);
 
-        $url = MediaForge::upload($file)
+        $path = MediaForge::upload($file)
             ->to('products')
             ->run();
 
+        $this->assertNotSame('', trim((string) $path));
+
+        $url = MediaForge::url($path)->public()->toString();
         $this->assertStringContainsString('http://localhost/', $url);
 
         $expectedDir = $tmpPublic . '/media/uploads/products';

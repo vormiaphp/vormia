@@ -15,21 +15,18 @@ class MediaForgeManager
     ) {
     }
 
-    public function url(string $urlOrPath, ?string $disk = null): string
+    public function url(string $urlOrPath, ?string $disk = null): MediaUrlBuilder
     {
         $cfg = (array) $this->config->get('vormia.mediaforge', []);
 
         $disk = $disk ?? (string) ($cfg['disk'] ?? 'public');
         $disk = strtolower(trim($disk));
 
-        $storageRule = (string) ($cfg['storage_rule'] ?? 'laravel');
-        $passthrough = (bool) ($cfg['url_passthrough'] ?? false);
-
-        return (new MediaPublicUrl($this->filesystems))->forUrlOrPath(
+        return new MediaUrlBuilder(
             urlOrPath: $urlOrPath,
             disk: $disk,
-            storageRule: $storageRule,
-            passthroughUrls: $passthrough,
+            cfg: $cfg,
+            filesystems: $this->filesystems,
         );
     }
 
@@ -77,20 +74,27 @@ class MediaForgeManager
         $cfg = (array) $this->config->get('vormia.mediaforge', []);
 
         $disk = $disk ?? (string) ($cfg['disk'] ?? 'public');
-        $mode = (string) ($options['mode'] ?? ($cfg['preview_mode'] ?? 'auto'));
-        $options['mode'] = $mode;
+        $disk = strtolower(trim((string) $disk));
 
         if ($expiresAt === null) {
             $minutes = (int) ($cfg['preview_expires_minutes'] ?? 10);
             $expiresAt = now()->addMinutes(max(1, $minutes));
         }
 
-        return (new MediaPreviewUrl($this->filesystems))->forUrlOrPath(
-            urlOrPath: $urlOrPath,
-            disk: $disk,
-            expiresAt: $expiresAt,
-            options: $options,
-        );
+        // Compatibility wrapper: prefer builder behavior.
+        // - If caller explicitly provided mode/public/private flags, keep honoring them.
+        // - Otherwise, default to "private" because preview URLs are expected to work for private buckets.
+        $mode = strtolower(trim((string) ($options['mode'] ?? 'private')));
+        $forcePrivate = $mode === 'private' || (($options['private'] ?? false) === true) || (($options['force_sign'] ?? false) === true);
+
+        $builder = $this->url($urlOrPath, $disk);
+        if ($forcePrivate) {
+            $builder->private();
+        } else {
+            $builder->public();
+        }
+
+        return $builder->expiresAt($expiresAt)->toString();
     }
 }
 

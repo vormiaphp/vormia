@@ -50,7 +50,7 @@ final class MediaFileForgeJob
      */
     public function run(): string
     {
-        return $this->runInfo()->urlOrPath;
+        return $this->runInfo()->path;
     }
 
     public function runInfo(): MediaForgeResult

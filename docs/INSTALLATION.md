@@ -140,7 +140,7 @@ Vormia ships MediaForge as a package-first service + facade. You can call it dir
 ```php
 use VormiaPHP\Vormia\Facades\MediaForge;
 
-$imageUrl = MediaForge::upload($request->file('image'))
+$path = MediaForge::upload($request->file('image'))
     ->useYearFolder(true)
     ->randomizeFileName(true)
     ->to('products')
@@ -148,18 +148,31 @@ $imageUrl = MediaForge::upload($request->file('image'))
     ->convert('webp', 90, true, true)
     ->thumbnail([[500, 500, 'thumb']])
     ->run();
+
+// Public buckets:
+$publicUrl = MediaForge::url($path)->public()->toString();
+
+// Private buckets (signed URL, defaults to VORMIA_MEDIAFORGE_PREVIEW_PERIOD seconds):
+$signedUrl = MediaForge::url($path)->private()->toString();
 ```
 
 ### MediaForge configuration
 
 ```env
+VORMIA_MEDIAFORGE_STORAGE_RULE=vormia
 VORMIA_MEDIAFORGE_DRIVER=auto
 VORMIA_MEDIAFORGE_DISK=public
 VORMIA_MEDIAFORGE_BASE_DIR=uploads
 VORMIA_MEDIAFORGE_DEFAULT_QUALITY=85
 VORMIA_MEDIAFORGE_DEFAULT_FORMAT=webp
 VORMIA_MEDIAFORGE_AUTO_OVERRIDE=false
+VORMIA_MEDIAFORGE_PREVIEW_PERIOD=86400
 VORMIA_MEDIAFORGE_PRESERVE_ORIGINALS=true
 VORMIA_MEDIAFORGE_THUMBNAIL_KEEP_ASPECT_RATIO=true
 VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 ```
+
+**Preview period notes:**
+
+- If `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` is **missing**, private URLs default to **24 hours**.
+- If it is present but **empty** (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`), private URLs default to **1 hour**.

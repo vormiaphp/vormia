@@ -72,6 +72,11 @@ return [
         // - public: always prefer `url()`
         // - private: prefer `temporaryUrl()` (signed) when supported
         'preview_mode' => env('VORMIA_MEDIAFORGE_PREVIEW_MODE', 'auto'),
+        // Default signed URL lifetime in seconds (when using MediaForge::url(...)->private() with no explicit expiry).
+        // - If missing: defaults to 86400 (24 hours)
+        // - If present but empty (VORMIA_MEDIAFORGE_PREVIEW_PERIOD=): defaults to 3600 (1 hour)
+        'preview_period_seconds' => env('VORMIA_MEDIAFORGE_PREVIEW_PERIOD'),
+        // Legacy / compatibility default (used by previewUrl() when no other period is provided).
         'preview_expires_minutes' => env('VORMIA_MEDIAFORGE_PREVIEW_EXPIRES_MINUTES', 10),
     ],
 

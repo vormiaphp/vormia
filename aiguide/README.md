@@ -38,10 +38,14 @@ Every guide follows the same sections:
 
 ## Vormia MediaForge Note (S3 / Remote Disks)
 
-When host-app code uses `VormiaPHP\Vormia\Facades\MediaForge`, the `->run()` method returns a **string**:
+When host-app code uses `VormiaPHP\Vormia\Facades\MediaForge`, the `->run()` method returns a **string storage path/key** (for example `uploads/products/2026/abc.webp`).
 
-- If the configured Laravel disk supports `url()`, it returns a **URL string** (often `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
-- If `url()` can’t be generated (or throws), it returns the **storage path/key** (for example `uploads/products/2026/abc.webp`).
+- To display a **public** URL: `MediaForge::url($path)->public()`
+- To display a **private** (signed) URL: `MediaForge::url($path)->private()`
+  - Default lifetime comes from `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` (seconds)
+    - Missing key: defaults to **24h**
+    - Present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to **1h**
+  - Override as needed: `->seconds()`, `->minutes()`, `->hours()`, `->days()`, etc.
 
 ## MediaForge File Upload (no processing)
 
@@ -54,7 +58,9 @@ If the uploaded file might be a **non-image** (PDFs, docs, zips, etc.), use eith
 
 In `v5.2.0+`, prefer these helpers when converting UI code:
 
-- `MediaForge::url($urlOrPath, $disk = null)` — normalize URL-or-path values for `<img src="...">`
-- `MediaForge::previewUrl($urlOrPath, $disk = null, $expiresAt = null, $options = [])` — generate preview URLs (signed when supported). If configured with `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, the host app can also use the proxy endpoint `GET /api/vrm/media/preview?disk=...&path=...`.
+- `MediaForge::url($pathOrUrl, $disk = null)` — fluent URL builder for `<img src="...">`
+  - Public: `->public()`
+  - Private/signed: `->private()`
+- `MediaForge::previewUrl(...)` — compatibility helper for signed preview URLs. If configured with `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, the host app can also use the proxy endpoint `GET /api/vrm/media/preview?disk=...&path=...`.
 
 For the canonical docs, see the “S3 / Remote Disks” section in [`../README.md`](../README.md).

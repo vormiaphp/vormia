@@ -61,8 +61,8 @@ The package will automatically check for required dependencies during installati
 
 ### ✨ New Features
 
-- **`MediaForge::url($urlOrPath, $disk = null)`**: Normalize a MediaForge `run()` return value into a usable URL when possible (works with Laravel disks and legacy webroot mode).
-- **`MediaForge::previewUrl(...)`**: Generate previewable URLs, including signed temporary URLs when supported by the configured disk.
+- **`MediaForge::url($urlOrPath, $disk = null)`**: Fluent URL builder that turns a storage path/key (or an older URL-or-path value) into either a public URL or a signed temporary URL.
+- **`MediaForge::previewUrl(...)`**: Compatibility helper for generating signed preview URLs (internally uses the URL builder).
 - **Preview proxy mode**: Set `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy` to enable a streaming preview endpoint at `GET /api/vrm/media/preview?disk=...&path=...`.
 - **URL passthrough option**: `VORMIA_MEDIAFORGE_URL_PASSTHROUGH` controls whether `MediaForge::url()` returns existing `http(s)`/`data:` inputs unchanged.
 
@@ -356,7 +356,7 @@ MediaForge provides comprehensive image processing with resize, conversion, and 
 use VormiaPHP\Vormia\Facades\MediaForge;
 
 // Basic upload with resize and convert
-$imageUrl = MediaForge::upload($request->file('image'))
+$path = MediaForge::upload($request->file('image'))
     ->useYearFolder(true)
     // Use YYYY/MM/DD folders instead of YYYY
     // ->useDateFolders(true)
@@ -367,13 +367,13 @@ $imageUrl = MediaForge::upload($request->file('image'))
     ->run();
 
 // Resize with background fill (exact dimensions with image centered)
-$imageUrl = MediaForge::upload($file)
+$path = MediaForge::upload($file)
     ->to('products')
     ->resize(606, 606, true, '#5a85b9')  // Creates 606x606 with #5a85b9 background
     ->run();
 
 // Thumbnail generation with full control
-$imageUrl = MediaForge::upload($file)
+$path = MediaForge::upload($file)
     ->to('products')
     ->resize(606, 606, true, '#5a85b9')
     ->thumbnail(
@@ -385,14 +385,14 @@ $imageUrl = MediaForge::upload($file)
     ->run();
 
 // Generate thumbnails from original image (before resize/convert)
-$imageUrl = MediaForge::upload($file)
+$path = MediaForge::upload($file)
     ->to('products')
     ->resize(606, 606)
     ->thumbnail([[500, 500, 'thumb']], true, true) // fromOriginal = true
     ->run();
 
 // Exact thumbnail dimensions (no aspect ratio preservation)
-$imageUrl = MediaForge::upload($file)
+$path = MediaForge::upload($file)
     ->to('products')
     ->thumbnail([[500, 500, 'thumb']], false) // keepAspectRatio = false
     ->run();
@@ -405,7 +405,7 @@ If you want to upload **any file type** (PDFs, docs, zips, etc.) without image d
 ```php
 use VormiaPHP\Vormia\Facades\MediaForge;
 
-$urlOrPath = MediaForge::uploadFile($request->file('document'))
+$path = MediaForge::uploadFile($request->file('document'))
     ->useYearFolder(true)
     ->randomizeFileName(true)
     ->to('documents')
@@ -417,7 +417,7 @@ You can also use the fluent flag on the normal upload pipeline:
 ```php
 use VormiaPHP\Vormia\Facades\MediaForge;
 
-$urlOrPath = MediaForge::upload($request->file('document'))
+$path = MediaForge::upload($request->file('document'))
     ->isFile()
     ->useYearFolder(true)
     ->randomizeFileName(true)
@@ -451,13 +451,17 @@ VORMIA_MEDIAFORGE_THUMBNAIL_FROM_ORIGINAL=false
 
 #### Display URL helper (`MediaForge::url`)
 
-`MediaForge::upload(...)->run()` may return either a **URL** or a **storage path/key** (see “URL-or-path” behavior above).\nTo reliably turn either a path/key **or** a URL into something you can put in an `<img src=\"\">`, use:
+`MediaForge::upload(...)->run()` returns a **storage path/key** (example: `uploads/products/2026/04/17/abc.webp`).\nTo turn that (or any prior “URL-or-path” value) into something you can put in an `<img src=\"\">`, use:
 
 ```php
 use VormiaPHP\Vormia\Facades\MediaForge;
 
-$src = MediaForge::url($iconPathOrUrl);        // uses configured disk
-$src = MediaForge::url($iconPathOrUrl, 'S3');  // optional disk override (case-insensitive)
+// Public buckets / public CDN URLs:
+$src = MediaForge::url($pathOrUrl)->public();        // uses configured disk
+$src = MediaForge::url($pathOrUrl, 's3')->public();  // optional disk override (case-insensitive)
+
+// Private buckets (signed / expiring URL):
+$src = MediaForge::url($pathOrUrl)->private()->hours(1);
 ```
 
 Behavior:
@@ -466,6 +470,7 @@ Behavior:
 - If input is already a URL:
   - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` returns it unchanged
   - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=false` tries to extract S3-style keys and rebuild via the disk (otherwise returns the URL unchanged)
+ - If `private()` is used, it prefers `Storage::disk($disk)->temporaryUrl($path, $expiresAt)` when supported.
 
 #### S3 / Remote Disks (Return Value + Failure Handling)
 
@@ -480,10 +485,14 @@ VORMIA_MEDIAFORGE_STORAGE_RULE=laravel
 VORMIA_MEDIAFORGE_DISK=s3
 ```
 
-`MediaForge::upload(...)->run()` returns a **string**:
+`MediaForge::upload(...)->run()` returns a **string path/key** (for example `uploads/products/2026/abc.webp`).
 
-- If the configured Laravel disk supports `url()`, Vormia will return a **URL string** (commonly something like `https://{bucket}.s3.../{key}` or your `AWS_URL` / CloudFront URL).
-- If `url()` can’t be generated (or throws), Vormia will return the **storage path/key** (for example `uploads/products/2026/abc.webp`). This is the “URL-or-path” behavior.
+- To display a **public** URL, use `MediaForge::url($path)->public()` (or just `(string) MediaForge::url($path)`).
+- To display a **private** (signed, expiring) URL, use `MediaForge::url($path)->private()` and set an expiry:
+  - `->minutes(10)`, `->hours(1)`, etc.
+  - If you don't set an expiry explicitly, it uses `VORMIA_MEDIAFORGE_PREVIEW_PERIOD` (seconds).
+    - If missing: defaults to `86400` (24h)
+    - If present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to `3600` (1h)
 
 To handle upload failures, wrap the call in a `try/catch`:
 
@@ -492,7 +501,7 @@ use Illuminate\Support\Facades\Log;
 use VormiaPHP\Vormia\Facades\MediaForge;
 
 try {
-    $urlOrPath = MediaForge::upload($request->file('image'))
+    $path = MediaForge::upload($request->file('image'))
         ->to('products')
         ->run();
 } catch (\Throwable $e) {
