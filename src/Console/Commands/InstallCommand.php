@@ -140,7 +140,6 @@ class InstallCommand extends Command
         $envContent_slug .= "VORMIA_SLUG_HISTORY_ENABLED=true\n";
 
         $envContent_routes = "\n# VORMIA ROUTES\nVORMIA_REGISTER_API_ROUTES=true\n";
-        $envContent_routes .= "VORMIA_REGISTER_WEB_ROUTES=true\n";
 
         // MediaForge config
         $envContent_mediaforge = "\n# VORMIA MEDIAFORGE CONFIG\nVORMIA_MEDIAFORGE_DRIVER=auto\n";

@@ -114,9 +114,7 @@ class InstallationTest extends TestCase
 
         $this->assertIsArray($config['register_routes'], 'register_routes should be an array');
         $this->assertArrayHasKey('api', $config['register_routes']);
-        $this->assertArrayHasKey('web', $config['register_routes']);
         $this->assertIsBool($config['register_routes']['api']);
-        $this->assertIsBool($config['register_routes']['web']);
 
         // Test mediaforge structure
         $this->assertIsArray($config['mediaforge'], 'mediaforge should be an array');

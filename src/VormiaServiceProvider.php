@@ -79,11 +79,6 @@ class VormiaServiceProvider extends ServiceProvider
                     ->middleware('api')
                     ->group(__DIR__ . '/../routes/api.php');
             }
-
-            if (config('vormia.register_routes.web', true)) {
-                Route::middleware('web')
-                    ->group(__DIR__ . '/../routes/web.php');
-            }
         });
     }
 

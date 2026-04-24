@@ -29,14 +29,13 @@ return [
     | Route registration
     |--------------------------------------------------------------------------
     |
-    | Control whether the package registers its route files. API routes default
-    | to off (opt-in); web route group defaults to on for future web endpoints.
+    | Default is false: routes/api.php is not loaded unless you enable it.
+    | Set VORMIA_REGISTER_API_ROUTES=true (or vormia:install) to register API routes.
     |
     */
 
     'register_routes' => [
-        'api' => env('VORMIA_REGISTER_API_ROUTES', false),
-        'web' => env('VORMIA_REGISTER_WEB_ROUTES', true),
+        'api' => filter_var(env('VORMIA_REGISTER_API_ROUTES', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
     /*
