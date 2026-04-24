@@ -101,6 +101,7 @@ class InstallationTest extends TestCase
         // Test required keys
         $requiredKeys = [
             'table_prefix',
+            'register_routes',
             'auto_update_slugs',
             'slug_approval_required',
             'slug_history_enabled',
@@ -110,6 +111,12 @@ class InstallationTest extends TestCase
         foreach ($requiredKeys as $key) {
             $this->assertArrayHasKey($key, $config, "Config should have key: $key");
         }
+
+        $this->assertIsArray($config['register_routes'], 'register_routes should be an array');
+        $this->assertArrayHasKey('api', $config['register_routes']);
+        $this->assertArrayHasKey('web', $config['register_routes']);
+        $this->assertIsBool($config['register_routes']['api']);
+        $this->assertIsBool($config['register_routes']['web']);
 
         // Test mediaforge structure
         $this->assertIsArray($config['mediaforge'], 'mediaforge should be an array');

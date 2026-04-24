@@ -74,9 +74,16 @@ class VormiaServiceProvider extends ServiceProvider
     protected function registerRoutes(): void
     {
         $this->app->booted(function () {
-            Route::prefix('api')
-                ->middleware('api')
-                ->group(__DIR__ . '/../routes/api.php');
+            if (config('vormia.register_routes.api', false)) {
+                Route::prefix('api')
+                    ->middleware('api')
+                    ->group(__DIR__ . '/../routes/api.php');
+            }
+
+            if (config('vormia.register_routes.web', true)) {
+                Route::middleware('web')
+                    ->group(__DIR__ . '/../routes/web.php');
+            }
         });
     }
 

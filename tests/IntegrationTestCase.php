@@ -37,6 +37,8 @@ abstract class IntegrationTestCase extends Orchestra
         $app['config']->set('cache.stores.array', ['driver' => 'array']);
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('vormia.user_model', User::class);
+        $app['config']->set('vormia.register_routes.api', true);
+        $app['config']->set('vormia.register_routes.web', true);
     }
 
     protected function defineDatabaseMigrations(): void

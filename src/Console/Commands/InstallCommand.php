@@ -139,6 +139,9 @@ class InstallCommand extends Command
         $envContent_slug .= "VORMIA_SLUG_APPROVAL_REQUIRED=true\n";
         $envContent_slug .= "VORMIA_SLUG_HISTORY_ENABLED=true\n";
 
+        $envContent_routes = "\n# VORMIA ROUTES\nVORMIA_REGISTER_API_ROUTES=true\n";
+        $envContent_routes .= "VORMIA_REGISTER_WEB_ROUTES=true\n";
+
         // MediaForge config
         $envContent_mediaforge = "\n# VORMIA MEDIAFORGE CONFIG\nVORMIA_MEDIAFORGE_DRIVER=auto\n";
         $envContent_mediaforge .= "VORMIA_MEDIAFORGE_STORAGE_RULE=vormia\n";
@@ -162,6 +165,9 @@ class InstallCommand extends Command
             if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envPath, $envContent_slug);
             }
+            if (strpos($content, 'VORMIA_REGISTER_API_ROUTES') === false) {
+                File::append($envPath, $envContent_routes);
+            }
             if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
                 File::append($envPath, $envContent_mediaforge);
             }
@@ -175,6 +181,9 @@ class InstallCommand extends Command
             }
             if (strpos($content, 'VORMIA_AUTO_UPDATE_SLUGS') === false) {
                 File::append($envExamplePath, $envContent_slug);
+            }
+            if (strpos($content, 'VORMIA_REGISTER_API_ROUTES') === false) {
+                File::append($envExamplePath, $envContent_routes);
             }
             if (strpos($content, 'VORMIA_MEDIAFORGE_DRIVER') === false) {
                 File::append($envExamplePath, $envContent_mediaforge);

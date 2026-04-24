@@ -26,6 +26,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Route registration
+    |--------------------------------------------------------------------------
+    |
+    | Control whether the package registers its route files. API routes default
+    | to off (opt-in); web route group defaults to on for future web endpoints.
+    |
+    */
+
+    'register_routes' => [
+        'api' => env('VORMIA_REGISTER_API_ROUTES', false),
+        'web' => env('VORMIA_REGISTER_WEB_ROUTES', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Slug Management Settings
     |--------------------------------------------------------------------------
     |
