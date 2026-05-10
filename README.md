@@ -1,26 +1,28 @@
 # Vormia - Laravel Package
 
-[![Packagist](https://img.shields.io/packagist/v/vormiaphp/vormia.svg)](https://packagist.org/packages/vormiaphp/vormia)
-[![GitHub](https://img.shields.io/github/stars/vormiaphp/vormia.svg)](https://github.com/vormiaphp/vormia)
+[Packagist](https://packagist.org/packages/vormiaphp/vormia)
+[GitHub](https://github.com/vormiaphp/vormia)
 
 ## AI Conversion Guides
 
-The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides (and companion `.md` references) for migrating between React and various Laravel/Next.js stacks. Guides are grouped by topic: [`aiguide/inertia/`](aiguide/inertia/) (Inertia.js v3), [`aiguide/livewire/`](aiguide/livewire/) (Livewire Volt), and [`aiguide/beta/`](aiguide/beta/) (experimental tracks). See [`aiguide/README.md`](aiguide/README.md) for the full index. `.mdc` files with `alwaysApply` are picked up by Cursor and compatible AI assistants.
+The `[/aiguide](aiguide/)` folder contains `.mdc` AI-oriented conversion guides (and companion `.md` references) for migrating between React and various Laravel/Next.js stacks. Guides are grouped by topic: `[aiguide/inertia/](aiguide/inertia/)` (Inertia.js v3), `[aiguide/livewire/](aiguide/livewire/)` (Livewire Volt), and `[aiguide/beta/](aiguide/beta/)` (experimental tracks). See `[aiguide/README.md](aiguide/README.md)` for the full index. `.mdc` files with `alwaysApply` are picked up by Cursor and compatible AI assistants.
 
-| Guide | Conversion |
-|-------|-----------|
-| [reactjs-from-scratch.md](aiguide/reactjs-from-scratch.md) | **From scratch:** learn React (Vite, hooks, steps to routing) |
-| [vuejs-from-scratch.md](aiguide/vuejs-from-scratch.md) | **From scratch:** learn Vue 3 (create-vue, Composition API, steps to router/Pinia) |
-| [svelte-from-scratch.md](aiguide/svelte-from-scratch.md) | **From scratch:** learn Svelte 5 (runes, Vite, when to add SvelteKit) |
-| [inertiajs-operations.md](aiguide/inertia/inertiajs-operations.md) | Inertia.js v3 — adapter-agnostic operations (Laravel, visits, Blade, middleware) |
-| [react-to-laravel-livewire-inline.mdc](aiguide/livewire/react-to-laravel-livewire-inline.mdc) | React → Laravel Blade + Livewire Volt (inline) |
-| [react-to-inertia-react.mdc](aiguide/inertia/react-to-inertia-react.mdc) | React → Inertia.js + React |
-| [react-to-inertia-vue.mdc](aiguide/inertia/react-to-inertia-vue.mdc) | React → Inertia.js + Vue 3 |
-| [react-to-inertia-svelte.mdc](aiguide/inertia/react-to-inertia-svelte.mdc) | React → Inertia.js + Svelte 5 |
-| [laravel-to-nextjs-tanstack.mdc](aiguide/beta/laravel-to-nextjs-tanstack.mdc) | Laravel → Next.js (App Router) + TanStack Query |
-| [laravel-to-react.mdc](aiguide/beta/laravel-to-react.mdc) | Laravel → Standalone React SPA |
-| [react-to-expo-react-native.mdc](aiguide/beta/react-to-expo-react-native.mdc) | React → Expo React Native |
-| [react-to-expo-react-native-gluestack.mdc](aiguide/beta/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2 |
+
+| Guide                                                                                             | Conversion                                                                         |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [reactjs-from-scratch.md](aiguide/reactjs-from-scratch.md)                                        | **From scratch:** learn React (Vite, hooks, steps to routing)                      |
+| [vuejs-from-scratch.md](aiguide/vuejs-from-scratch.md)                                            | **From scratch:** learn Vue 3 (create-vue, Composition API, steps to router/Pinia) |
+| [svelte-from-scratch.md](aiguide/svelte-from-scratch.md)                                          | **From scratch:** learn Svelte 5 (runes, Vite, when to add SvelteKit)              |
+| [inertiajs-operations.md](aiguide/inertia/inertiajs-operations.md)                                | Inertia.js v3 — adapter-agnostic operations (Laravel, visits, Blade, middleware)   |
+| [react-to-laravel-livewire-inline.mdc](aiguide/livewire/react-to-laravel-livewire-inline.mdc)     | React → Laravel Blade + Livewire Volt (inline)                                     |
+| [react-to-inertia-react.mdc](aiguide/inertia/react-to-inertia-react.mdc)                          | React → Inertia.js + React                                                         |
+| [react-to-inertia-vue.mdc](aiguide/inertia/react-to-inertia-vue.mdc)                              | React → Inertia.js + Vue 3                                                         |
+| [react-to-inertia-svelte.mdc](aiguide/inertia/react-to-inertia-svelte.mdc)                        | React → Inertia.js + Svelte 5                                                      |
+| [laravel-to-nextjs-tanstack.mdc](aiguide/beta/laravel-to-nextjs-tanstack.mdc)                     | Laravel → Next.js (App Router) + TanStack Query                                    |
+| [laravel-to-react.mdc](aiguide/beta/laravel-to-react.mdc)                                         | Laravel → Standalone React SPA                                                     |
+| [react-to-expo-react-native.mdc](aiguide/beta/react-to-expo-react-native.mdc)                     | React → Expo React Native                                                          |
+| [react-to-expo-react-native-gluestack.mdc](aiguide/beta/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2                                        |
+
 
 See also: [react-to-laravel-livewire-inline.mdc](aiguide/livewire/react-to-laravel-livewire-inline.mdc) for React → Laravel Blade + Livewire Volt (inline components).
 
@@ -57,13 +59,13 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v5.5.0 🎉
+## What's New in v5.5.3 🎉
 
 ### ✨ Highlights
 
-- **AI guides reorganized by stack**: Inertia, Livewire, and beta conversion tracks now live under clear subfolders; README links and [`aiguide/README.md`](aiguide/README.md) point at the current paths.
-- **Inertia.js v3 documentation**: New adapter-agnostic guide [`aiguide/inertia/inertiajs-operations.md`](aiguide/inertia/inertiajs-operations.md) alongside the React/Vue/Svelte conversion `.mdc` files under [`aiguide/inertia/`](aiguide/inertia/).
-- **Installer documentation**: Livewire vs Inertia install paths (`php artisan vormia:install --stack=livewire|inertia`) are documented in README and aligned with [`aiguide/CURSOR_CODEX_MCP_GUIDE.md`](aiguide/CURSOR_CODEX_MCP_GUIDE.md).
+- **AI guides reorganized by stack**: Inertia, Livewire, and beta conversion tracks now live under clear subfolders; README links and `[aiguide/README.md](aiguide/README.md)` point at the current paths.
+- **Inertia.js v3 documentation**: New adapter-agnostic guide `[aiguide/inertia/inertiajs-operations.md](aiguide/inertia/inertiajs-operations.md)` alongside the React/Vue/Svelte conversion `.mdc` files under `[aiguide/inertia/](aiguide/inertia/)`.
+- **Installer documentation**: Livewire vs Inertia install paths (`php artisan vormia:install --stack=livewire|inertia`) are documented in README and aligned with `[aiguide/CURSOR_CODEX_MCP_GUIDE.md](aiguide/CURSOR_CODEX_MCP_GUIDE.md)`.
 
 ### 📚 Documentation
 
@@ -77,9 +79,9 @@ The package will automatically check for required dependencies during installati
 
 All models now use consistent method names for managing meta data:
 
-- **`setMeta($key, $value, $is_active = 1)`** - Set or update meta values
-- **`getMeta($key, $default = null)`** - Retrieve meta values
-- **`deleteMeta($key)`** - Remove meta values
+- `**setMeta($key, $value, $is_active = 1)`** - Set or update meta values
+- `**getMeta($key, $default = null)**` - Retrieve meta values
+- `**deleteMeta($key)**` - Remove meta values
 
 This eliminates confusion between different method names like `setMetaValue` vs `setMeta` across models.
 
@@ -133,26 +135,28 @@ This installs Vormia with all files and configurations, including API support. S
 
 The interactive prompt lists two options; move the cursor with the arrow keys and confirm with Enter.
 
-- **Install Livewire Vormia Version** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS sources, compiled `style.min.css`, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for **`livewire/style.min.css`** and **`livewire/select2-dark.css`** only (not `.scss`). Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
-- **Install Inertiajs Vormia Version** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/` (SCSS is for your build pipeline; `app.css` only **`@import './plugins/style.min.css';`**). No Flux. No `resources/js/app.js` changes; npm install is skipped.
+- **Install Livewire Vormia Version** — Copies `[dev/plugins/livewire](dev/plugins/livewire)` into `resources/css/plugins/livewire/` (SCSS sources, compiled `style.min.css`, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for `**livewire/style.min.css`** and `**livewire/select2-dark.css**` only (not `.scss`). Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
+- **Install Inertiajs Vormia Version** — Copies `[dev/plugins/style.scss](dev/plugins/style.scss)`, `[style.min.css](dev/plugins/style.min.css)`, and `[dev/plugins/incl/](dev/plugins/incl)` into `resources/css/plugins/` (SCSS is for your build pipeline; `app.css` only `**@import './plugins/style.min.css';`**). No Flux. No `resources/js/app.js` changes; npm install is skipped.
 
-| | **Livewire** | **Inertia.js** |
-| --- | --- | --- |
-| Copied CSS | `resources/css/plugins/livewire/**` | `resources/css/plugins/style.scss`, `style.min.css`, `incl/**` |
-| `resources/css/app.css` | Flux + `./plugins/livewire/style.min.css` + `select2-dark.css` | `./plugins/style.min.css` only |
-| `resources/js/app.js` | Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Unchanged |
-| npm packages | Installed by the installer | Skipped |
 
-**Compiled CSS only:** `app.css` does not `@import` Vormia `.scss` files; it imports the shipped **`style.min.css`** (built from `style.scss` in the package repo). Use `sass` only if you choose to `@import` or compile those `.scss` files yourself.
+|                         | **Livewire**                                                                 | **Inertia.js**                                                 |
+| ----------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Copied CSS              | `resources/css/plugins/livewire/`**                                          | `resources/css/plugins/style.scss`, `style.min.css`, `incl/**` |
+| `resources/css/app.css` | Flux + `./plugins/livewire/style.min.css` + `select2-dark.css`               | `./plugins/style.min.css` only                                 |
+| `resources/js/app.js`   | Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Unchanged                                                      |
+| npm packages            | Installed by the installer                                                   | Skipped                                                        |
+
+
+**Compiled CSS only:** `app.css` does not `@import` Vormia `.scss` files; it imports the shipped `**style.min.css`** (built from `style.scss` in the package repo). Use `sass` only if you choose to `@import` or compile those `.scss` files yourself.
 
 ### Plugin stylesheet source (`dev/plugins`)
 
-Maintain two stub trees under [`src/stubs/pkg/css/plugins/`](src/stubs/pkg/css/plugins/) (mirrors dev) before tagging releases:
+Maintain two stub trees under `[src/stubs/pkg/css/plugins/](src/stubs/pkg/css/plugins/)` (mirrors dev) before tagging releases:
 
-- **Inertia path:** [`dev/plugins/style.scss`](dev/plugins/style.scss), [`dev/plugins/style.min.css`](dev/plugins/style.min.css), [`dev/plugins/incl/`](dev/plugins/incl) — copied to the host as `resources/css/plugins/…` on Inertia installs.
-- **Livewire path:** [`dev/plugins/livewire/`](dev/plugins/livewire) — copied to `resources/css/plugins/livewire/…` on Livewire installs.
+- **Inertia path:** `[dev/plugins/style.scss](dev/plugins/style.scss)`, `[dev/plugins/style.min.css](dev/plugins/style.min.css)`, `[dev/plugins/incl/](dev/plugins/incl)` — copied to the host as `resources/css/plugins/…` on Inertia installs.
+- **Livewire path:** `[dev/plugins/livewire/](dev/plugins/livewire)` — copied to `resources/css/plugins/livewire/…` on Livewire installs.
 
-The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` receives only **`@import` of compiled `.min.css`** (plus Flux and `select2-dark.css` on Livewire). Rebuild `style.min.css` from `style.scss` in the package repo before release when you change SCSS.
+The package dev sample `[dev/resources/css/app.css](dev/resources/css/app.css)` is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` receives only `**@import` of compiled `.min.css`** (plus Flux and `select2-dark.css` on Livewire). Rebuild `style.min.css` from `style.scss` in the package repo before release when you change SCSS.
 
 **Automatically Installed (all stacks):**
 
@@ -177,9 +181,8 @@ The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) 
 
 Middleware (`role`, `permission`, `module`, `authority`, `api-auth`) and service providers are auto-registered by the package -- no manual `bootstrap/app.php` changes needed.
 
-2. Configure your `.env` file as needed.
-
-4. Run migrations:
+1. Configure your `.env` file as needed.
+2. Run migrations:
 
 ```
 php artisan migrate
@@ -371,7 +374,7 @@ Route::prefix('vrm')->group(function () {
 
 With the `vrm` prefix (as shipped by Vormia), the final endpoint is:
 
-- **`/api/vrm/media/preview`**
+- `**/api/vrm/media/preview**`
 
 If this route is missing (or `VORMIA_MEDIAFORGE_PREVIEW_MODE` is not `proxy`), the controller will return `404`.
 
@@ -492,12 +495,13 @@ $src = MediaForge::url($pathOrUrl)->private()->hours(1);
 ```
 
 Behavior:
+
 - If `VORMIA_MEDIAFORGE_STORAGE_RULE=laravel`, it uses `Storage::disk($disk)->url($path)` and wraps relative results (like `/storage/...`) with `asset()` to make them absolute.
 - If `VORMIA_MEDIAFORGE_STORAGE_RULE=vormia`, it returns `asset($path)` for paths/keys.
 - If input is already a URL:
   - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=true` returns it unchanged
   - `VORMIA_MEDIAFORGE_URL_PASSTHROUGH=false` tries to extract S3-style keys and rebuild via the disk (otherwise returns the URL unchanged)
- - If `private()` is used, it prefers `Storage::disk($disk)->temporaryUrl($path, $expiresAt)` when supported.
+- If `private()` is used, it prefers `Storage::disk($disk)->temporaryUrl($path, $expiresAt)` when supported.
 
 #### S3 / Remote Disks (Return Value + Failure Handling)
 
@@ -638,3 +642,4 @@ dd('All utilities:', $allUtilities);
 $themeUtility = DB::table($tableName)->where('key', 'theme')->first();
 dd('Theme utility:', $themeUtility);
 ```
+
