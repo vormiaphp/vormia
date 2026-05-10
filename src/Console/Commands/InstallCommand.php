@@ -314,7 +314,7 @@ class InstallCommand extends Command
     }
 
     /**
-     * Update app.css with Vormia imports (Flux + livewire plugin tree, or inertia plugin files).
+     * Update app.css with Vormia imports (compiled CSS only; .scss is shipped for editing / compile pipeline, not @import'd here).
      */
     private function updateAppCss(string $stack): void
     {
@@ -330,12 +330,10 @@ class InstallCommand extends Command
 
         $importsToAdd = $stack === self::STACK_INERTIA
             ? [
-                "@import './plugins/style.scss';",
                 "@import './plugins/style.min.css';",
             ]
             : [
                 "@import '../../vendor/livewire/flux/dist/flux.css';",
-                "@import './plugins/livewire/style.scss';",
                 "@import './plugins/livewire/style.min.css';",
                 "@import './plugins/livewire/select2-dark.css';",
             ];

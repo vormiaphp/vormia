@@ -13,12 +13,12 @@ php artisan vormia:install
 
 When the installer runs interactively, use **arrow keys** and **Enter** to pick **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** (Laravel Prompts).
 
-- **Livewire:** copies `dev/plugins/livewire` into `resources/css/plugins/livewire/`, adds Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `select2-dark.css`, wires `resources/js/app.js`, and installs npm packages.
-- **Inertia:** copies `dev/plugins/style.scss`, `style.min.css`, and `dev/plugins/incl/` into `resources/css/plugins/`, adds `@import` for `./plugins/style.scss` and `./plugins/style.min.css` only; JS and npm are unchanged.
+- **Livewire:** copies `dev/plugins/livewire` into `resources/css/plugins/livewire/`, adds Flux plus `@import` for **`livewire/style.min.css`** and **`select2-dark.css`** only (not `.scss`), wires `resources/js/app.js`, and installs npm packages.
+- **Inertia:** copies `dev/plugins/style.scss`, `style.min.css`, and `dev/plugins/incl/` into `resources/css/plugins/`, adds **`@import './plugins/style.min.css';`** only; JS and npm are unchanged.
 
 **Without a prompt (CI / `--no-interaction`):** pass `--stack=livewire` or `--stack=inertia`. Omitting `--stack` defaults to Livewire.
 
-**Sass:** host apps need the `sass` npm dev dependency so Vite can compile the `.scss` imports.
+**Note:** `style.scss` is the source used to produce `style.min.css` in the package; the installer does not add `@import` for `.scss` in `app.css`.
 
 **Package authors:** sync stubs under `src/stubs/pkg/css/plugins/` from `dev/plugins/` (Inertia root files + `incl/`) and `dev/plugins/livewire/` before releases.
 

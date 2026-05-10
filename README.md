@@ -133,17 +133,17 @@ This installs Vormia with all files and configurations, including API support. S
 
 The interactive prompt lists two options; move the cursor with the arrow keys and confirm with Enter.
 
-- **Install Livewire Vormia Version** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS, min CSS, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `livewire/select2-dark.css`. Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
-- **Install Inertiajs Vormia Version** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/`. `app.css` gets `@import './plugins/style.scss';` and `@import './plugins/style.min.css';` (no Flux). No `resources/js/app.js` changes; npm install is skipped.
+- **Install Livewire Vormia Version** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS sources, compiled `style.min.css`, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for **`livewire/style.min.css`** and **`livewire/select2-dark.css`** only (not `.scss`). Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
+- **Install Inertiajs Vormia Version** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/` (SCSS is for your build pipeline; `app.css` only **`@import './plugins/style.min.css';`**). No Flux. No `resources/js/app.js` changes; npm install is skipped.
 
 | | **Livewire** | **Inertia.js** |
 | --- | --- | --- |
 | Copied CSS | `resources/css/plugins/livewire/**` | `resources/css/plugins/style.scss`, `style.min.css`, `incl/**` |
-| `resources/css/app.css` | Flux + livewire SCSS/CSS imports (see above) | `./plugins/style.scss` + `./plugins/style.min.css` |
+| `resources/css/app.css` | Flux + `./plugins/livewire/style.min.css` + `select2-dark.css` | `./plugins/style.min.css` only |
 | `resources/js/app.js` | Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Unchanged |
 | npm packages | Installed by the installer | Skipped |
 
-**Sass:** `@import` lines reference `.scss` files; install the **`sass`** npm dev dependency in the host app so Vite can compile them (`npm i -D sass`).
+**Compiled CSS only:** `app.css` does not `@import` Vormia `.scss` files; it imports the shipped **`style.min.css`** (built from `style.scss` in the package repo). Use `sass` only if you choose to `@import` or compile those `.scss` files yourself.
 
 ### Plugin stylesheet source (`dev/plugins`)
 
@@ -152,7 +152,7 @@ Maintain two stub trees under [`src/stubs/pkg/css/plugins/`](src/stubs/pkg/css/p
 - **Inertia path:** [`dev/plugins/style.scss`](dev/plugins/style.scss), [`dev/plugins/style.min.css`](dev/plugins/style.min.css), [`dev/plugins/incl/`](dev/plugins/incl) — copied to the host as `resources/css/plugins/…` on Inertia installs.
 - **Livewire path:** [`dev/plugins/livewire/`](dev/plugins/livewire) — copied to `resources/css/plugins/livewire/…` on Livewire installs.
 
-The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` always receives the Vormia `@import` lines from the installer.
+The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` receives only **`@import` of compiled `.min.css`** (plus Flux and `select2-dark.css` on Livewire). Rebuild `style.min.css` from `style.scss` in the package repo before release when you change SCSS.
 
 **Automatically Installed (all stacks):**
 
@@ -164,7 +164,7 @@ The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) 
 - ✅ API routes file copied to `routes/api.php` (you may be prompted to overwrite)
 - ✅ Postman collection copied to `public/Vormia.postman_collection.json`
 - ✅ CSS and JS plugin files: stack-specific plugin tree under `resources/css/plugins` (see table above) plus `resources/js/plugins`
-- ✅ `resources/css/app.css` updated per stack (Flux + livewire SCSS/CSS imports, or inertia `style.scss` + `style.min.css`)
+- ✅ `resources/css/app.css` updated per stack (Flux + livewire min/dark CSS, or inertia `style.min.css` only)
 - ✅ **Livewire stack only:** `resources/js/app.js` updated with Vormia imports and initialization; **npm packages** installed (jquery, flatpickr, select2, sweetalert2)
 - ✅ **intervention/image** package installed via Composer
 - ✅ **Laravel Sanctum** installed via `php artisan install:api`
