@@ -11,6 +11,17 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
+When the installer runs interactively, choose **`[Install Livewire Vormia Version]`** or **`[Install Inertiajs Vormia Version]`**.
+
+- **Livewire:** copies `dev/plugins/livewire` into `resources/css/plugins/livewire/`, adds Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `select2-dark.css`, wires `resources/js/app.js`, and installs npm packages.
+- **Inertia:** copies `dev/plugins/style.scss`, `style.min.css`, and `dev/plugins/incl/` into `resources/css/plugins/`, adds `@import` for `./plugins/style.scss` and `./plugins/style.min.css` only; JS and npm are unchanged.
+
+**Without a prompt (CI / `--no-interaction`):** pass `--stack=livewire` or `--stack=inertia`. Omitting `--stack` defaults to Livewire.
+
+**Sass:** host apps need the `sass` npm dev dependency so Vite can compile the `.scss` imports.
+
+**Package authors:** sync stubs under `src/stubs/pkg/css/plugins/` from `dev/plugins/` (Inertia root files + `incl/`) and `dev/plugins/livewire/` before releases.
+
 ## Post-Install Steps
 
 ### 1. User Model Setup

@@ -19,7 +19,7 @@ class InstallationTest extends TestCase
         $signatureProperty->setAccessible(true);
         $signature = $signatureProperty->getValue($command);
         $this->assertEquals(
-            'vormia:install {--stack= : Application stack: livewire (default) or inertia}',
+            'vormia:install {--stack= : Non-interactive only: livewire (default) or inertia}',
             $signature
         );
     }
@@ -149,7 +149,7 @@ class InstallationTest extends TestCase
     }
 
     /**
-     * VormiaVormia::copyResourceFiles copies from stubs/pkg into the host app's resources/.
+     * Pkg stubs required for vormia:install (JS always; CSS split livewire vs inertia in copyResourceFiles).
      */
     public function test_pkg_stub_assets_exist_for_installer(): void
     {
@@ -159,7 +159,15 @@ class InstallationTest extends TestCase
             'js/plugins/select2.js',
             'js/plugins/flatpickr.js',
             'js/helpers/livewire-hooks.js',
+            'css/plugins/style.scss',
             'css/plugins/style.min.css',
+            'css/plugins/incl/_colors.scss',
+            'css/plugins/incl/_func.scss',
+            'css/plugins/livewire/style.scss',
+            'css/plugins/livewire/style.min.css',
+            'css/plugins/livewire/select2-dark.css',
+            'css/plugins/livewire/incl/_colors.scss',
+            'css/plugins/livewire/incl/_func.scss',
         ];
         foreach ($required as $relative) {
             $path = $base . '/' . $relative;

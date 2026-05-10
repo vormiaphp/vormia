@@ -107,19 +107,36 @@ Before installing Vormia, ensure you have Laravel installed.
 
 ### Livewire vs Inertia
 
-The installer targets either a **Livewire** (default) or **Inertia.js** frontend stack:
+Run the installer and pick a version when prompted:
 
-| | **Livewire** (default) | **Inertia.js** |
+```sh
+php artisan vormia:install
+```
+
+You will see:
+
+1. **`[Install Livewire Vormia Version]`** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS, min CSS, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `livewire/select2-dark.css`. Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
+2. **`[Install Inertiajs Vormia Version]`** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/`. `app.css` gets `@import './plugins/style.scss';` and `@import './plugins/style.min.css';` (no Flux). No `resources/js/app.js` changes; npm install is skipped.
+
+| | **Livewire** | **Inertia.js** |
 | --- | --- | --- |
-| Command | `php artisan vormia:install` or `--stack=livewire` | `php artisan vormia:install --stack=inertia` |
-| `resources/css/app.css` | Adds Flux vendor import and `@import './plugins/style.min.css';` | Adds only `@import './plugins/style.min.css';` (no Flux) |
-| `resources/js/app.js` | Appends Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Not modified; wire your own entrypoint |
-| npm packages | Installs jquery, flatpickr, select2, sweetalert2 | Skipped (add them yourself if needed) |
+| Copied CSS | `resources/css/plugins/livewire/**` | `resources/css/plugins/style.scss`, `style.min.css`, `incl/**` |
+| `resources/css/app.css` | Flux + livewire SCSS/CSS imports (see above) | `./plugins/style.scss` + `./plugins/style.min.css` |
+| `resources/js/app.js` | Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Unchanged |
+| npm packages | Installed by the installer | Skipped |
 
-- **Interactive install:** run `php artisan vormia:install` and choose the stack when prompted.
-- **CI or scripts:** pass `--stack=livewire` or `--stack=inertia`. If you omit `--stack` with `--no-interaction`, the default is **Livewire**.
+**Sass:** `@import` lines reference `.scss` files; install the **`sass`** npm dev dependency in the host app so Vite can compile them (`npm i -D sass`).
 
-Plugin CSS is copied to `resources/css/plugins/style.min.css` for both stacks (from the package stubs).
+**Non-interactive installs (CI, Docker):** use `--no-interaction` and optionally `--stack=livewire` or `--stack=inertia`. If you omit `--stack`, the installer defaults to **Livewire**.
+
+### Plugin stylesheet source (`dev/plugins`)
+
+Maintain two stub trees under [`src/stubs/pkg/css/plugins/`](src/stubs/pkg/css/plugins/) (mirrors dev) before tagging releases:
+
+- **Inertia path:** [`dev/plugins/style.scss`](dev/plugins/style.scss), [`dev/plugins/style.min.css`](dev/plugins/style.min.css), [`dev/plugins/incl/`](dev/plugins/incl) — copied to the host as `resources/css/plugins/…` on Inertia installs.
+- **Livewire path:** [`dev/plugins/livewire/`](dev/plugins/livewire) — copied to `resources/css/plugins/livewire/…` on Livewire installs.
+
+The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` always receives the Vormia `@import` lines from the installer.
 
 ### Step 1: Install Laravel
 
@@ -149,13 +166,13 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
-For an Inertia app without prompts (for example in CI):
+Then choose **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** when prompted. For scripts without a TTY, for example:
 
 ```sh
-php artisan vormia:install --stack=inertia --no-interaction
+php artisan vormia:install --no-interaction --stack=inertia
 ```
 
-This installs Vormia with all files and configurations, including API support. Stack-specific steps are summarized in [Livewire vs Inertia](#livewire-vs-inertia) above.
+This installs Vormia with all files and configurations, including API support. Stack-specific steps are summarized in [Livewire vs Inertia](#livewire-vs-inertia) and [Plugin stylesheet source](#plugin-stylesheet-source-devplugins) above.
 
 **Automatically Installed (all stacks):**
 
@@ -166,8 +183,8 @@ This installs Vormia with all files and configurations, including API support. S
 - ✅ All API controllers in `stubs/controllers/Api` copied to `app/Http/Controllers/Api`
 - ✅ API routes file copied to `routes/api.php` (you may be prompted to overwrite)
 - ✅ Postman collection copied to `public/Vormia.postman_collection.json`
-- ✅ CSS and JS plugin files copied to `resources/css/plugins` and `resources/js/plugins`
-- ✅ `resources/css/app.css` updated per stack (Flux + plugin CSS for Livewire; plugin CSS import only for Inertia)
+- ✅ CSS and JS plugin files: stack-specific plugin tree under `resources/css/plugins` (see table above) plus `resources/js/plugins`
+- ✅ `resources/css/app.css` updated per stack (Flux + livewire SCSS/CSS imports, or inertia `style.scss` + `style.min.css`)
 - ✅ **Livewire stack only:** `resources/js/app.js` updated with Vormia imports and initialization; **npm packages** installed (jquery, flatpickr, select2, sweetalert2)
 - ✅ **intervention/image** package installed via Composer
 - ✅ **Laravel Sanctum** installed via `php artisan install:api`
@@ -563,7 +580,7 @@ php artisan vormia:uninstall
 
 - ⚠️ **Laravel Sanctum**: If you want to remove Sanctum, run: `composer remove laravel/sanctum`
 - ⚠️ **CORS Config**: If you want to remove CORS config, delete: `config/cors.php`
-- ⚠️ **app.css and app.js**: Remove Vormia `@import` lines from `app.css` and any Vormia initialization from `app.js` manually (Inertia installs only change `app.css` for the plugin stylesheet)
+- ⚠️ **app.css and app.js**: Remove Vormia `@import` lines from `app.css` (Flux, `./plugins/…`, `./plugins/livewire/…`) and any Vormia block from `app.js` manually if needed
 - ⚠️ **Composer package**: Run `composer remove vormiaphp/vormia` to completely remove from composer.json
 
 ### **7. Troubleshooting Section**

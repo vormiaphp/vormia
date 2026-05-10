@@ -1,0 +1,35 @@
+// Import Colors
+@import "incl/colors";
+@import "incl/func";
+
+/**
+* Style
+**/
+@include liveselect2;
+
+/* Error */
+span.error,
+p.error,
+span.error > p {
+    font-size: 13px;
+    font-weight: 400;
+    color: getColor(red);
+    font-style: italic;
+}
+
+/* Error */
+.required {
+    & {
+        .bi-asterisk,
+        .fa-asterisk {
+            color: getColor(red);
+            font-size: 10px;
+        }
+    }
+}
+
+label.required:after {
+    content: "*";
+    margin-left: 0.2rem;
+    color: getColor(red);
+}

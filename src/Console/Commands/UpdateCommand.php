@@ -30,7 +30,7 @@ class UpdateCommand extends Command
     {
         $vormia = new VormiaVormia();
         $vormia->uninstall();
-        $vormia->install(true);
+        $vormia->install(true, 'livewire');
     }
 }
 

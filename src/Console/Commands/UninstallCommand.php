@@ -210,16 +210,25 @@ class UninstallCommand extends Command
         $content = File::get($appCssPath);
         $lines = preg_split('/\\R/', $content);
 
-        $filtered = array_filter($lines, function ($line) {
+        $vormiaImportNeedles = [
+            "@import '../../vendor/livewire/flux/dist/flux.css';",
+            "@import './plugins/style.scss';",
+            "@import './plugins/style.min.css';",
+            "@import './plugins/livewire/style.scss';",
+            "@import './plugins/livewire/style.min.css';",
+            "@import './plugins/livewire/select2-dark.css';",
+        ];
+
+        $filtered = array_filter($lines, function ($line) use ($vormiaImportNeedles) {
             if (strpos($line, '/* Include Style */') !== false) {
                 return false;
             }
-            if (strpos($line, "@import '../../vendor/livewire/flux/dist/flux.css';") !== false) {
-                return false;
+            foreach ($vormiaImportNeedles as $needle) {
+                if (strpos($line, $needle) !== false) {
+                    return false;
+                }
             }
-            if (strpos($line, "@import './plugins/style.min.css';") !== false) {
-                return false;
-            }
+
             return true;
         });
 

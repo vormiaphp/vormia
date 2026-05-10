@@ -1,2 +1,1 @@
-/* Vormia: minimal surface styles for Select2/Flatpickr in Flux/Livewire layouts; extend in app.css as needed */
-.select2-container{z-index:50}
+span.error,p.error,span.error>p{font-size:13px;font-weight:400;color:#ed3038;font-style:italic}.required .bi-asterisk,.required .fa-asterisk{color:#ed3038;font-size:10px}label.required:after{content:"*";margin-left:.2rem;color:#ed3038}

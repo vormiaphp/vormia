@@ -21,7 +21,7 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'vormia:install {--stack= : Application stack: livewire (default) or inertia}';
+    protected $signature = 'vormia:install {--stack= : Non-interactive only: livewire (default) or inertia}';
 
     /**
      * The console command description.
@@ -67,7 +67,7 @@ class InstallCommand extends Command
 
         // Step 2: Install Vormia kit
         $this->step('Installing Vormia kit...');
-        if ($vormia->install($isApi)) {
+        if ($vormia->install($isApi, $stack)) {
             $this->info('✅ Vormia kit installed successfully.');
         } else {
             $this->error('❌ Failed to install Vormia kit.');
@@ -144,12 +144,26 @@ class InstallCommand extends Command
     }
 
     /**
-     * Resolve install stack from --stack, interactive choice, or default livewire.
+     * Resolve install stack: interactive menu, or --stack when non-interactive (default livewire).
      *
      * @return string|null livewire|inertia, or null if --stack was invalid
      */
     private function resolveInstallStack(): ?string
     {
+        if ($this->input->isInteractive()) {
+            $this->newLine();
+            $choice = $this->choice(
+                'Choose Vormia installation type',
+                [
+                    '[Install Livewire Vormia Version]',
+                    '[Install Inertiajs Vormia Version]',
+                ],
+                0
+            );
+
+            return str_contains((string) $choice, 'Inertiajs') ? self::STACK_INERTIA : self::STACK_LIVEWIRE;
+        }
+
         $raw = $this->option('stack');
         if (is_string($raw) && trim($raw) !== '') {
             $normalized = strtolower(trim($raw));
@@ -160,16 +174,6 @@ class InstallCommand extends Command
             }
 
             return $normalized;
-        }
-
-        if ($this->input->isInteractive()) {
-            $choice = $this->choice(
-                'Which stack are you using?',
-                ['Livewire (default)', 'Inertia.js'],
-                0
-            );
-
-            return str_starts_with((string) $choice, 'Inertia') ? self::STACK_INERTIA : self::STACK_LIVEWIRE;
         }
 
         return self::STACK_LIVEWIRE;
@@ -308,7 +312,7 @@ class InstallCommand extends Command
     }
 
     /**
-     * Update app.css with Vormia imports (Flux + plugins for Livewire; plugin CSS only for Inertia).
+     * Update app.css with Vormia imports (Flux + livewire plugin tree, or inertia plugin files).
      */
     private function updateAppCss(string $stack): void
     {
@@ -322,12 +326,16 @@ class InstallCommand extends Command
 
         $content = File::get($appCssPath);
 
-        $styleMinImport = "@import './plugins/style.min.css';";
         $importsToAdd = $stack === self::STACK_INERTIA
-            ? [$styleMinImport]
+            ? [
+                "@import './plugins/style.scss';",
+                "@import './plugins/style.min.css';",
+            ]
             : [
                 "@import '../../vendor/livewire/flux/dist/flux.css';",
-                $styleMinImport,
+                "@import './plugins/livewire/style.scss';",
+                "@import './plugins/livewire/style.min.css';",
+                "@import './plugins/livewire/select2-dark.css';",
             ];
 
         $needsUpdate = false;

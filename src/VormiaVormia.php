@@ -46,11 +46,13 @@ class VormiaVormia
 
     /**
      * Install the vormia kit.
+     *
+     * @param  string  $stack  livewire|inertia — selects which CSS plugin stubs are copied into resources/css/plugins
      */
-    public function install(bool $apiOnly = false): bool
+    public function install(bool $apiOnly = false, string $stack = 'livewire'): bool
     {
         try {
-            $this->copyStubs($apiOnly);
+            $this->copyStubs($apiOnly, $stack);
             $this->runMigrations();
             return true;
         } catch (\Exception $e) {
@@ -90,7 +92,7 @@ class VormiaVormia
     /**
      * Copy stubs to app. Models, traits, services, middleware now live in package.
      */
-    protected function copyStubs(bool $apiOnly = false): void
+    protected function copyStubs(bool $apiOnly = false, string $stack = 'livewire'): void
     {
         $stubs = [
             'jobs' => $this->appPath('Jobs'),
@@ -152,7 +154,7 @@ class VormiaVormia
             }
         }
 
-        $this->copyResourceFiles();
+        $this->copyResourceFiles($stack);
 
         // Copy seeder files
         $seederSource = __DIR__ . '/stubs/seeders';
@@ -250,25 +252,35 @@ class VormiaVormia
     }
 
     /**
-     * Copy CSS and JS files from pkg stubs to resources directory.
+     * Copy CSS plugin stubs for the chosen stack; always copy pkg JS.
+     *
+     * @param  string  $stack  livewire|inertia
      */
-    protected function copyResourceFiles(): void
+    protected function copyResourceFiles(string $stack = 'livewire'): void
     {
-        // Copy CSS files
-        $cssSource = __DIR__ . '/stubs/pkg/css';
-        $cssDest = $this->resourcePath('css');
-        if ($this->filesystem->isDirectory($cssSource)) {
-            $this->filesystem->ensureDirectoryExists($cssDest);
-            foreach ($this->filesystem->allFiles($cssSource) as $file) {
-                // Skip .DS_Store files
-                if (basename($file->getPathname()) === '.DS_Store') {
-                    continue;
+        $pkgCssPlugins = __DIR__ . '/stubs/pkg/css/plugins';
+        $pluginsDest = $this->resourcePath('css/plugins');
+
+        if ($stack === 'inertia') {
+            foreach (['style.scss', 'style.min.css'] as $name) {
+                $src = $pkgCssPlugins . '/' . $name;
+                if (! $this->filesystem->exists($src)) {
+                    throw new RuntimeException("Missing inertia CSS stub: {$src}");
                 }
-                $relativePath = ltrim(str_replace($cssSource, '', $file->getPathname()), '/\\');
-                $destFile = rtrim($cssDest, '/\\') . '/' . $relativePath;
-                $this->filesystem->ensureDirectoryExists(dirname($destFile));
-                $this->filesystem->copy($file->getPathname(), $destFile);
+                $this->filesystem->ensureDirectoryExists($pluginsDest);
+                $this->filesystem->copy($src, $pluginsDest . '/' . $name);
             }
+            $inclSource = $pkgCssPlugins . '/incl';
+            if (! $this->filesystem->isDirectory($inclSource)) {
+                throw new RuntimeException("Missing inertia CSS stub directory: {$inclSource}");
+            }
+            $this->mirrorStubDirectory($inclSource, $pluginsDest . '/incl');
+        } else {
+            $livewireSource = $pkgCssPlugins . '/livewire';
+            if (! $this->filesystem->isDirectory($livewireSource)) {
+                throw new RuntimeException("Missing livewire CSS stub directory: {$livewireSource}");
+            }
+            $this->mirrorStubDirectory($livewireSource, $pluginsDest . '/livewire');
         }
 
         // Copy JS files
@@ -286,6 +298,23 @@ class VormiaVormia
                 $this->filesystem->ensureDirectoryExists(dirname($destFile));
                 $this->filesystem->copy($file->getPathname(), $destFile);
             }
+        }
+    }
+
+    /**
+     * Copy every file under a stub directory into the destination, preserving relative paths.
+     */
+    protected function mirrorStubDirectory(string $sourceDir, string $destDir): void
+    {
+        $this->filesystem->ensureDirectoryExists($destDir);
+        foreach ($this->filesystem->allFiles($sourceDir) as $file) {
+            if (basename($file->getPathname()) === '.DS_Store') {
+                continue;
+            }
+            $relativePath = ltrim(str_replace($sourceDir, '', $file->getPathname()), '/\\');
+            $destFile = rtrim($destDir, '/\\') . '/' . $relativePath;
+            $this->filesystem->ensureDirectoryExists(dirname($destFile));
+            $this->filesystem->copy($file->getPathname(), $destFile);
         }
     }
 
