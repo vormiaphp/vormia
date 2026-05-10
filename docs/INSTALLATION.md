@@ -11,7 +11,7 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
-When the installer runs interactively, choose **`[Install Livewire Vormia Version]`** or **`[Install Inertiajs Vormia Version]`**.
+When the installer runs interactively, use **arrow keys** and **Enter** to pick **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** (Laravel Prompts).
 
 - **Livewire:** copies `dev/plugins/livewire` into `resources/css/plugins/livewire/`, adds Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `select2-dark.css`, wires `resources/js/app.js`, and installs npm packages.
 - **Inertia:** copies `dev/plugins/style.scss`, `style.min.css`, and `dev/plugins/incl/` into `resources/css/plugins/`, adds `@import` for `./plugins/style.scss` and `./plugins/style.min.css` only; JS and npm are unchanged.

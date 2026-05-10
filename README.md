@@ -119,7 +119,7 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
-Then choose **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** when prompted.
+Then use **arrow keys** to highlight **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** and press **Enter** (Laravel Prompts; no numeric input).
 
 For non-interactive environments (CI, Docker), use `--no-interaction` and optionally `--stack=livewire` or `--stack=inertia`. If you omit `--stack`, the installer defaults to **Livewire**. For example:
 
@@ -131,10 +131,10 @@ This installs Vormia with all files and configurations, including API support. S
 
 ### Livewire vs Inertia
 
-You will see:
+The interactive prompt lists two options; move the cursor with the arrow keys and confirm with Enter.
 
-1. **`[Install Livewire Vormia Version]`** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS, min CSS, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `livewire/select2-dark.css`. Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
-2. **`[Install Inertiajs Vormia Version]`** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/`. `app.css` gets `@import './plugins/style.scss';` and `@import './plugins/style.min.css';` (no Flux). No `resources/js/app.js` changes; npm install is skipped.
+- **Install Livewire Vormia Version** — Copies [`dev/plugins/livewire`](dev/plugins/livewire) into `resources/css/plugins/livewire/` (SCSS, min CSS, `incl/`, `select2-dark.css`). `resources/css/app.css` gets Flux plus `@import` for `livewire/style.scss`, `livewire/style.min.css`, and `livewire/select2-dark.css`. Vormia bootstrap in `resources/js/app.js` and npm packages (jQuery, Select2, Flatpickr, SweetAlert2).
+- **Install Inertiajs Vormia Version** — Copies [`dev/plugins/style.scss`](dev/plugins/style.scss), [`style.min.css`](dev/plugins/style.min.css), and [`dev/plugins/incl/`](dev/plugins/incl) into `resources/css/plugins/`. `app.css` gets `@import './plugins/style.scss';` and `@import './plugins/style.min.css';` (no Flux). No `resources/js/app.js` changes; npm install is skipped.
 
 | | **Livewire** | **Inertia.js** |
 | --- | --- | --- |

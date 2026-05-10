@@ -2,6 +2,8 @@
 
 namespace Vormia\Console\Commands;
 
+use function Laravel\Prompts\select;
+
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -152,16 +154,16 @@ class InstallCommand extends Command
     {
         if ($this->input->isInteractive()) {
             $this->newLine();
-            $choice = $this->choice(
-                'Choose Vormia installation type',
-                [
-                    '[Install Livewire Vormia Version]',
-                    '[Install Inertiajs Vormia Version]',
-                ],
-                0
-            );
 
-            return str_contains((string) $choice, 'Inertiajs') ? self::STACK_INERTIA : self::STACK_LIVEWIRE;
+            // Arrow keys + Enter (radio-style); avoids numbered Symfony choice() input.
+            return select(
+                label: 'Choose Vormia installation type',
+                options: [
+                    self::STACK_LIVEWIRE => 'Install Livewire Vormia Version',
+                    self::STACK_INERTIA => 'Install Inertiajs Vormia Version',
+                ],
+                default: self::STACK_LIVEWIRE,
+            );
         }
 
         $raw = $this->option('stack');
