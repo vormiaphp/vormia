@@ -103,15 +103,33 @@ New `api-auth` middleware for Sanctum-based API authentication:
 
 ## Installation
 
-Before installing Vormia, ensure you have Laravel installed.
+Vormia is installed into an existing Laravel application.
 
-### Livewire vs Inertia
+### Install the package
 
-Run the installer and pick a version when prompted:
+```sh
+composer require vormiaphp/vormia
+```
+
+**Note:** The `intervention/image` package will be automatically installed during the installation process. This package is required for MediaForge image processing functionality.
+
+### Run the installer
 
 ```sh
 php artisan vormia:install
 ```
+
+Then choose **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** when prompted.
+
+For non-interactive environments (CI, Docker), use `--no-interaction` and optionally `--stack=livewire` or `--stack=inertia`. If you omit `--stack`, the installer defaults to **Livewire**. For example:
+
+```sh
+php artisan vormia:install --no-interaction --stack=inertia
+```
+
+This installs Vormia with all files and configurations, including API support. Stack-specific steps are summarized in [Livewire vs Inertia](#livewire-vs-inertia) and [Plugin stylesheet source](#plugin-stylesheet-source-devplugins) below.
+
+### Livewire vs Inertia
 
 You will see:
 
@@ -127,8 +145,6 @@ You will see:
 
 **Sass:** `@import` lines reference `.scss` files; install the **`sass`** npm dev dependency in the host app so Vite can compile them (`npm i -D sass`).
 
-**Non-interactive installs (CI, Docker):** use `--no-interaction` and optionally `--stack=livewire` or `--stack=inertia`. If you omit `--stack`, the installer defaults to **Livewire**.
-
 ### Plugin stylesheet source (`dev/plugins`)
 
 Maintain two stub trees under [`src/stubs/pkg/css/plugins/`](src/stubs/pkg/css/plugins/) (mirrors dev) before tagging releases:
@@ -137,42 +153,6 @@ Maintain two stub trees under [`src/stubs/pkg/css/plugins/`](src/stubs/pkg/css/p
 - **Livewire path:** [`dev/plugins/livewire/`](dev/plugins/livewire) — copied to `resources/css/plugins/livewire/…` on Livewire installs.
 
 The package dev sample [`dev/resources/css/app.css`](dev/resources/css/app.css) is unrelated to what the installer writes; the **consuming** app’s `resources/css/app.css` always receives the Vormia `@import` lines from the installer.
-
-### Step 1: Install Laravel
-
-```sh
-composer create-project laravel/laravel myproject
-cd myproject
-```
-
-### OR Using Laravel Installer
-
-```sh
-laravel new myproject
-cd myproject
-```
-
-### Step 2: Install Vormia
-
-```sh
-composer require vormiaphp/vormia
-```
-
-**Note:** The `intervention/image` package will be automatically installed during the installation process. This package is required for MediaForge image processing functionality.
-
-### Step 3: Run Vormia Installation
-
-```sh
-php artisan vormia:install
-```
-
-Then choose **Install Livewire Vormia Version** or **Install Inertiajs Vormia Version** when prompted. For scripts without a TTY, for example:
-
-```sh
-php artisan vormia:install --no-interaction --stack=inertia
-```
-
-This installs Vormia with all files and configurations, including API support. Stack-specific steps are summarized in [Livewire vs Inertia](#livewire-vs-inertia) and [Plugin stylesheet source](#plugin-stylesheet-source-devplugins) above.
 
 **Automatically Installed (all stacks):**
 
