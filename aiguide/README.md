@@ -47,7 +47,7 @@ Every guide follows the same sections:
 
 ## Related
 
-- [`../references/react-laravel.mdc`](../references/react-laravel.mdc) — original React → Blade/Livewire Volt (class-style) guide
+- [`livewire/react-to-laravel-livewire-inline.mdc`](livewire/react-to-laravel-livewire-inline.mdc) — React → Laravel Blade + Livewire Volt (inline components)
 
 ## Vormia MediaForge Note (S3 / Remote Disks)
 

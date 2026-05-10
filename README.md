@@ -5,7 +5,7 @@
 
 ## AI Conversion Guides
 
-The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides (and companion `.md` references) for migrating between React and various Laravel/Next.js stacks. `.mdc` files with `alwaysApply` are picked up by Cursor and compatible AI assistants.
+The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides (and companion `.md` references) for migrating between React and various Laravel/Next.js stacks. Guides are grouped by topic: [`aiguide/inertia/`](aiguide/inertia/) (Inertia.js v3), [`aiguide/livewire/`](aiguide/livewire/) (Livewire Volt), and [`aiguide/beta/`](aiguide/beta/) (experimental tracks). See [`aiguide/README.md`](aiguide/README.md) for the full index. `.mdc` files with `alwaysApply` are picked up by Cursor and compatible AI assistants.
 
 | Guide | Conversion |
 |-------|-----------|
@@ -22,7 +22,7 @@ The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides 
 | [react-to-expo-react-native.mdc](aiguide/beta/react-to-expo-react-native.mdc) | React → Expo React Native |
 | [react-to-expo-react-native-gluestack.mdc](aiguide/beta/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2 |
 
-See also: [references/react-laravel.mdc](references/react-laravel.mdc) for the original React → Blade/Livewire Volt (class-style) guide.
+See also: [react-to-laravel-livewire-inline.mdc](aiguide/livewire/react-to-laravel-livewire-inline.mdc) for React → Laravel Blade + Livewire Volt (inline components).
 
 ---
 
@@ -57,32 +57,19 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v5.2.0 🎉
+## What's New in v5.5.0 🎉
 
 ### ✨ Highlights
 
-- **MediaForge URL handling for local + S3/remote disks**: First-class helpers for “URL-or-path” outputs, preview URLs, and an optional proxy preview route.
-
-### ✨ New Features
-
-- **`MediaForge::url($urlOrPath, $disk = null)`**: Fluent URL builder that turns a storage path/key (or an older URL-or-path value) into either a public URL or a signed temporary URL.
-- **`MediaForge::previewUrl(...)`**: Compatibility helper for generating signed preview URLs (internally uses the URL builder).
-- **Preview proxy mode**: Set `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy` to enable a streaming preview endpoint at `GET /api/vrm/media/preview?disk=...&path=...`.
-- **URL passthrough option**: `VORMIA_MEDIAFORGE_URL_PASSTHROUGH` controls whether `MediaForge::url()` returns existing `http(s)`/`data:` inputs unchanged.
-
-### 🔧 Improvements
-
-- **Remote disk friendliness**: Clearer patterns for displaying MediaForge outputs across local/public disks and private buckets.
-
-### 🐛 Bug Fixes
-
-- **Documentation correctness**: Updated examples and troubleshooting to reflect current MediaForge behavior (URL-or-path) and best practices.
+- **AI guides reorganized by stack**: Inertia, Livewire, and beta conversion tracks now live under clear subfolders; README links and [`aiguide/README.md`](aiguide/README.md) point at the current paths.
+- **Inertia.js v3 documentation**: New adapter-agnostic guide [`aiguide/inertia/inertiajs-operations.md`](aiguide/inertia/inertiajs-operations.md) alongside the React/Vue/Svelte conversion `.mdc` files under [`aiguide/inertia/`](aiguide/inertia/).
+- **Installer documentation**: Livewire vs Inertia install paths (`php artisan vormia:install --stack=livewire|inertia`) are documented in README and aligned with [`aiguide/CURSOR_CODEX_MCP_GUIDE.md`](aiguide/CURSOR_CODEX_MCP_GUIDE.md).
 
 ### 📚 Documentation
 
-- **Updated README + guides**: Added MediaForge URL helper docs (`MediaForge::url`) and proxy preview route guidance.
+- **README**: AI Conversion Guides table and “See also” links updated for the new `aiguide/inertia/`, `aiguide/livewire/`, and `aiguide/beta/` layout.
 
-[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v4.5.2)
+[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v5.4.0)
 
 ## Key Improvements
 

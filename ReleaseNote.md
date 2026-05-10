@@ -2,6 +2,30 @@
 
 This document contains human-friendly release notes for tagged versions of this package.
 
+## v5.5.0
+
+### Summary
+
+- **AI conversion guides (`aiguide/`)** are organized by topic: **Inertia.js** guides under `aiguide/inertia/`, **Livewire** under `aiguide/livewire/`, and experimental tracks under `aiguide/beta/`. Root-level “from scratch” Markdown guides remain at the top of `aiguide/`.
+- **New Inertia.js v3 reference**: `aiguide/inertia/inertiajs-operations.md` describes adapter-agnostic behavior (Laravel, visits, Blade root, middleware, forms, testing pointers). Stack-specific React → Inertia guides stay as `.mdc` files next to it.
+- **Documentation refresh**: `README.md` AI guide links and the “See also” note now target these paths; [`aiguide/README.md`](aiguide/README.md) is the canonical index inside the folder.
+
+### Changes
+
+- Relocated Inertia conversion `.mdc` files and the new operations doc into `aiguide/inertia/`.
+- Relocated the Livewire Volt inline conversion guide into `aiguide/livewire/`.
+- Relocated Laravel → Next.js / React SPA / Expo guides into `aiguide/beta/`.
+- Removed stale references to a non-shipped `references/react-laravel.mdc` path in favor of the in-repo Livewire Volt inline guide.
+
+### Upgrade / Install
+
+```bash
+composer require vormiaphp/vormia:^5.5
+php artisan vormia:install
+# Inertia frontend (no prompts):
+# php artisan vormia:install --stack=inertia --no-interaction
+```
+
 ## v5.4.0
 
 ### Summary
