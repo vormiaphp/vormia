@@ -132,7 +132,8 @@ The repo includes a **dev** Inertia shell so agents can mirror real wiring:
 - Keep generated examples aligned with the **target stack** (Livewire vs Inertia) and the **actual** `resolve` / page directory in the project.
 - After changing Blade directives or Inertia root markup: `php artisan view:clear`.
 - When upgrading from v2: republish Inertia config (`php artisan vendor:publish --provider="Inertia\ServiceProvider" --force`) and merge customizations per upstream.
-- Deeper migration patterns for React / Vue / Svelte live under `aiguide/inertia/*.mdc`.
+- Deeper migration patterns for React / Vue / Svelte live under `aiguide/inertia/*.mdc`. Adapter-agnostic Inertia behavior (visits, Blade root, middleware, v3 upgrades) is summarized in [aiguide/inertia/inertiajs-operations.md](inertia/inertiajs-operations.md).
+- For **adapter-side UI** (hooks, SFCs, runes), treat official framework docs as canonical: [React](https://react.dev/reference/react) (current 19.x line, for example 19.2.x), [Vue 3 guide — Introduction](https://vuejs.org/guide/introduction.html), [Svelte — Overview](https://svelte.dev/docs/svelte/overview).
 
 ## API/Auth Guidance
 
@@ -158,6 +159,7 @@ The repo includes a **dev** Inertia shell so agents can mirror real wiring:
   - `README.md`
   - `docs/INSTALLATION.md`
 - This file is only for AI/MCP behavior and architecture guardrails.
+- **From-scratch frontend learning paths** (ordered steps, Vite-first, PHP/Laravel-friendly): [`aiguide/reactjs-from-scratch.md`](reactjs-from-scratch.md), [`aiguide/vuejs-from-scratch.md`](vuejs-from-scratch.md), [`aiguide/svelte-from-scratch.md`](svelte-from-scratch.md).
 
 ## Quick Verification Checklist
 

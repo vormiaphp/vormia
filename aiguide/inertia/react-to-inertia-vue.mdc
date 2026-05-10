@@ -8,13 +8,15 @@ alwaysApply: true
 
 This guide covers converting a React SPA to a **Laravel + Inertia.js + Vue 3** stack. Vue 3 uses Single File Components (SFCs) with the Composition API (preferred) and `<script setup>` syntax. The Laravel side is identical to the React adapter — only the frontend view layer changes.
 
+> **Shared Inertia behavior** (Laravel responses, Blade root, visits, middleware, v3 upgrades) is described in [inertiajs-operations.md](inertiajs-operations.md), which applies to React, Vue, and Svelte adapters.
+
 ## Tech Stack
 
 - **Laravel**: 12.x
 - **Inertia.js**: 3.x (`inertiajs/inertia-laravel` ^3.0)
 - **Inertia Vue adapter**: `@inertiajs/vue3` ^3.0
 - **Optional**: `@inertiajs/vite` ^3.0 — page resolution and simplified SSR in dev ([client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md))
-- **Vue**: 3.x (Composition API + `<script setup>`)
+- **Vue**: 3.x (Composition API + `<script setup>`) — high-level overview and learning path: [Vue.js — Introduction](https://vuejs.org/guide/introduction.html)
 - **Tailwind CSS**: 4.x
 - **Vite**: 6.x
 
@@ -635,6 +637,13 @@ const submit = () => {
 ---
 
 ## Resources
+
+### Official Vue 3 (outside Laravel)
+
+- [Vue.js — Introduction](https://vuejs.org/guide/introduction.html) (what Vue is, SFCs, Options vs Composition API)
+- [Vue.js — Quick Start](https://vuejs.org/guide/quick-start.html)
+
+### Inertia and Laravel
 
 - [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index)
 - [Inertia.js v3 — Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)

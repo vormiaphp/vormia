@@ -5,18 +5,22 @@
 
 ## AI Conversion Guides
 
-The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides for migrating between React and various Laravel/Next.js stacks. These are automatically applied by Cursor and compatible AI assistants.
+The [`/aiguide`](aiguide/) folder contains `.mdc` AI-oriented conversion guides (and companion `.md` references) for migrating between React and various Laravel/Next.js stacks. `.mdc` files with `alwaysApply` are picked up by Cursor and compatible AI assistants.
 
 | Guide | Conversion |
 |-------|-----------|
-| [react-to-laravel-livewire-inline.mdc](aiguide/react-to-laravel-livewire-inline.mdc) | React → Laravel Blade + Livewire Volt (inline) |
-| [react-to-inertia-react.mdc](aiguide/react-to-inertia-react.mdc) | React → Inertia.js + React |
-| [react-to-inertia-vue.mdc](aiguide/react-to-inertia-vue.mdc) | React → Inertia.js + Vue 3 |
-| [react-to-inertia-svelte.mdc](aiguide/react-to-inertia-svelte.mdc) | React → Inertia.js + Svelte 5 |
-| [laravel-to-nextjs-tanstack.mdc](aiguide/laravel-to-nextjs-tanstack.mdc) | Laravel → Next.js (App Router) + TanStack Query |
-| [laravel-to-react.mdc](aiguide/laravel-to-react.mdc) | Laravel → Standalone React SPA |
-| [react-to-expo-react-native.mdc](aiguide/react-to-expo-react-native.mdc) | React → Expo React Native |
-| [react-to-expo-react-native-gluestack.mdc](aiguide/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2 |
+| [reactjs-from-scratch.md](aiguide/reactjs-from-scratch.md) | **From scratch:** learn React (Vite, hooks, steps to routing) |
+| [vuejs-from-scratch.md](aiguide/vuejs-from-scratch.md) | **From scratch:** learn Vue 3 (create-vue, Composition API, steps to router/Pinia) |
+| [svelte-from-scratch.md](aiguide/svelte-from-scratch.md) | **From scratch:** learn Svelte 5 (runes, Vite, when to add SvelteKit) |
+| [inertiajs-operations.md](aiguide/inertia/inertiajs-operations.md) | Inertia.js v3 — adapter-agnostic operations (Laravel, visits, Blade, middleware) |
+| [react-to-laravel-livewire-inline.mdc](aiguide/livewire/react-to-laravel-livewire-inline.mdc) | React → Laravel Blade + Livewire Volt (inline) |
+| [react-to-inertia-react.mdc](aiguide/inertia/react-to-inertia-react.mdc) | React → Inertia.js + React |
+| [react-to-inertia-vue.mdc](aiguide/inertia/react-to-inertia-vue.mdc) | React → Inertia.js + Vue 3 |
+| [react-to-inertia-svelte.mdc](aiguide/inertia/react-to-inertia-svelte.mdc) | React → Inertia.js + Svelte 5 |
+| [laravel-to-nextjs-tanstack.mdc](aiguide/beta/laravel-to-nextjs-tanstack.mdc) | Laravel → Next.js (App Router) + TanStack Query |
+| [laravel-to-react.mdc](aiguide/beta/laravel-to-react.mdc) | Laravel → Standalone React SPA |
+| [react-to-expo-react-native.mdc](aiguide/beta/react-to-expo-react-native.mdc) | React → Expo React Native |
+| [react-to-expo-react-native-gluestack.mdc](aiguide/beta/react-to-expo-react-native-gluestack.mdc) | React → Expo React Native + GlueStack UI v2 |
 
 See also: [references/react-laravel.mdc](references/react-laravel.mdc) for the original React → Blade/Livewire Volt (class-style) guide.
 

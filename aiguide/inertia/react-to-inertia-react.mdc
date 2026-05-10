@@ -8,13 +8,15 @@ alwaysApply: true
 
 This guide covers migrating a standalone React SPA (with its own router and API calls) to a **Laravel + Inertia.js + React** stack. With Inertia, your React components become full-page "views" served by Laravel — no separate API needed for page data. The server renders the first HTML, Inertia handles subsequent client-side navigation.
 
+> **Shared Inertia behavior** (Laravel responses, Blade root, visits, middleware, v3 upgrades) is described in [inertiajs-operations.md](inertiajs-operations.md), which applies to React, Vue, and Svelte adapters.
+
 ## Tech Stack
 
 - **Laravel**: 12.x
 - **Inertia.js**: 3.x (server-side adapter: `inertiajs/inertia-laravel` ^3.0)
 - **Inertia React adapter**: `@inertiajs/react` ^3.0
 - **Optional**: `@inertiajs/vite` ^3.0 — page resolution and simplified SSR in dev ([client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md))
-- **React**: 19.x (required by the v3 React adapter)
+- **React**: 19.x (required by the v3 React adapter; stay on the current 19.x line your app installs, for example 19.2.x — see official docs below)
 - **Tailwind CSS**: 4.x
 - **Vite**: 6.x (via `laravel-vite-plugin`)
 
@@ -617,6 +619,15 @@ Show.layout = page => <AppLayout>{page}</AppLayout>;
 
 ## Resources
 
+### Official React (outside Laravel)
+
+Use the current React 19 docs as the source of truth for hooks, components, and rules of React (patch versions such as 19.2 ship behavior and doc fixes on the same site):
+
+- [React — Learn](https://react.dev/learn) (concepts and tutorials)
+- [React — Reference](https://react.dev/reference/react) (hooks, `useState`, `useEffect`, APIs)
+
+### Inertia and Laravel
+
 - [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index)
 - [Inertia.js v3 — Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)
 - [Inertia Laravel (server-side setup)](https://inertiajs.com/docs/v3/installation/server-side-setup.md)
@@ -628,4 +639,4 @@ Show.layout = page => <AppLayout>{page}</AppLayout>;
 ---
 
 **Last Updated**: May 2026
-**Framework Versions**: Laravel 12, Inertia.js 3.x, `@inertiajs/react` ^3, React 19.x, Tailwind CSS 4.x
+**Framework Versions**: Laravel 12, Inertia.js 3.x, `@inertiajs/react` ^3, React 19.x (see [react.dev](https://react.dev/reference/react) for the current 19.x reference), Tailwind CSS 4.x
