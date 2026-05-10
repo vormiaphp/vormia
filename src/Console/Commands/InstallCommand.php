@@ -12,12 +12,16 @@ use VormiaPHP\Vormia\VormiaVormia;
 
 class InstallCommand extends Command
 {
+    private const STACK_LIVEWIRE = 'livewire';
+
+    private const STACK_INERTIA = 'inertia';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'vormia:install';
+    protected $signature = 'vormia:install {--stack= : Application stack: livewire (default) or inertia}';
 
     /**
      * The console command description.
@@ -35,6 +39,11 @@ class InstallCommand extends Command
 
         // Check for required dependencies
         $this->checkRequiredDependencies();
+
+        $stack = $this->resolveInstallStack();
+        if ($stack === null) {
+            return 1;
+        }
 
         // Install intervention/image if not already installed
         $this->step('Installing intervention/image package...');
@@ -69,14 +78,23 @@ class InstallCommand extends Command
         $this->step('Updating environment files...');
         $this->updateEnvFiles();
 
-        // Step 6: Install npm packages
-        $this->step('Installing npm packages...');
-        $this->installNpmPackages();
+        // Step 6: Install npm packages (Livewire stack only; Inertia apps wire their own JS)
+        if ($stack === self::STACK_LIVEWIRE) {
+            $this->step('Installing npm packages...');
+            $this->installNpmPackages();
+        } else {
+            $this->step('Skipping npm packages (Inertia stack).');
+            $this->line('   Add jquery, select2, flatpickr, sweetalert2 to your app if you use those features.');
+        }
 
         // Step 7: Update CSS and JS files
         $this->step('Updating CSS and JS files...');
-        $this->updateAppCss();
-        $this->updateAppJs();
+        $this->updateAppCss($stack);
+        if ($stack === self::STACK_LIVEWIRE) {
+            $this->updateAppJs();
+        } else {
+            $this->info('✅ Skipping resources/js/app.js changes (Inertia stack).');
+        }
 
         // Step 8: Install Sanctum (API)
         $this->step('Installing Laravel Sanctum...');
@@ -123,6 +141,38 @@ class InstallCommand extends Command
     private function step($message)
     {
         $this->info("📦 {$message}");
+    }
+
+    /**
+     * Resolve install stack from --stack, interactive choice, or default livewire.
+     *
+     * @return string|null livewire|inertia, or null if --stack was invalid
+     */
+    private function resolveInstallStack(): ?string
+    {
+        $raw = $this->option('stack');
+        if (is_string($raw) && trim($raw) !== '') {
+            $normalized = strtolower(trim($raw));
+            if (! in_array($normalized, [self::STACK_LIVEWIRE, self::STACK_INERTIA], true)) {
+                $this->error('Invalid --stack value. Use livewire or inertia.');
+
+                return null;
+            }
+
+            return $normalized;
+        }
+
+        if ($this->input->isInteractive()) {
+            $choice = $this->choice(
+                'Which stack are you using?',
+                ['Livewire (default)', 'Inertia.js'],
+                0
+            );
+
+            return str_starts_with((string) $choice, 'Inertia') ? self::STACK_INERTIA : self::STACK_LIVEWIRE;
+        }
+
+        return self::STACK_LIVEWIRE;
     }
 
     /**
@@ -258,9 +308,9 @@ class InstallCommand extends Command
     }
 
     /**
-     * Update app.css with Vormia imports
+     * Update app.css with Vormia imports (Flux + plugins for Livewire; plugin CSS only for Inertia).
      */
-    private function updateAppCss(): void
+    private function updateAppCss(string $stack): void
     {
         $appCssPath = resource_path('css/app.css');
 
@@ -272,11 +322,13 @@ class InstallCommand extends Command
 
         $content = File::get($appCssPath);
 
-        // Check if imports already exist
-        $importsToAdd = [
-            "@import '../../vendor/livewire/flux/dist/flux.css';",
-            "@import './plugins/style.min.css';",
-        ];
+        $styleMinImport = "@import './plugins/style.min.css';";
+        $importsToAdd = $stack === self::STACK_INERTIA
+            ? [$styleMinImport]
+            : [
+                "@import '../../vendor/livewire/flux/dist/flux.css';",
+                $styleMinImport,
+            ];
 
         $needsUpdate = false;
         foreach ($importsToAdd as $import) {

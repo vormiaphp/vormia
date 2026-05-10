@@ -112,7 +112,23 @@ New `api-auth` middleware for Sanctum-based API authentication:
 
 ## Installation
 
-Before installing Vormia, ensure you have Laravel installed. **Note:** Inertia is not yet supported.
+Before installing Vormia, ensure you have Laravel installed.
+
+### Livewire vs Inertia
+
+The installer targets either a **Livewire** (default) or **Inertia.js** frontend stack:
+
+| | **Livewire** (default) | **Inertia.js** |
+| --- | --- | --- |
+| Command | `php artisan vormia:install` or `--stack=livewire` | `php artisan vormia:install --stack=inertia` |
+| `resources/css/app.css` | Adds Flux vendor import and `@import './plugins/style.min.css';` | Adds only `@import './plugins/style.min.css';` (no Flux) |
+| `resources/js/app.js` | Appends Vormia plugin init (jQuery, Select2, Flatpickr, Livewire hooks, SweetAlert2) | Not modified; wire your own entrypoint |
+| npm packages | Installs jquery, flatpickr, select2, sweetalert2 | Skipped (add them yourself if needed) |
+
+- **Interactive install:** run `php artisan vormia:install` and choose the stack when prompted.
+- **CI or scripts:** pass `--stack=livewire` or `--stack=inertia`. If you omit `--stack` with `--no-interaction`, the default is **Livewire**.
+
+Plugin CSS is copied to `resources/css/plugins/style.min.css` for both stacks (from the package stubs).
 
 ### Step 1: Install Laravel
 
@@ -142,9 +158,15 @@ composer require vormiaphp/vormia
 php artisan vormia:install
 ```
 
-This will automatically install Vormia with all files and configurations, including API support:
+For an Inertia app without prompts (for example in CI):
 
-**Automatically Installed:**
+```sh
+php artisan vormia:install --stack=inertia --no-interaction
+```
+
+This installs Vormia with all files and configurations, including API support. Stack-specific steps are summarized in [Livewire vs Inertia](#livewire-vs-inertia) above.
+
+**Automatically Installed (all stacks):**
 
 - ✅ All Vormia files and directories (models, services, middleware, traits are auto-loaded from the package)
 - ✅ All notification stubs copied to `app/Notifications`
@@ -154,11 +176,11 @@ This will automatically install Vormia with all files and configurations, includ
 - ✅ API routes file copied to `routes/api.php` (you may be prompted to overwrite)
 - ✅ Postman collection copied to `public/Vormia.postman_collection.json`
 - ✅ CSS and JS plugin files copied to `resources/css/plugins` and `resources/js/plugins`
-- ✅ `app.css` and `app.js` updated with Vormia imports and initialization
+- ✅ `resources/css/app.css` updated per stack (Flux + plugin CSS for Livewire; plugin CSS import only for Inertia)
+- ✅ **Livewire stack only:** `resources/js/app.js` updated with Vormia imports and initialization; **npm packages** installed (jquery, flatpickr, select2, sweetalert2)
 - ✅ **intervention/image** package installed via Composer
 - ✅ **Laravel Sanctum** installed via `php artisan install:api`
 - ✅ **CORS configuration** published via `php artisan config:publish cors`
-- ✅ **npm packages** installed: jquery, flatpickr, select2, sweetalert2
 
 **Manual Steps Required:**
 
@@ -309,6 +331,23 @@ public function hasPermission(string $permission): bool
     return $this->permissions()->contains('name', $permission);
 }
 ```
+
+#### 4) Attach a role to a user
+
+After you create a user, assign a role on the `role_user` pivot using the `roles()` relationship from step 3. Pass the role’s **primary key** (the `id` column on your roles table):
+
+```php
+$_user = User::create([
+    'name' => $input['name'],
+    'email' => $input['email'],
+    'password' => $input['password'],
+]);
+
+// Assign the role to the user
+$_user->roles()->attach(1);
+```
+
+For several roles at once, use `$_user->roles()->attach([1, 2]);`. To replace the user’s roles with an exact set, use `sync([...])` instead of `attach`.
 
 ### API Authentication
 
@@ -533,7 +572,7 @@ php artisan vormia:uninstall
 
 - ⚠️ **Laravel Sanctum**: If you want to remove Sanctum, run: `composer remove laravel/sanctum`
 - ⚠️ **CORS Config**: If you want to remove CORS config, delete: `config/cors.php`
-- ⚠️ **app.css and app.js**: Remove Vormia imports and initialization code manually
+- ⚠️ **app.css and app.js**: Remove Vormia `@import` lines from `app.css` and any Vormia initialization from `app.js` manually (Inertia installs only change `app.css` for the plugin stylesheet)
 - ⚠️ **Composer package**: Run `composer remove vormiaphp/vormia` to completely remove from composer.json
 
 ### **7. Troubleshooting Section**

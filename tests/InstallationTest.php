@@ -18,7 +18,10 @@ class InstallationTest extends TestCase
         $signatureProperty = $reflection->getProperty('signature');
         $signatureProperty->setAccessible(true);
         $signature = $signatureProperty->getValue($command);
-        $this->assertEquals('vormia:install', $signature);
+        $this->assertEquals(
+            'vormia:install {--stack= : Application stack: livewire (default) or inertia}',
+            $signature
+        );
     }
 
     /**

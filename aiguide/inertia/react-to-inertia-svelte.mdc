@@ -11,9 +11,10 @@ This guide covers converting a React SPA to a **Laravel + Inertia.js + Svelte** 
 ## Tech Stack
 
 - **Laravel**: 12.x
-- **Inertia.js**: 2.x (`inertiajs/inertia-laravel`)
-- **Inertia Svelte adapter**: `@inertiajs/svelte` 2.x
-- **Svelte**: 5.x (runes: `$state`, `$derived`, `$effect`, `$props`)
+- **Inertia.js**: 3.x (`inertiajs/inertia-laravel` ^3.0)
+- **Inertia Svelte adapter**: `@inertiajs/svelte` ^3.0
+- **Optional**: `@inertiajs/vite` ^3.0 — page resolution and simplified SSR in dev ([client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md))
+- **Svelte**: 5.x (runes: `$state`, `$derived`, `$effect`, `$props`) — **required** by the v3 Svelte adapter
 - **Tailwind CSS**: 4.x
 - **Vite**: 6.x
 
@@ -53,6 +54,21 @@ resources/
     │   └── AppLayout.svelte
     └── app.js              ← Inertia + Svelte bootstrap
 ```
+
+### Vormia package dev sandbox (`dev/resources`)
+
+The Vormia repo’s **dev** shell mirrors a Laravel `resources/` tree under `dev/resources/`: Blade root at `dev/resources/views/app.blade.php` (`@vite` + `<x-inertia::head />` + `<x-inertia::app />`), bootstrap at `dev/resources/js/app.tsx` (React in this sandbox), with pages under `dev/resources/js/vormia/pages/` when using the package’s `import.meta.glob` layout. **Host apps** typically use `resources/js/Pages/*.svelte` instead — both are valid if `resolve` / `@inertiajs/vite` matches `Inertia::render()` names.
+
+### Root Blade template (Inertia v3)
+
+Use **`@inertiaHead` / `@inertia`** or **`<x-inertia::head />` / `<x-inertia::app />`** in the root layout ([server-side setup](https://inertiajs.com/docs/v3/installation/server-side-setup.md)). After changing Blade output, run `php artisan view:clear`.
+
+### Inertia v3 — adapter notes (Svelte)
+
+- **`router.cancel()`** was removed; use **`router.cancelAll()`** (with options if you need narrower cancellation) — [manual visits](https://inertiajs.com/docs/v3/the-basics/manual-visits.md).
+- **Progress helpers**: named exports `hideProgress` / `revealProgress` are removed; use **`import { progress } from '@inertiajs/svelte'`** then `progress.hide()` / `progress.reveal()` ([progress indicators](https://inertiajs.com/docs/v3/advanced/progress-indicators.md)).
+- Server: **`Inertia::lazy()`** removed → **`Inertia::optional()`**; global events **`invalid` / `exception`** renamed to **`httpException` / `networkError`** ([upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)).
+- Cross-cutting v3 features (same ideas as React): **`useHttp`**, **optimistic updates**, **layout props** (`useLayoutProps`), **SSR** workflow with `@inertiajs/vite` — see [Introduction](https://inertiajs.com/docs/v3/getting-started/index) and topic pages under `https://inertiajs.com/docs/v3/`.
 
 ---
 
@@ -470,8 +486,12 @@ public function share(Request $request): array
 ## Migration Checklist
 
 - [ ] Install Svelte 5: `npm install svelte@latest`
-- [ ] Install Inertia Svelte adapter: `npm install @inertiajs/svelte`
+- [ ] Install Inertia Laravel adapter: `composer require inertiajs/inertia-laravel:^3.0`
+- [ ] Install Inertia Svelte adapter: `npm install @inertiajs/svelte@^3`
+- [ ] Optional: `npm install @inertiajs/vite@^3` per [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
 - [ ] Replace `app.js` with Inertia Svelte bootstrap
+- [ ] Root Blade: `@inertia` / `@inertiaHead` or `<x-inertia::head />` / `<x-inertia::app />`; then `php artisan view:clear`
+- [ ] If upgrading from v2: republish `config/inertia.php`; replace `Inertia::lazy()` with `Inertia::optional()`; update `router.on('invalid'|'exception', ...)` to `httpException` / `networkError`
 - [ ] Rename page files from `.jsx` to `.svelte`
 - [ ] Move JSX to `<template>`-style Svelte markup (no template tag, just markup directly)
 - [ ] Replace `useState` with `let x = $state(value)`
@@ -566,7 +586,9 @@ public function show(Product $product): \Inertia\Response
 
 ## Resources
 
-- [Inertia.js with Svelte](https://inertiajs.com/client-side-setup)
+- [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index)
+- [Inertia.js v3 — Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)
+- [Inertia Svelte (client-side setup)](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
 - [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
 - [Svelte 5 $state](https://svelte.dev/docs/svelte/$state)
 - [Svelte 5 $derived](https://svelte.dev/docs/svelte/$derived)
@@ -576,5 +598,5 @@ public function show(Product $product): \Inertia\Response
 
 ---
 
-**Last Updated**: March 2026
-**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/svelte 2.x, Svelte 5.x, Tailwind CSS 4.x
+**Last Updated**: May 2026
+**Framework Versions**: Laravel 12, Inertia.js 3.x, `@inertiajs/svelte` ^3, Svelte 5.x, Tailwind CSS 4.x

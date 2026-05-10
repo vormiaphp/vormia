@@ -15,7 +15,7 @@ class HelpCommand extends Command
         $this->info('Vormia commands');
         $this->newLine();
 
-        $this->line('  - vormia:install');
+        $this->line('  - vormia:install [--stack=livewire|inertia]');
         $this->line('  - vormia:update');
         $this->line('  - vormia:uninstall');
 

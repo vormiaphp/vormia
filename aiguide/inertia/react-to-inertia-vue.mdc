@@ -11,8 +11,9 @@ This guide covers converting a React SPA to a **Laravel + Inertia.js + Vue 3** s
 ## Tech Stack
 
 - **Laravel**: 12.x
-- **Inertia.js**: 2.x (`inertiajs/inertia-laravel`)
-- **Inertia Vue adapter**: `@inertiajs/vue3` 2.x
+- **Inertia.js**: 3.x (`inertiajs/inertia-laravel` ^3.0)
+- **Inertia Vue adapter**: `@inertiajs/vue3` ^3.0
+- **Optional**: `@inertiajs/vite` ^3.0 — page resolution and simplified SSR in dev ([client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md))
 - **Vue**: 3.x (Composition API + `<script setup>`)
 - **Tailwind CSS**: 4.x
 - **Vite**: 6.x
@@ -51,6 +52,21 @@ resources/
     │   └── AppLayout.vue
     └── app.js                  ← Inertia + Vue bootstrap
 ```
+
+### Vormia package dev sandbox (`dev/resources`)
+
+The Vormia package keeps a **dev** Inertia shell under `dev/resources/` (Blade at `views/app.blade.php`, JS entry `js/app.tsx` in the current sandbox). Page files may live under `js/vormia/pages/` with a custom `resolve` glob, or under the usual **`resources/js/Pages/*.vue`** in a host app. Align **`Inertia::render()`** names with whatever `createInertiaApp` / `@inertiajs/vite` resolves.
+
+### Root Blade template (Inertia v3)
+
+Use **`@inertiaHead` / `@inertia`** or **`<x-inertia::head />` / `<x-inertia::app />`** ([server-side setup](https://inertiajs.com/docs/v3/installation/server-side-setup.md)). After Blade changes: `php artisan view:clear`.
+
+### Inertia v3 — adapter notes (Vue)
+
+- **`router.cancel()`** → **`router.cancelAll()`** ([manual visits](https://inertiajs.com/docs/v3/the-basics/manual-visits.md)).
+- **Progress**: use **`import { progress } from '@inertiajs/vue3'`** and `progress.hide()` / `progress.reveal()` instead of removed `hideProgress` / `revealProgress` exports ([progress indicators](https://inertiajs.com/docs/v3/advanced/progress-indicators.md)).
+- Server: **`Inertia::lazy()`** → **`Inertia::optional()`**; global events **`invalid` / `exception`** → **`httpException` / `networkError`** ([upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)).
+- Cross-cutting v3 features: **`useHttp`**, **optimistic updates**, **layout props** (`useLayoutProps`), **SSR** with `@inertiajs/vite` — [Introduction](https://inertiajs.com/docs/v3/getting-started/index) and `https://inertiajs.com/docs/v3/` topic index ([llms.txt](https://inertiajs.com/docs/llms.txt)).
 
 ---
 
@@ -498,8 +514,12 @@ Named slots:
 ## Migration Checklist
 
 - [ ] Install Vue 3: `npm install vue@latest`
-- [ ] Install Inertia Vue adapter: `npm install @inertiajs/vue3`
+- [ ] Install Inertia Laravel adapter: `composer require inertiajs/inertia-laravel:^3.0`
+- [ ] Install Inertia Vue adapter: `npm install @inertiajs/vue3@^3`
+- [ ] Optional: `npm install @inertiajs/vite@^3` per [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
 - [ ] Replace `createRoot` in `app.js` with Inertia Vue bootstrap (`createApp`)
+- [ ] Root Blade: `@inertia` / `@inertiaHead` or `<x-inertia::head />` / `<x-inertia::app />`; then `php artisan view:clear`
+- [ ] If upgrading from v2: republish `config/inertia.php`; replace `Inertia::lazy()` with `Inertia::optional()`; update global event names if used
 - [ ] Rename page files from `.jsx` to `.vue`
 - [ ] Convert JSX templates to Vue `<template>` blocks
 - [ ] Replace `useState` with `ref()` / `reactive()`
@@ -616,7 +636,9 @@ const submit = () => {
 
 ## Resources
 
-- [Inertia.js with Vue](https://inertiajs.com/client-side-setup)
+- [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index)
+- [Inertia.js v3 — Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)
+- [Inertia Vue (client-side setup)](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
 - [Vue 3 Composition API](https://vuejs.org/guide/extras/composition-api-faq.html)
 - [Vue 3 `<script setup>`](https://vuejs.org/api/sfc-script-setup.html)
 - [Vue 3 Reactivity (ref/reactive/computed)](https://vuejs.org/guide/essentials/reactivity-fundamentals.html)
@@ -624,5 +646,5 @@ const submit = () => {
 
 ---
 
-**Last Updated**: March 2026
-**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/vue3 2.x, Vue 3.x, Tailwind CSS 4.x
+**Last Updated**: May 2026
+**Framework Versions**: Laravel 12, Inertia.js 3.x, `@inertiajs/vue3` ^3, Vue 3.x, Tailwind CSS 4.x

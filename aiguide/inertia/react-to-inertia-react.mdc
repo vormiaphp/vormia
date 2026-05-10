@@ -11,9 +11,10 @@ This guide covers migrating a standalone React SPA (with its own router and API 
 ## Tech Stack
 
 - **Laravel**: 12.x
-- **Inertia.js**: 2.x (server-side adapter: `inertiajs/inertia-laravel`)
-- **Inertia React adapter**: `@inertiajs/react` 2.x
-- **React**: 19.x
+- **Inertia.js**: 3.x (server-side adapter: `inertiajs/inertia-laravel` ^3.0)
+- **Inertia React adapter**: `@inertiajs/react` ^3.0
+- **Optional**: `@inertiajs/vite` ^3.0 — page resolution and simplified SSR in dev ([client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md))
+- **React**: 19.x (required by the v3 React adapter)
 - **Tailwind CSS**: 4.x
 - **Vite**: 6.x (via `laravel-vite-plugin`)
 
@@ -64,6 +65,42 @@ resources/
 routes/
 └── web.php                 ← All page routes (no API routes for page data)
 ```
+
+### Vormia package dev sandbox (`dev/resources`)
+
+This repository’s **dev** Inertia shell uses the same concepts as a host Laravel app, but pages live under a `vormia/` namespace and `resolve` maps `Inertia::render()` names to files on disk:
+
+```
+dev/resources/
+├── views/
+│   └── app.blade.php       ← @vite + <x-inertia::head /> + <x-inertia::app />
+└── js/
+    ├── app.tsx             ← createInertiaApp + import.meta.glob('./vormia/pages/**/*.tsx')
+    ├── components/         ← Shared UI (e.g. shadcn-style primitives)
+    │   └── ui/
+    └── vormia/
+        ├── layouts/        ← Optional persistent layouts for demo pages
+        ├── pages/          ← Inertia pages (e.g. welcome.tsx, democrud/*.tsx)
+        └── wayfinder/      ← Generated route/action helpers (optional)
+```
+
+`Inertia::render('welcome')` resolves to `vormia/pages/welcome.tsx`; `Inertia::render('democrud/index')` → `vormia/pages/democrud/index.tsx`. A host app using `resources/js/Pages/` is equally valid if `createInertiaApp` / `@inertiajs/vite` matches those paths.
+
+### Root Blade template (Inertia v3)
+
+You can use either style ([server-side setup](https://inertiajs.com/docs/v3/installation/server-side-setup.md)):
+
+- **Classic directives**: `@vite(...)`, `@inertiaHead`, `@inertia` in `resources/views/app.blade.php`
+- **v3 Blade components** (used in this package’s dev layout): `<x-inertia::head />` in `<head>` and `<x-inertia::app />` in `<body>`. The head component can wrap fallback `<title>` / meta for non-SSR output.
+
+### Inertia v3 — features to know
+
+See [Introduction](https://inertiajs.com/docs/v3/getting-started/index) and [Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md) for the full list. Short list:
+
+- **`useHttp`**: standalone HTTP requests without a full Inertia visit ([HTTP requests](https://inertiajs.com/docs/v3/the-basics/http-requests.md))
+- **Optimistic updates** with automatic rollback on failure ([Optimistic updates](https://inertiajs.com/docs/v3/the-basics/optimistic-updates.md))
+- **Layout props** via `useLayoutProps` for data shared between a persistent layout and pages ([Layouts](https://inertiajs.com/docs/v3/the-basics/layouts.md))
+- **SSR**: with `@inertiajs/vite`, dev SSR can run alongside `npm run dev`; production still follows [SSR deployment](https://inertiajs.com/docs/v3/advanced/server-side-rendering.md)
 
 ---
 
@@ -194,8 +231,30 @@ export default function Home({ featuredProducts }) {
 }
 
 // Attach layout — persists across Inertia navigation (Navbar doesn't remount)
+// This is a *render callback* (receives the page element). That pattern is fine in v3.
 Home.layout = page => <AppLayout>{page}</AppLayout>;
 ```
+
+#### Inertia v3 — layout assignment caveat
+
+In v3 you **cannot** assign an **arrow function component** directly to `.layout` — Inertia cannot tell it apart from a render function. Prefer a **function declaration**, wrap the component in an **array**, or set a **default layout** in `createInertiaApp` ([upgrade guide — React layouts](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)):
+
+```jsx
+// ❌ Broken in v3 — Layout is an arrow *component* assigned directly
+const Layout = ({ children }) => <main>{children}</main>;
+Dashboard.layout = Layout;
+
+// ✅ Wrap in an array
+Dashboard.layout = [Layout];
+
+// ✅ Or use a function declaration for the layout component
+function Layout({ children }) {
+    return <main>{children}</main>;
+}
+Dashboard.layout = Layout;
+```
+
+The `Page.layout = page => <AppLayout>{page}</AppLayout>` pattern above is a **function that returns JSX** (render callback), not “assign arrow component reference”, so it remains a common valid approach.
 
 ---
 
@@ -444,23 +503,25 @@ return flash.success && <div className="alert">{flash.success}</div>;
 
 ## Best Practices
 
-1. **Page components live in `resources/js/Pages/`** — Inertia resolves them by name from `Inertia::render('Folder/File', [...])`
+1. **Page directory matches `resolve`** — Laravel convention is `resources/js/Pages/`; this package’s dev sandbox uses `resources/js/vormia/pages/`. `Inertia::render('Path/Name')` must map to a real module path.
 2. **Never fetch page data client-side** — pass it from the controller as props
 3. **Use `useForm` for all mutations** — it handles CSRF, redirects, and validation errors automatically
-4. **Use persistent layouts** (`Page.layout = page => <Layout>{page}</Layout>`) to prevent Navbar remounting on navigation
+4. **Use persistent layouts** (render callback or `createInertiaApp` `defaultLayout`) so the shell does not remount on navigation — see [Layouts](https://inertiajs.com/docs/v3/the-basics/layouts.md) and the v3 layout caveat above
 5. **Use Ziggy** for `route()` helper in JavaScript — avoids hardcoding URLs
-6. **Use `router.reload({ only: [...] })`** for polling or partial refreshes instead of separate API calls
+6. **Use `router.reload({ only: [...] })`** for polling or partial refreshes instead of separate API calls; in v3 use **`router.cancelAll()`** instead of removed `router.cancel()` when cancelling visits ([manual visits](https://inertiajs.com/docs/v3/the-basics/manual-visits.md))
 7. **TypeScript tip**: Define prop types with an interface matching the controller's returned array keys
 
 ---
 
 ## Migration Checklist
 
-- [ ] Install Inertia Laravel adapter: `composer require inertiajs/inertia-laravel`
-- [ ] Install Inertia React adapter: `npm install @inertiajs/react`
+- [ ] Install Inertia Laravel adapter: `composer require inertiajs/inertia-laravel:^3.0`
+- [ ] Install Inertia React adapter: `npm install @inertiajs/react@^3`
+- [ ] Optional: `npm install @inertiajs/vite@^3` and configure per [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
 - [ ] Replace `main.jsx` with Inertia bootstrap (`createInertiaApp`)
-- [ ] Add `@inertia` directive to root Blade layout (`resources/views/app.blade.php`)
-- [ ] Move page components from `src/pages/` to `resources/js/Pages/`
+- [ ] Root Blade: add `@inertiaHead` / `@inertia` **or** `<x-inertia::head />` / `<x-inertia::app />` in `resources/views/app.blade.php` ([server-side setup](https://inertiajs.com/docs/v3/installation/server-side-setup.md)); then `php artisan view:clear`
+- [ ] If upgrading from v2: republish `config/inertia.php` and merge customizations; replace `Inertia::lazy()` with `Inertia::optional()`
+- [ ] Move page components from `src/pages/` to `resources/js/Pages/` (or your chosen folder that matches `resolve`)
 - [ ] Remove React Router — replace with Inertia `<Link>` and `router.visit()`
 - [ ] Replace all page-level `useEffect + fetch` with data from Laravel controller
 - [ ] Replace `fetch POST` forms with `useForm` hook
@@ -556,13 +617,15 @@ Show.layout = page => <AppLayout>{page}</AppLayout>;
 
 ## Resources
 
-- [Inertia.js Docs](https://inertiajs.com)
-- [Inertia Laravel Adapter](https://inertiajs.com/server-side-setup)
-- [Inertia React Adapter](https://inertiajs.com/client-side-setup)
+- [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index)
+- [Inertia.js v3 — Upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md)
+- [Inertia Laravel (server-side setup)](https://inertiajs.com/docs/v3/installation/server-side-setup.md)
+- [Inertia React (client-side setup)](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
+- [Pages](https://inertiajs.com/docs/v3/the-basics/pages.md) · [Layouts](https://inertiajs.com/docs/v3/the-basics/layouts.md) · [Forms](https://inertiajs.com/docs/v3/the-basics/forms.md)
 - [Ziggy (route() helper for JS)](https://github.com/tighten/ziggy)
 - [Laravel Controllers](https://laravel.com/docs/controllers)
 
 ---
 
-**Last Updated**: March 2026
-**Framework Versions**: Laravel 12, Inertia.js 2.x, @inertiajs/react 2.x, React 19.x, Tailwind CSS 4.x
+**Last Updated**: May 2026
+**Framework Versions**: Laravel 12, Inertia.js 3.x, `@inertiajs/react` ^3, React 19.x, Tailwind CSS 4.x

@@ -97,6 +97,43 @@ For Livewire usage in this package:
 - Use `Vormia\Vormia\Traits\Livewire\WithNotifications`.
 - Event listeners should use attribute-based style (for example, `#[On(...)]`) rather than legacy `$listeners` mutation patterns.
 
+## Inertia.js 3 Guidance
+
+Vormia’s installer and AI conversion guides target **Inertia.js v3** with Laravel. Official overview: [Inertia.js v3 — Introduction](https://inertiajs.com/docs/v3/getting-started/index). Full doc index: [llms.txt](https://inertiajs.com/docs/llms.txt).
+
+### Versions (target stack)
+
+- **Server**: `composer require inertiajs/inertia-laravel:^3.0`
+- **Client** (pick one): `npm install @inertiajs/react@^3.0` | `@inertiajs/vue3@^3.0` | `@inertiajs/svelte@^3.0`
+- **Optional**: `npm install @inertiajs/vite@^3.0` — automatic page resolution, SSR-friendly Vite integration, simplified SSR during `npm run dev` per [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup.md)
+
+### v3 changes agents should remember
+
+Summarized from the [v3 upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide.md):
+
+- **HTTP**: Axios is no longer bundled; Inertia uses a built-in XHR client (interceptors supported). Apps may still use Axios via the documented adapter if needed.
+- **Router**: `router.cancel()` → `router.cancelAll()` (options exist to narrow what gets cancelled).
+- **Global events**: `invalid` → `httpException`, `exception` → `networkError` (and per-visit `onHttpException` / `onNetworkError` callbacks).
+- **Laravel**: `Inertia::lazy()` removed — use `Inertia::optional()` instead. Published `config/inertia.php` is restructured (`pages.*` for paths/extensions).
+- **Requirements**: PHP 8.2+, Laravel 11+; React adapter requires **React 19+**; Svelte adapter requires **Svelte 5+**.
+- **Head markup**: if templates use the old `inertia` attribute on `<title>` etc., rename to `data-inertia` (v3-only if you touch raw head tags; Blade components handle this for you).
+- **New v3 features** (link to docs when generating code): `useHttp`, optimistic updates with rollback, layout props (`useLayoutProps`), improved exception/error pages, `@inertiajs/vite` dev SSR workflow.
+
+### Package dev sandbox (`dev/resources`)
+
+The repo includes a **dev** Inertia shell so agents can mirror real wiring:
+
+- **Blade root**: `dev/resources/views/app.blade.php` — `@viteReactRefresh`, `@vite([...])`, then **`<x-inertia::head />`** and **`<x-inertia::app />`** ([Blade components](https://inertiajs.com/docs/v3/installation/server-side-setup.md#setup-root-template), alternative to `@inertia` / `@inertiaHead`, which still work).
+- **Bootstrap**: `dev/resources/js/app.tsx` — `createInertiaApp` with a `resolve` that maps `Inertia::render('welcome')` to `./vormia/pages/welcome.tsx` via `import.meta.glob('./vormia/pages/**/*.tsx', ...)`.
+- **Pages vs host apps**: Laravel’s usual convention is `resources/js/Pages/`. The sandbox uses **`resources/js/vormia/pages/`** (and shared UI under `resources/js/components/`, Wayfinder output under `vormia/wayfinder/`). Both layouts are valid as long as **`resolve`** (or `@inertiajs/vite` `pages` config) matches the string passed to `Inertia::render()`.
+
+### Agent guardrails
+
+- Keep generated examples aligned with the **target stack** (Livewire vs Inertia) and the **actual** `resolve` / page directory in the project.
+- After changing Blade directives or Inertia root markup: `php artisan view:clear`.
+- When upgrading from v2: republish Inertia config (`php artisan vendor:publish --provider="Inertia\ServiceProvider" --force`) and merge customizations per upstream.
+- Deeper migration patterns for React / Vue / Svelte live under `aiguide/inertia/*.mdc`.
+
 ## API/Auth Guidance
 
 - Sanctum-backed auth middleware alias: `api-auth`.
