@@ -78,5 +78,10 @@
             "@build",
             "@php vendor/bin/testbench serve --ansi"
         ]
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.6"
+        }
     }
 }
