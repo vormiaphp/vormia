@@ -359,6 +359,25 @@ Route::get('/protected-endpoint', [Controller::class, 'method'])
     ->middleware('api-auth');
 ```
 
+#### Vormia package API routes (`/api/vrm`)
+
+When `VORMIA_REGISTER_API_ROUTES=true` (set by `php artisan vormia:install`), the package registers **all** API endpoints under `/api/vrm/*`, including:
+
+- `POST /api/vrm/login`
+- `POST /api/vrm/logout` (auth:sanctum)
+- `GET /api/vrm/user` (auth:sanctum)
+- `GET /api/vrm/roles`, `POST /api/vrm/permissions`, `POST /api/vrm/users/{id}/roles`, `GET /api/vrm/media/preview`, and related routes
+
+> **Disclaimer — `/api/v1/*` no longer works:** Older Vormia releases registered auth at `/api/v1/login`, `/api/v1/logout`, and `/api/v1/user`. Those paths are **removed**. After upgrading, any client or integration still calling `/api/v1/...` for Vormia auth **will stop working**. Update to `/api/vrm/login`, `/api/vrm/logout`, and `/api/vrm/user`.
+
+**API route conflict after upgrade:** If your app uses `/api/v1` for its own REST API and an older Vormia install left duplicate auth routes (or stale route cache), run this after `composer update`:
+
+```bash
+php artisan vormia:migrate-api-routes
+```
+
+Preview changes without writing files: `php artisan vormia:migrate-api-routes --dry-run`. On production, you may then run `php artisan route:cache`. See [docs/INSTALLATION.md](docs/INSTALLATION.md) for full upgrade steps.
+
 #### MediaForge preview route (required for proxy mode)
 
 If you set `VORMIA_MEDIAFORGE_PREVIEW_MODE=proxy`, MediaForge will generate preview URLs that rely on a proxy endpoint. Make sure this route exists in your app’s `routes/api.php`:
@@ -602,6 +621,15 @@ class User extends Authenticatable
 1. Sanctum is automatically installed during `php artisan vormia:install`
 2. Add `HasApiTokens` trait to User model
 3. The `api-auth` middleware is auto-registered by the package (`Vormia\Vormia\Http\Middleware\ApiAuthenticate`)
+
+##### **Vormia API `/api/v1` conflict or 404 after upgrade**
+
+**Problem**: Login/logout fails, routes clash with your app’s own `/api/v1` API, or clients still call `/api/v1/login`
+**Solution**:
+
+1. Vormia auth now lives only under `/api/vrm/*` — `/api/v1/*` Vormia endpoints no longer exist
+2. Update API clients to `POST /api/vrm/login`, `POST /api/vrm/logout`, and `GET /api/vrm/user`
+3. After upgrading the package, run: `php artisan vormia:migrate-api-routes` (clears caches, enables route registration, removes legacy duplicate routes from `routes/api.php`)
 
 ##### **Utilities Service Not Working**
 
