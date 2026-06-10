@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`vormia:migrate-api-routes`** — focused production command to clear route/config caches, enable `VORMIA_REGISTER_API_ROUTES`, remove duplicate `/api/v1` Vormia auth routes from the host `routes/api.php`, and update the Postman collection after upgrading
+
+### Changed
+
+- **Breaking: API auth prefix** — login, logout, and current-user endpoints moved from `/api/v1/*` to `/api/vrm/*` so all Vormia API routes share one prefix and no longer conflict with host-app `/api/v1` versioning
+
 ## [5.4.0] - 2026-04-17
 
 ### Added

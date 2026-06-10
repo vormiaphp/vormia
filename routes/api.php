@@ -34,9 +34,7 @@ Route::prefix('vrm')->group(function () {
         Route::delete('/{userId}/roles', 'removeRoles');
         Route::get('/by-role/{roleIdOrSlug}', 'getUsersByRole');
     });
-});
 
-Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthLoginController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {

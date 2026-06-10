@@ -4,6 +4,7 @@ namespace VormiaPHP\Vormia\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Vormia\Console\Commands\InstallCommand;
+use Vormia\Console\Commands\MigrateApiRoutesCommand;
 use Vormia\Console\Commands\UpdateCommand;
 
 class InstallationTest extends TestCase
@@ -27,6 +28,19 @@ class InstallationTest extends TestCase
     /**
      * Test that the update command has the correct signature
      */
+    public function test_migrate_api_routes_command_signature()
+    {
+        $command = new MigrateApiRoutesCommand();
+        $reflection = new \ReflectionClass($command);
+        $signatureProperty = $reflection->getProperty('signature');
+        $signatureProperty->setAccessible(true);
+        $signature = $signatureProperty->getValue($command);
+        $this->assertEquals(
+            'vormia:migrate-api-routes {--dry-run : Preview changes without writing files or clearing caches}',
+            $signature
+        );
+    }
+
     public function test_update_command_signature()
     {
         $command = new UpdateCommand();

@@ -90,6 +90,55 @@ class VormiaVormia
     }
 
     /**
+     * Migrate Vormia API auth routes from /api/v1 to /api/vrm on a host application.
+     *
+     * @param  array{dry_run?: bool}  $options
+     * @return array{success: bool, messages: array<int, string>}
+     */
+    public function migrateApiRoutes(array $options = []): array
+    {
+        $dryRun = (bool) ($options['dry_run'] ?? false);
+        $messages = [];
+
+        try {
+            if (! $dryRun) {
+                Artisan::call('route:clear');
+                Artisan::call('config:clear');
+                $messages[] = 'Cleared route and config caches.';
+            } else {
+                $messages[] = 'Dry run: would clear route and config caches.';
+            }
+
+            $envResult = $this->ensureApiRoutesEnvFlag($dryRun);
+            if ($envResult !== null) {
+                $messages[] = $envResult;
+            }
+
+            $scrubResult = $this->scrubHostV1AuthRoutes($dryRun);
+            if ($scrubResult !== null) {
+                $messages[] = $scrubResult;
+            }
+
+            $postmanResult = $this->updatePostmanCollection($dryRun);
+            if ($postmanResult !== null) {
+                $messages[] = $postmanResult;
+            }
+
+            $messages[] = 'Vormia auth endpoints are now under /api/vrm:';
+            $messages[] = '  POST /api/vrm/login';
+            $messages[] = '  POST /api/vrm/logout (auth:sanctum)';
+            $messages[] = '  GET  /api/vrm/user (auth:sanctum)';
+            $messages[] = 'Update API clients that still call /api/v1/* auth routes.';
+
+            return ['success' => true, 'messages' => $messages];
+        } catch (\Exception $e) {
+            $this->handleError($e);
+
+            return ['success' => false, 'messages' => array_merge($messages, [$e->getMessage()])];
+        }
+    }
+
+    /**
      * Copy stubs to app. Models, traits, services, middleware now live in package.
      */
     protected function copyStubs(bool $apiOnly = false, string $stack = 'livewire'): void
@@ -364,6 +413,190 @@ class VormiaVormia
     protected function configPath(string $path = ''): string
     {
         return config_path($path);
+    }
+
+    /**
+     * Ensure VORMIA_REGISTER_API_ROUTES=true exists in .env.
+     */
+    protected function ensureApiRoutesEnvFlag(bool $dryRun): ?string
+    {
+        $envPath = $this->basePath('.env');
+        if (! $this->filesystem->exists($envPath)) {
+            return 'No .env file found; ensure VORMIA_REGISTER_API_ROUTES=true is set manually.';
+        }
+
+        $content = $this->filesystem->get($envPath);
+
+        if (! str_contains($content, 'VORMIA_REGISTER_API_ROUTES')) {
+            $append = "\n# VORMIA ROUTES\nVORMIA_REGISTER_API_ROUTES=true\n";
+            if (! $dryRun) {
+                $this->filesystem->append($envPath, $append);
+            }
+
+            return $dryRun
+                ? 'Dry run: would append VORMIA_REGISTER_API_ROUTES=true to .env.'
+                : 'Appended VORMIA_REGISTER_API_ROUTES=true to .env.';
+        }
+
+        if (preg_match('/^VORMIA_REGISTER_API_ROUTES\s*=\s*false\s*$/mi', $content)) {
+            $updated = preg_replace(
+                '/^VORMIA_REGISTER_API_ROUTES\s*=\s*false\s*$/mi',
+                'VORMIA_REGISTER_API_ROUTES=true',
+                $content,
+            );
+            if (! $dryRun && is_string($updated)) {
+                $this->filesystem->put($envPath, $updated);
+            }
+
+            return $dryRun
+                ? 'Dry run: would set VORMIA_REGISTER_API_ROUTES=true in .env.'
+                : 'Set VORMIA_REGISTER_API_ROUTES=true in .env.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Remove duplicate Vormia auth routes under prefix v1 from the host routes/api.php.
+     */
+    protected function scrubHostV1AuthRoutes(bool $dryRun): ?string
+    {
+        $path = $this->basePath('routes/api.php');
+        if (! $this->filesystem->exists($path)) {
+            return null;
+        }
+
+        $content = $this->filesystem->get($path);
+        if (! str_contains($content, 'AuthLoginController')) {
+            return null;
+        }
+
+        $updated = $this->removeV1AuthRouteBlock($content);
+        if ($updated === null || $updated === $content) {
+            return null;
+        }
+
+        $updated = $this->removeUnusedAuthLoginControllerImport($updated);
+
+        if (! $dryRun) {
+            $this->filesystem->put($path, $updated);
+        }
+
+        return $dryRun
+            ? 'Dry run: would remove legacy /api/v1 Vormia auth routes from routes/api.php.'
+            : 'Removed legacy /api/v1 Vormia auth routes from routes/api.php.';
+    }
+
+    /**
+     * Replace /api/v1/ with /api/vrm/ in the published Postman collection when present.
+     */
+    protected function updatePostmanCollection(bool $dryRun): ?string
+    {
+        $path = $this->publicPath('Vormia.postman_collection.json');
+        if (! $this->filesystem->exists($path)) {
+            return null;
+        }
+
+        $content = $this->filesystem->get($path);
+        if (! str_contains($content, '/api/v1/')) {
+            return null;
+        }
+
+        $updated = str_replace('/api/v1/', '/api/vrm/', $content);
+        if (! $dryRun) {
+            $this->filesystem->put($path, $updated);
+        }
+
+        return $dryRun
+            ? 'Dry run: would update /api/v1/ URLs in public/Vormia.postman_collection.json.'
+            : 'Updated /api/v1/ URLs in public/Vormia.postman_collection.json.';
+    }
+
+    /**
+     * Remove a Route::prefix('v1') group that contains AuthLoginController.
+     */
+    protected function removeV1AuthRouteBlock(string $content): ?string
+    {
+        foreach (["Route::prefix('v1')", 'Route::prefix("v1")'] as $marker) {
+            $pos = strpos($content, $marker);
+            if ($pos === false) {
+                continue;
+            }
+
+            $bracePos = strpos($content, '{', $pos);
+            if ($bracePos === false) {
+                continue;
+            }
+
+            $block = $this->extractBalancedBraceBlock($content, $bracePos);
+            if ($block === null || ! str_contains($block, 'AuthLoginController')) {
+                continue;
+            }
+
+            $end = $bracePos + strlen($block);
+            while ($end < strlen($content) && ctype_space($content[$end])) {
+                $end++;
+            }
+            if ($end < strlen($content) && $content[$end] === ')') {
+                $end++;
+            }
+            while ($end < strlen($content) && ctype_space($content[$end])) {
+                $end++;
+            }
+            if ($end < strlen($content) && $content[$end] === ';') {
+                $end++;
+            }
+
+            $before = rtrim(substr($content, 0, $pos));
+            $after = ltrim(substr($content, $end));
+
+            return ($before !== '' ? $before . "\n\n" : '') . $after . (str_ends_with($after, "\n") ? '' : "\n");
+        }
+
+        return null;
+    }
+
+    /**
+     * Drop AuthLoginController import when it is no longer referenced in routes/api.php.
+     */
+    protected function removeUnusedAuthLoginControllerImport(string $content): string
+    {
+        if (str_contains($content, 'AuthLoginController::class') || str_contains($content, 'AuthLoginController::')) {
+            return $content;
+        }
+
+        return (string) preg_replace(
+            "/^use Vormia\\\\Vormia\\\\Http\\\\Controllers\\\\Api\\\\AuthLoginController;\s*\r?\n/m",
+            '',
+            $content,
+        );
+    }
+
+    /**
+     * Extract a substring from opening brace through its matching closing brace.
+     */
+    protected function extractBalancedBraceBlock(string $content, int $openPos): ?string
+    {
+        if (! isset($content[$openPos]) || $content[$openPos] !== '{') {
+            return null;
+        }
+
+        $depth = 0;
+        $length = strlen($content);
+
+        for ($i = $openPos; $i < $length; $i++) {
+            $char = $content[$i];
+            if ($char === '{') {
+                $depth++;
+            } elseif ($char === '}') {
+                $depth--;
+                if ($depth === 0) {
+                    return substr($content, $openPos, $i - $openPos + 1);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

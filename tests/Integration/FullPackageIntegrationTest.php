@@ -78,7 +78,7 @@ class FullPackageIntegrationTest extends IntegrationTestCase
             'email_verified_at' => now(),
         ]);
 
-        $response = $this->postJson('/api/v1/login', [
+        $response = $this->postJson('/api/vrm/login', [
             'email' => 'test@example.com',
             'password' => 'password',
         ]);
@@ -97,7 +97,7 @@ class FullPackageIntegrationTest extends IntegrationTestCase
 
     public function test_api_login_invalid_credentials(): void
     {
-        $response = $this->postJson('/api/v1/login', [
+        $response = $this->postJson('/api/vrm/login', [
             'email' => 'wrong@example.com',
             'password' => 'wrong',
         ]);
@@ -107,7 +107,7 @@ class FullPackageIntegrationTest extends IntegrationTestCase
 
     public function test_api_protected_route_requires_auth(): void
     {
-        $response = $this->getJson('/api/v1/user');
+        $response = $this->getJson('/api/vrm/user');
 
         $response->assertStatus(401);
     }
@@ -125,7 +125,7 @@ class FullPackageIntegrationTest extends IntegrationTestCase
         $token = $user->createToken('test')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/user');
+            ->getJson('/api/vrm/user');
 
         $response->assertOk();
         $response->assertJsonPath('id', $user->id);
@@ -134,7 +134,8 @@ class FullPackageIntegrationTest extends IntegrationTestCase
     public function test_vormia_commands_registered(): void
     {
         $this->artisan('vormia:help')
-            ->assertSuccessful();
+            ->assertSuccessful()
+            ->expectsOutputToContain('vormia:migrate-api-routes');
     }
 
     public function test_vormia_help_command(): void

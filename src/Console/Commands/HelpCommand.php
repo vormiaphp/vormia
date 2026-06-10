@@ -17,6 +17,7 @@ class HelpCommand extends Command
 
         $this->line('  - vormia:install (interactive: pick Livewire or Inertia)');
         $this->line('  - vormia:install --no-interaction [--stack=livewire|inertia]');
+        $this->line('  - vormia:migrate-api-routes [--dry-run]');
         $this->line('  - vormia:update');
         $this->line('  - vormia:uninstall');
 

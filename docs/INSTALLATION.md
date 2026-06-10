@@ -134,15 +134,37 @@ class MyComponent extends Component
 
 ## API Routes
 
-The package registers these API routes under `/api`:
+The package registers these API routes under `/api/vrm`:
 
-- `POST /api/v1/login`
-- `POST /api/v1/logout` (auth:sanctum)
+- `POST /api/vrm/login`
+- `POST /api/vrm/logout` (auth:sanctum)
+- `GET /api/vrm/user` (auth:sanctum)
 - `GET /api/vrm/roles`, `POST /api/vrm/roles`, etc.
 - `GET /api/vrm/permissions`, ...
 - `POST /api/vrm/users/{id}/roles`, ...
 
 Ensure Laravel Sanctum is installed for API auth: `php artisan install:api`
+
+### Upgrading from `/api/v1`
+
+Auth endpoints previously lived under `/api/v1/*` and are now unified under `/api/vrm/*`. This avoids conflicts with host apps that use `/api/v1` for their own API versioning.
+
+After updating the package on a live system:
+
+```bash
+composer update vormiaphp/vormia
+php artisan vormia:migrate-api-routes
+# optional on production after deploy:
+php artisan route:cache
+```
+
+Use `--dry-run` to preview changes without modifying files or clearing caches:
+
+```bash
+php artisan vormia:migrate-api-routes --dry-run
+```
+
+Update API clients to call `/api/vrm/login`, `/api/vrm/logout`, and `/api/vrm/user` instead of `/api/v1/*`.
 
 ## MediaForge (Image Processing)
 

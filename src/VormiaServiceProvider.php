@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Vormia\Console\Commands\HelpCommand;
 use Vormia\Console\Commands\InstallCommand;
+use Vormia\Console\Commands\MigrateApiRoutesCommand;
 use Vormia\Console\Commands\UninstallCommand;
 use Vormia\Console\Commands\UpdateCommand;
 use Illuminate\Support\Facades\Blade;
@@ -43,6 +44,7 @@ class VormiaServiceProvider extends ServiceProvider
             $this->commands([
                 HelpCommand::class,
                 InstallCommand::class,
+                MigrateApiRoutesCommand::class,
                 UpdateCommand::class,
                 UninstallCommand::class,
             ]);
