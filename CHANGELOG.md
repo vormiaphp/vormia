@@ -5,8 +5,6 @@ All notable changes to the Vormia package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
 ## [5.5.5] - 2026-06-10
 
 ### Added
@@ -17,9 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking: API auth prefix** — login, logout, and current-user endpoints moved from `/api/v1/*` to `/api/vrm/*` so all Vormia API routes share one prefix and no longer conflict with host-app `/api/v1` versioning
 
+## [Unreleased]
+
 ## [5.4.0] - 2026-04-17
 
 ### Added
+
 - **MediaForge fluent URL builder**: `MediaForge::url($pathOrUrl, $disk = null)` now returns a builder that can generate:
   - Public URLs via `->public()`
   - Signed temporary URLs via `->private()` (prefers `temporaryUrl()` when supported)
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Present but empty (`VORMIA_MEDIAFORGE_PREVIEW_PERIOD=`): defaults to `3600` (1h)
 
 ### Changed
+
 - **Breaking: MediaForge upload return value**: `MediaForge::upload(...)->run()` and `MediaForge::uploadFile(...)->run()` now return a **storage path/key** by default (instead of sometimes returning a URL).
 - **Installer env block** (`vormia:install`): now includes
   - `VORMIA_MEDIAFORGE_STORAGE_RULE=vormia`
