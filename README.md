@@ -59,19 +59,24 @@ The package will automatically check for required dependencies during installati
 - **Robust Database Handling**
 - **API Authentication Middleware**
 
-## What's New in v5.5.3 🎉
+## What's New in v5.5.5 🎉
+
+Patch release — unified Vormia API prefix and production migration command.
 
 ### ✨ Highlights
 
-- **AI guides reorganized by stack**: Inertia, Livewire, and beta conversion tracks now live under clear subfolders; README links and `[aiguide/README.md](aiguide/README.md)` point at the current paths.
-- **Inertia.js v3 documentation**: New adapter-agnostic guide `[aiguide/inertia/inertiajs-operations.md](aiguide/inertia/inertiajs-operations.md)` alongside the React/Vue/Svelte conversion `.mdc` files under `[aiguide/inertia/](aiguide/inertia/)`.
-- **Installer documentation**: Livewire vs Inertia install paths (`php artisan vormia:install --stack=livewire|inertia`) are documented in README and aligned with `[aiguide/CURSOR_CODEX_MCP_GUIDE.md](aiguide/CURSOR_CODEX_MCP_GUIDE.md)`.
+- **All Vormia API routes under `/api/vrm/*`**: auth (`login`, `logout`, `user`) now shares the same prefix as roles, permissions, users, and media preview — no more split between `/api/v1` and `/api/vrm`.
+- **`vormia:migrate-api-routes`**: run after `composer update` on live apps that had `/api/v1` conflicts with the host app’s own API versioning (clears caches, fixes `.env`, scrubs duplicate routes).
+- **Breaking for API clients**: `/api/v1/login`, `/api/v1/logout`, and `/api/v1/user` are **removed** and will not work after upgrading. Use `/api/vrm/login`, `/api/vrm/logout`, and `/api/vrm/user` instead.
 
-### 📚 Documentation
+### Upgrade (existing projects)
 
-- **README**: AI Conversion Guides table and “See also” links updated for the new `aiguide/inertia/`, `aiguide/livewire/`, and `aiguide/beta/` layout.
+```bash
+composer update vormiaphp/vormia
+php artisan vormia:migrate-api-routes
+```
 
-[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v5.4.0)
+[View Full Changelog](CHANGELOG.md) | [Previous Version](https://github.com/vormiaphp/vormia/releases/tag/v5.5.4)
 
 ## Key Improvements
 
