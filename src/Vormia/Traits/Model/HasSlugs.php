@@ -28,7 +28,8 @@ trait HasSlugs
         });
 
         static::deleting(function ($model) {
-            if ($model->isForceDeleting()) {
+            // isForceDeleting() only exists on models using SoftDeletes; hard deletes are always permanent.
+            if (! method_exists($model, 'isForceDeleting') || $model->isForceDeleting()) {
                 $model->slugs()->forceDelete();
             } else {
                 $model->slugs()->update(['is_active' => false]);
